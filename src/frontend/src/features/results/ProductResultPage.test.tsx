@@ -3,6 +3,7 @@ import { render, screen } from '@testing-library/react'
 import { RouterProvider, createMemoryRouter } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
+import { CollectionsProvider } from '../../shared/collections/CollectionsProvider'
 import { ProfileProvider } from '../../shared/profile/ProfileProvider'
 import { ProductResultPage } from './ProductResultPage'
 
@@ -26,7 +27,9 @@ function renderProductResultPage(gtin = '1735000111004') {
   render(
     <QueryClientProvider client={queryClient}>
       <ProfileProvider>
-        <RouterProvider router={router} />
+        <CollectionsProvider>
+          <RouterProvider router={router} />
+        </CollectionsProvider>
       </ProfileProvider>
     </QueryClientProvider>,
   )

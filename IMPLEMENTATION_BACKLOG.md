@@ -115,6 +115,16 @@ It assumes:
 - Add profile-state store/context
 - Navigate to scan after save
 
+### Next session checklist
+- [x] Create frontend shared DTOs matching backend contracts in `/src/frontend/shared/domain`
+- [x] Create frontend API client utilities in `/src/frontend/shared/api`
+- [x] Fetch allergen options from `GET /api/reference/allergens`
+- [x] Replace onboarding placeholder chips with real controlled allergen selection UI
+- [x] Persist selected allergens to local storage
+- [x] Rehydrate saved allergen profile on app load
+- [x] Navigate from onboarding to `/scan` after saving a valid profile
+- [x] Add component tests for onboarding state and persistence
+
 ### Acceptance criteria
 - Profile persists across reloads
 - Onboarding visually matches mockup intent
@@ -136,6 +146,16 @@ It assumes:
   - empty results
   - error state
   - partial enrichment state
+
+### Next session checklist
+- [x] Wire scanner search form to backend `GET /api/products/search?q=...`
+- [x] Include selected allergen codes in search requests when available
+- [x] Replace static search cards with backend-driven results
+- [x] Render loading, empty, and error states in `SearchResultsPage`
+- [x] Support partial enrichment rendering when preview fields are missing
+- [x] Persist recent searches locally
+- [x] Route selected search result to `/results/:gtin`
+- [x] Add component tests for search result rendering and empty/error states
 
 ### Optional enrichment tasks
 - Render `previewStatus`
@@ -161,6 +181,15 @@ It assumes:
 - Map scanned GTIN into backend product lookup
 - Route successful lookup into result flow
 
+### Next session checklist
+- [x] Decide barcode library/package version compatible with current frontend stack
+- [x] Lazy-load scanner dependencies on the scan route only
+- [x] Implement camera permission request and denied-state UI
+- [x] Keep the existing inline search experience intact while adding live camera scanning
+- [x] Add duplicate scan suppression and cooldown handling
+- [x] Route scanned GTINs through backend lookup instead of local mocks
+- [x] Add scanner flow tests where feasible and document manual device QA steps
+
 ### Acceptance criteria
 - Supported devices can scan a barcode
 - Scan flow uses backend contracts, not local-only frontend mocks
@@ -182,6 +211,16 @@ It assumes:
   - CTA actions
 - Add support for favorites/save action
 
+### Next session checklist
+- [x] Fetch product detail and analysis for selected GTINs
+- [x] Build shared result-state layout components
+- [x] Implement safe result UI from mockup
+- [x] Implement warning result UI from mockup
+- [x] Implement caution result UI consistent with the design system
+- [x] Render checked allergens and ingredient highlights from backend data
+- [x] Add save-to-favorites interaction stub
+- [x] Add component tests for safe, warning, and caution result variants
+
 ### Acceptance criteria
 - All three result states work against placeholder backend data
 - Result pages share reusable components
@@ -192,17 +231,17 @@ It assumes:
 ## Phase 7 - Search Enrichment and Caching
 
 ### Backend tasks
-- Add query normalization for search
-- Add caching for:
-  - search results by normalized query
-  - product details by GTIN
-  - preview analysis by `{gtin + selectedAllergens}`
-- Add optional enrichment pipeline for top-N search results
-- Ensure enrichment failures do not fail the base search request
+- [x] Add query normalization for search
+- [x] Add caching for:
+  - [x] search results by normalized query
+  - [x] product details by GTIN
+  - [x] preview analysis by `{gtin + selectedAllergens}`
+- [x] Add optional enrichment pipeline for top-N search results
+- [x] Ensure enrichment failures do not fail the base search request
 
 ### Frontend tasks
-- Render enriched search cards when available
-- Fall back to identity-only cards when enrichment is missing
+- [x] Render enriched search cards when available
+- [x] Fall back to identity-only cards when enrichment is missing
 
 ### Acceptance criteria
 - Base search stays fast
@@ -214,17 +253,17 @@ It assumes:
 ## Phase 8 - Secondary Screens
 
 ### Tasks
-- Stub or implement:
-  - Home
-  - Favorites
-  - Profile
-  - History
-- Ensure navigation works end-to-end
-- Reuse placeholder backend where applicable
+- [x] Implement `Home`
+- [x] Implement `Favorites`
+- [x] Implement `Profile`
+- [x] Implement `History`
+- [x] Ensure navigation works end-to-end
+- [x] Reuse placeholder backend where applicable
 
 ### Acceptance criteria
 - Navigation sections exist and do not dead-end
 - Favorites naming is consistent across app
+- Secondary screens have basic component test coverage
 
 ---
 
@@ -308,6 +347,31 @@ It assumes:
 7. Search enrichment and caching
 8. Secondary screens
 9. DABAS provider swap
+
+---
+
+## Recommended Immediate Next Work
+
+This is the recommended continuation point for the next coding session.
+
+### Step 1 - Frontend shared integration layer
+- [x] Add frontend DTOs for allergens, products, search results, and analysis responses
+- [x] Add typed API helpers for reference, search, lookup, and analysis endpoints
+- [x] Add a lightweight persisted profile store for selected allergens
+
+### Step 2 - Real onboarding flow
+- [x] Load allergen options from the backend
+- [x] Replace static onboarding UI with controlled selection state
+- [x] Persist the profile and navigate to the scan route
+
+### Step 3 - Real search flow
+- [x] Connect scanner search input to the backend search endpoint
+- [x] Render backend search results instead of placeholder frontend cards
+- [x] Carry selected allergens into search/result flow
+
+### Step 4 - Result fetch wiring
+- [x] Fetch backend product detail and analysis for selected GTINs
+- [x] Use the fetched payload to prepare safe/warning/caution result page implementation
 
 ---
 

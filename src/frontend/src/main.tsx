@@ -12,6 +12,7 @@ import { RouterProvider } from 'react-router-dom'
 
 import { router } from './app/router'
 import './index.css'
+import { CollectionsProvider } from './shared/collections/CollectionsProvider'
 import { ProfileProvider } from './shared/profile/ProfileProvider'
 
 const queryClient = new QueryClient({
@@ -28,7 +29,9 @@ createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
       <ProfileProvider>
-        <RouterProvider router={router} />
+        <CollectionsProvider>
+          <RouterProvider router={router} />
+        </CollectionsProvider>
       </ProfileProvider>
     </QueryClientProvider>
   </StrictMode>,

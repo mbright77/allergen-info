@@ -520,6 +520,13 @@ button {
   font-weight: 700;
 }
 
+.secondary-action--link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+
 .analysis-banner__icon {
   display: inline-flex;
   align-items: center;

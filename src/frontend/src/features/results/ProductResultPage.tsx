@@ -1,14 +1,16 @@
 import { useQuery } from '@tanstack/react-query'
-import { useMemo } from 'react'
+import { useEffect, useMemo } from 'react'
 import { Link, useParams } from 'react-router-dom'
 
 import { analyzeProduct } from '../../shared/api/products'
 import type { AnalysisOverallStatus } from '../../shared/domain/contracts'
+import { toSavedProductItem, useCollections } from '../../shared/collections/CollectionsProvider'
 import { useProfile } from '../../shared/profile/ProfileProvider'
 
 export function ProductResultPage() {
   const { gtin } = useParams()
   const { selectedAllergens } = useProfile()
+  const { addHistoryEntry, isFavorite, toggleFavorite } = useCollections()
 
   const normalizedGtin = gtin ?? ''
   const analysisQuery = useQuery({
@@ -55,6 +57,12 @@ export function ProductResultPage() {
         }
     }
   }, [analysisQuery.data?.analysis.overallStatus])
+
+  useEffect(() => {
+    if (analysisQuery.data) {
+      addHistoryEntry(toSavedProductItem(analysisQuery.data))
+    }
+  }, [addHistoryEntry, analysisQuery.data])
 
   return (
     <section className="stack-xl">
@@ -151,8 +159,16 @@ export function ProductResultPage() {
               <Link to="/scan" className="primary-action primary-action--link">
                 Scan another product
               </Link>
-              <button type="button" className="secondary-action">
-                Save to Favorites
+              <button
+                type="button"
+                className="secondary-action"
+                onClick={() => {
+                  if (analysisQuery.data) {
+                    toggleFavorite(toSavedProductItem(analysisQuery.data))
+                  }
+                }}
+              >
+                {isFavorite(analysisQuery.data.product.gtin) ? 'Remove from Favorites' : 'Save to Favorites'}
               </button>
             </div>
           </section>

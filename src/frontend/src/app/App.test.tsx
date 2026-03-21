@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { createMemoryRouter, RouterProvider } from 'react-router-dom'
 
 import { router as appRouter } from './router'
+import { CollectionsProvider } from '../shared/collections/CollectionsProvider'
 import { ProfileProvider } from '../shared/profile/ProfileProvider'
 
 describe('app router', () => {
@@ -23,7 +24,9 @@ describe('app router', () => {
     render(
       <QueryClientProvider client={queryClient}>
         <ProfileProvider>
-          <RouterProvider router={router} />
+          <CollectionsProvider>
+            <RouterProvider router={router} />
+          </CollectionsProvider>
         </ProfileProvider>
       </QueryClientProvider>,
     )
