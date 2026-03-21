@@ -1,0 +1,99 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { render, screen, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import { RouterProvider, createMemoryRouter } from 'react-router-dom'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+
+import { ProfileProvider } from '../../shared/profile/ProfileProvider'
+import { SearchResultsPage } from './SearchResultsPage'
+
+function renderSearchResultsPage(query = 'oat') {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+      },
+    },
+  })
+
+  const router = createMemoryRouter(
+    [
+      { path: '/search/results', element: <SearchResultsPage /> },
+      { path: '/results/:gtin', element: <p>Result route</p> },
+    ],
+    { initialEntries: [`/search/results?q=${query}`] },
+  )
+
+  render(
+    <QueryClientProvider client={queryClient}>
+      <ProfileProvider>
+        <RouterProvider router={router} />
+      </ProfileProvider>
+    </QueryClientProvider>,
+  )
+
+  return { router }
+}
+
+describe('SearchResultsPage', () => {
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  it('renders backend search results and navigates to the result route', async () => {
+    const user = userEvent.setup()
+
+    vi.spyOn(window, 'fetch').mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          query: 'oat',
+          results: [
+            {
+              gtin: '1735000111001',
+              name: 'The Original Oat Milk',
+              subtitle: 'Clean label oat drink',
+              brand: 'Oatly',
+              category: 'Beverage',
+              packageSize: '1 l',
+              articleNumber: 'OAT-1001',
+              articleType: 'BaseArticle',
+              previewStatus: 'Safe',
+              previewBadge: 'Clean Label',
+              previewNote: 'Auto-detecting peanuts and gluten',
+              updatedAt: '2026-03-21T10:00:00Z',
+              source: 'placeholder-search',
+            },
+          ],
+        }),
+        {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        },
+      ),
+    )
+
+    const { router } = renderSearchResultsPage()
+
+    const cardButton = await screen.findByRole('button', { name: /view details for the original oat milk/i })
+    expect(screen.getByText(/Clean Label/i)).toBeInTheDocument()
+
+    await user.click(cardButton)
+
+    await waitFor(() => {
+      expect(router.state.location.pathname).toBe('/results/1735000111001')
+    })
+  })
+
+  it('renders an empty state when no results are returned', async () => {
+    vi.spyOn(window, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ query: 'oat', results: [] }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    )
+
+    renderSearchResultsPage()
+
+    expect(await screen.findByText(/No results yet/i)).toBeInTheDocument()
+  })
+})
