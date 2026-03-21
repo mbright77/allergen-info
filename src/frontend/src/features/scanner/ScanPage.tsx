@@ -193,18 +193,6 @@ export function ScanPage() {
           </div>
         </section>
       </div>
-
-      <div className="analysis-banner">
-        <div className="analysis-banner__icon">
-          <span className="material-symbols-outlined" aria-hidden="true">
-            shield
-          </span>
-        </div>
-        <div>
-          <p className="eyebrow">Live Analysis</p>
-          <p className="analysis-banner__text">Auto-detecting peanuts and gluten</p>
-        </div>
-      </div>
     </section>
   )
 }

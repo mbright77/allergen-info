@@ -838,23 +838,6 @@ button {
   color: var(--primary);
 }
 
-.analysis-banner {
-  position: sticky;
-  bottom: 5.75rem;
-  z-index: 2;
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 1rem;
-  width: calc(100% - 3rem);
-  max-width: calc(100% - 3rem);
-  margin: 0 auto 1rem;
-  padding: 1rem 1.15rem;
-  border: 1px solid rgba(255, 255, 255, 0.7);
-  border-radius: 1.5rem;
-  background: rgba(255, 255, 255, 0.88);
-  backdrop-filter: blur(16px);
-}
-
 .scanner-status {
   width: 100%;
   max-width: 100%;
@@ -1006,17 +989,6 @@ button {
   align-items: center;
   justify-content: center;
   text-decoration: none;
-}
-
-.analysis-banner__icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 3rem;
-  height: 3rem;
-  border-radius: 999px;
-  background: rgba(177, 240, 206, 0.78);
-  color: var(--primary);
 }
 
 .search-grid {
@@ -1495,15 +1467,6 @@ button {
     padding: 1.15rem;
   }
 
-  .analysis-banner {
-    position: fixed;
-    right: 1rem;
-    bottom: 5.85rem;
-    left: 1rem;
-    width: auto;
-    max-width: none;
-    margin: 0;
-  }
 }
 
 @media (max-height: 680px) {
