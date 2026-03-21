@@ -1,0 +1,17 @@
+/home/michael/Dev/allergen-info/src/backend/src/SafeScan.Infrastructure/obj/Debug/net9.0/SafeScan.Infrastructure.csproj.AssemblyReference.cache
+/home/michael/Dev/allergen-info/src/backend/src/SafeScan.Infrastructure/obj/Debug/net9.0/SafeScan.Infrastructure.GeneratedMSBuildEditorConfig.editorconfig
+/home/michael/Dev/allergen-info/src/backend/src/SafeScan.Infrastructure/obj/Debug/net9.0/SafeScan.Infrastructure.AssemblyInfoInputs.cache
+/home/michael/Dev/allergen-info/src/backend/src/SafeScan.Infrastructure/obj/Debug/net9.0/SafeScan.Infrastructure.AssemblyInfo.cs
+/home/michael/Dev/allergen-info/src/backend/src/SafeScan.Infrastructure/obj/Debug/net9.0/SafeScan.Infrastructure.csproj.CoreCompileInputs.cache
+/home/michael/Dev/allergen-info/src/backend/src/SafeScan.Infrastructure/bin/Debug/net9.0/SafeScan.Infrastructure.deps.json
+/home/michael/Dev/allergen-info/src/backend/src/SafeScan.Infrastructure/bin/Debug/net9.0/SafeScan.Infrastructure.dll
+/home/michael/Dev/allergen-info/src/backend/src/SafeScan.Infrastructure/bin/Debug/net9.0/SafeScan.Infrastructure.pdb
+/home/michael/Dev/allergen-info/src/backend/src/SafeScan.Infrastructure/bin/Debug/net9.0/SafeScan.Application.dll
+/home/michael/Dev/allergen-info/src/backend/src/SafeScan.Infrastructure/bin/Debug/net9.0/SafeScan.Domain.dll
+/home/michael/Dev/allergen-info/src/backend/src/SafeScan.Infrastructure/bin/Debug/net9.0/SafeScan.Application.pdb
+/home/michael/Dev/allergen-info/src/backend/src/SafeScan.Infrastructure/bin/Debug/net9.0/SafeScan.Domain.pdb
+/home/michael/Dev/allergen-info/src/backend/src/SafeScan.Infrastructure/obj/Debug/net9.0/SafeScan.352327BD.Up2Date
+/home/michael/Dev/allergen-info/src/backend/src/SafeScan.Infrastructure/obj/Debug/net9.0/SafeScan.Infrastructure.dll
+/home/michael/Dev/allergen-info/src/backend/src/SafeScan.Infrastructure/obj/Debug/net9.0/refint/SafeScan.Infrastructure.dll
+/home/michael/Dev/allergen-info/src/backend/src/SafeScan.Infrastructure/obj/Debug/net9.0/SafeScan.Infrastructure.pdb
+/home/michael/Dev/allergen-info/src/backend/src/SafeScan.Infrastructure/obj/Debug/net9.0/ref/SafeScan.Infrastructure.dll

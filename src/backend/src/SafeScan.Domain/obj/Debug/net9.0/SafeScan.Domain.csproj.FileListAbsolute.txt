@@ -1,0 +1,11 @@
+/home/michael/Dev/allergen-info/src/backend/src/SafeScan.Domain/bin/Debug/net9.0/SafeScan.Domain.deps.json
+/home/michael/Dev/allergen-info/src/backend/src/SafeScan.Domain/bin/Debug/net9.0/SafeScan.Domain.dll
+/home/michael/Dev/allergen-info/src/backend/src/SafeScan.Domain/bin/Debug/net9.0/SafeScan.Domain.pdb
+/home/michael/Dev/allergen-info/src/backend/src/SafeScan.Domain/obj/Debug/net9.0/SafeScan.Domain.GeneratedMSBuildEditorConfig.editorconfig
+/home/michael/Dev/allergen-info/src/backend/src/SafeScan.Domain/obj/Debug/net9.0/SafeScan.Domain.AssemblyInfoInputs.cache
+/home/michael/Dev/allergen-info/src/backend/src/SafeScan.Domain/obj/Debug/net9.0/SafeScan.Domain.AssemblyInfo.cs
+/home/michael/Dev/allergen-info/src/backend/src/SafeScan.Domain/obj/Debug/net9.0/SafeScan.Domain.csproj.CoreCompileInputs.cache
+/home/michael/Dev/allergen-info/src/backend/src/SafeScan.Domain/obj/Debug/net9.0/SafeScan.Domain.dll
+/home/michael/Dev/allergen-info/src/backend/src/SafeScan.Domain/obj/Debug/net9.0/refint/SafeScan.Domain.dll
+/home/michael/Dev/allergen-info/src/backend/src/SafeScan.Domain/obj/Debug/net9.0/SafeScan.Domain.pdb
+/home/michael/Dev/allergen-info/src/backend/src/SafeScan.Domain/obj/Debug/net9.0/ref/SafeScan.Domain.dll
