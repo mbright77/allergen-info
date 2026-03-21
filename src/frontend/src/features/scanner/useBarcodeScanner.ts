@@ -15,7 +15,26 @@ export function useBarcodeScanner({ enabled, onDetected }: UseBarcodeScannerOpti
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!enabled || typeof navigator === 'undefined' || !navigator.mediaDevices?.getUserMedia) {
+    if (!enabled || typeof window === 'undefined') {
+      return
+    }
+
+    const testBarcode = (window as Window & { __SAFE_SCAN_TEST_BARCODE__?: string }).__SAFE_SCAN_TEST_BARCODE__
+
+    if (testBarcode) {
+      setStatus('active')
+      setErrorMessage(null)
+
+      const timeoutId = window.setTimeout(() => {
+        onDetected(testBarcode)
+      }, 150)
+
+      return () => {
+        window.clearTimeout(timeoutId)
+      }
+    }
+
+    if (typeof navigator === 'undefined' || !navigator.mediaDevices?.getUserMedia) {
       return
     }
 

@@ -3,6 +3,7 @@ import { useEffect, useMemo } from 'react'
 import { Link, useParams } from 'react-router-dom'
 
 import { analyzeProduct } from '../../shared/api/products'
+import { buildAnalysisCacheKey, readCachedAnalysis, writeCachedAnalysis } from '../../shared/results/analysis-cache'
 import type { AnalysisOverallStatus } from '../../shared/domain/contracts'
 import { toSavedProductItem, useCollections } from '../../shared/collections/CollectionsProvider'
 import { useProfile } from '../../shared/profile/ProfileProvider'
@@ -13,6 +14,11 @@ export function ProductResultPage() {
   const { addHistoryEntry, isFavorite, toggleFavorite } = useCollections()
 
   const normalizedGtin = gtin ?? ''
+  const analysisCacheKey = useMemo(
+    () => buildAnalysisCacheKey(normalizedGtin, selectedAllergens),
+    [normalizedGtin, selectedAllergens],
+  )
+  const cachedAnalysis = useMemo(() => readCachedAnalysis(analysisCacheKey), [analysisCacheKey])
   const analysisQuery = useQuery({
     queryKey: ['analysis', normalizedGtin, selectedAllergens],
     queryFn: () =>
@@ -22,9 +28,11 @@ export function ProductResultPage() {
       }),
     enabled: normalizedGtin.length > 0,
   })
+  const resolvedAnalysis = analysisQuery.data ?? (analysisQuery.isError ? cachedAnalysis : null)
+  const isShowingCachedAnalysis = analysisQuery.isError && !!cachedAnalysis
 
   const heroCopy = useMemo(() => {
-    const overallStatus = analysisQuery.data?.analysis.overallStatus
+    const overallStatus = resolvedAnalysis?.analysis.overallStatus
 
     switch (overallStatus) {
       case 'Contains':
@@ -56,13 +64,20 @@ export function ProductResultPage() {
           description: 'The app could not complete a confident analysis for this product yet.',
         }
     }
-  }, [analysisQuery.data?.analysis.overallStatus])
+  }, [resolvedAnalysis?.analysis.overallStatus])
 
   useEffect(() => {
     if (analysisQuery.data) {
+      writeCachedAnalysis(analysisCacheKey, analysisQuery.data)
       addHistoryEntry(toSavedProductItem(analysisQuery.data))
     }
-  }, [addHistoryEntry, analysisQuery.data])
+  }, [addHistoryEntry, analysisCacheKey, analysisQuery.data])
+
+  useEffect(() => {
+    if (isShowingCachedAnalysis && cachedAnalysis) {
+      addHistoryEntry(toSavedProductItem(cachedAnalysis))
+    }
+  }, [addHistoryEntry, cachedAnalysis, isShowingCachedAnalysis])
 
   return (
     <section className="stack-xl">
@@ -73,15 +88,22 @@ export function ProductResultPage() {
         </section>
       ) : null}
 
-      {analysisQuery.isError ? (
+      {analysisQuery.isError && !cachedAnalysis ? (
         <section className="status-panel status-panel--error stack-sm" role="alert">
           <p className="eyebrow">Analysis unavailable</p>
           <p className="supporting-text">We could not analyze this product right now. Please try another item or try again.</p>
         </section>
       ) : null}
 
-      {analysisQuery.data ? (
+      {resolvedAnalysis ? (
         <>
+          {isShowingCachedAnalysis ? (
+            <section className="content-card content-card--accent stack-sm" role="status">
+              <p className="eyebrow">Offline fallback</p>
+              <p className="supporting-text">Showing your last saved analysis for this product while the network is unavailable.</p>
+            </section>
+          ) : null}
+
           <div className={`hero-card hero-card--${heroCopy.className} stack-md`}>
             <p className="eyebrow eyebrow--light">{heroCopy.eyebrow}</p>
             <h1 className="display-title display-title--light">{heroCopy.title}</h1>
@@ -90,14 +112,14 @@ export function ProductResultPage() {
 
           <section className="content-card stack-md">
             <p className="eyebrow">Product summary</p>
-            <h2 className="section-title">{analysisQuery.data.product.name}</h2>
+            <h2 className="section-title">{resolvedAnalysis.product.name}</h2>
             <p className="supporting-text">
-              {[analysisQuery.data.product.brand, analysisQuery.data.product.category]
+              {[resolvedAnalysis.product.brand, resolvedAnalysis.product.category]
                 .filter(Boolean)
                 .join(' • ') || 'Product details'}
             </p>
-            {analysisQuery.data.product.subtitle ? (
-              <p className="supporting-text">{analysisQuery.data.product.subtitle}</p>
+            {resolvedAnalysis.product.subtitle ? (
+              <p className="supporting-text">{resolvedAnalysis.product.subtitle}</p>
             ) : null}
           </section>
 
@@ -106,15 +128,15 @@ export function ProductResultPage() {
             <div className="status-summary-grid">
               <StatusSummaryCard
                 label="Overall status"
-                value={formatOverallStatus(analysisQuery.data.analysis.overallStatus)}
+                value={formatOverallStatus(resolvedAnalysis.analysis.overallStatus)}
               />
               <StatusSummaryCard
                 label="Matched allergens"
-                value={joinOrFallback(analysisQuery.data.analysis.matchedAllergens, 'None detected')}
+                value={joinOrFallback(resolvedAnalysis.analysis.matchedAllergens, 'None detected')}
               />
               <StatusSummaryCard
                 label="Trace warnings"
-                value={joinOrFallback(analysisQuery.data.analysis.traceAllergens, 'None reported')}
+                value={joinOrFallback(resolvedAnalysis.analysis.traceAllergens, 'None reported')}
               />
             </div>
           </section>
@@ -122,7 +144,7 @@ export function ProductResultPage() {
           <section className="content-card stack-md">
             <p className="eyebrow">Checked allergens</p>
             <div className="checked-allergen-list">
-              {analysisQuery.data.analysis.checkedAllergens.map((checkedAllergen) => (
+              {resolvedAnalysis.analysis.checkedAllergens.map((checkedAllergen) => (
                 <div key={checkedAllergen.code} className="checked-allergen-item">
                   <span>{formatAllergenCode(checkedAllergen.code)}</span>
                   <span className={`inline-status inline-status--${toStatusTone(checkedAllergen.status)}`}>
@@ -135,11 +157,11 @@ export function ProductResultPage() {
 
           <section className="content-card stack-md">
             <p className="eyebrow">Ingredient review</p>
-            <p className="supporting-text">{analysisQuery.data.product.ingredientsText}</p>
+            <p className="supporting-text">{resolvedAnalysis.product.ingredientsText}</p>
 
-            {analysisQuery.data.analysis.ingredientHighlights.length > 0 ? (
+            {resolvedAnalysis.analysis.ingredientHighlights.length > 0 ? (
               <div className="highlight-list">
-                {analysisQuery.data.analysis.ingredientHighlights.map((highlight) => (
+                {resolvedAnalysis.analysis.ingredientHighlights.map((highlight) => (
                   <div key={`${highlight.allergenCode}-${highlight.text}`} className="highlight-item">
                     <span className={`inline-status inline-status--${toStatusTone(highlight.severity)}`}>
                       {formatCheckedStatus(highlight.severity)}
@@ -163,12 +185,10 @@ export function ProductResultPage() {
                 type="button"
                 className="secondary-action"
                 onClick={() => {
-                  if (analysisQuery.data) {
-                    toggleFavorite(toSavedProductItem(analysisQuery.data))
-                  }
+                  toggleFavorite(toSavedProductItem(resolvedAnalysis))
                 }}
               >
-                {isFavorite(analysisQuery.data.product.gtin) ? 'Remove from Favorites' : 'Save to Favorites'}
+                {isFavorite(resolvedAnalysis.product.gtin) ? 'Remove from Favorites' : 'Save to Favorites'}
               </button>
             </div>
           </section>

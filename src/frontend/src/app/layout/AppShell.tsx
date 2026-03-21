@@ -1,4 +1,4 @@
-import type { PropsWithChildren } from 'react'
+import { useEffect, useState, type PropsWithChildren } from 'react'
 import { NavLink } from 'react-router-dom'
 
 const navigation = [
@@ -9,8 +9,36 @@ const navigation = [
 ]
 
 export function AppShell({ children }: PropsWithChildren) {
+  const [isOffline, setIsOffline] = useState(() =>
+    typeof navigator !== 'undefined' ? navigator.onLine === false : false,
+  )
+
+  useEffect(() => {
+    function handleOnline() {
+      setIsOffline(false)
+    }
+
+    function handleOffline() {
+      setIsOffline(true)
+    }
+
+    window.addEventListener('online', handleOnline)
+    window.addEventListener('offline', handleOffline)
+
+    return () => {
+      window.removeEventListener('online', handleOnline)
+      window.removeEventListener('offline', handleOffline)
+    }
+  }, [])
+
   return (
     <div className="app-shell">
+      {isOffline ? (
+        <div className="offline-banner" role="status" aria-live="polite">
+          Offline mode: saved profile, favorites, and history remain available.
+        </div>
+      ) : null}
+
       <header className="top-bar">
         <div className="brand-lockup">
           <span className="brand-mark" aria-hidden="true">

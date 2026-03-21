@@ -38,5 +38,19 @@ public sealed class ProductEndpointsTests : IClassFixture<WebApplicationFactory<
         firstResponse!.Results.Should().HaveSameCount(secondResponse!.Results);
     }
 
+    [Fact]
+    public async Task ReferenceEndpoint_ReturnsAllergens()
+    {
+        var response = await _client.GetAsync("/api/reference/allergens");
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var payload = await response.Content.ReadFromJsonAsync<List<AllergenPayload>>();
+
+        payload.Should().NotBeNull();
+        payload!.Should().Contain(item => item.Code == "milk_protein");
+    }
+
     private sealed record ProductSearchPayload(string Query, IReadOnlyList<object> Results);
+
+    private sealed record AllergenPayload(string Code, string Label);
 }

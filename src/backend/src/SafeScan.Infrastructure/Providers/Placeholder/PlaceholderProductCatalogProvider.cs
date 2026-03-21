@@ -1,24 +1,12 @@
 using SafeScan.Application.Abstractions;
 using SafeScan.Application.Contracts;
 using SafeScan.Domain.Products;
+using SafeScan.Infrastructure.Providers;
 
 namespace SafeScan.Infrastructure.Providers.Placeholder;
 
 public sealed class PlaceholderProductCatalogProvider : IProductCatalogSource
 {
-    private static readonly IReadOnlyList<AllergenOptionDto> Allergens =
-    [
-        new("milk_protein", "Milk Protein"),
-        new("lactose", "Lactose Intolerance"),
-        new("egg", "Egg"),
-        new("gluten", "Gluten"),
-        new("nuts", "Nuts"),
-        new("soy", "Soy"),
-        new("peanuts", "Peanuts"),
-        new("fish", "Fish"),
-        new("shellfish", "Shellfish")
-    ];
-
     private static readonly IReadOnlyList<PlaceholderProduct> Products =
     [
         new(
@@ -114,7 +102,7 @@ public sealed class PlaceholderProductCatalogProvider : IProductCatalogSource
     ];
 
     public Task<IReadOnlyList<AllergenOptionDto>> GetAllergensAsync(CancellationToken cancellationToken = default)
-        => Task.FromResult(Allergens);
+        => Task.FromResult(AllergenCatalog.DefaultOptions);
 
     public Task<ProductRecord?> GetProductByGtinAsync(string gtin, CancellationToken cancellationToken = default)
     {

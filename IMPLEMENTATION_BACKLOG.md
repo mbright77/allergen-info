@@ -270,19 +270,20 @@ It assumes:
 ## Phase 9 - DABAS Integration Swap
 
 ### Tasks
-- Implement DABAS provider behind existing provider interface
-- Add API key configuration
-- Implement DABAS search using:
-  - `basesearchparameter`
-  - `searchparameter`
-- Implement DABAS GTIN detail lookup
-- Preserve normalized output contracts
-- Keep placeholder provider available for local/dev/test use
+- [x] Implement DABAS provider behind existing provider interface
+- [x] Add API key configuration
+- [x] Implement DABAS search using:
+  - [x] `basesearchparameter`
+  - [x] `searchparameter`
+- [x] Implement DABAS GTIN detail lookup
+- [x] Preserve normalized output contracts
+- [x] Keep placeholder provider available for local/dev/test use
 
 ### Acceptance criteria
 - Provider switch is config-driven
 - Frontend requires no contract changes
 - Placeholder and DABAS providers both pass contract tests
+- DABAS adapter has basic mapping tests for search and GTIN detail normalization
 
 ---
 
@@ -291,24 +292,31 @@ It assumes:
 ### Frontend
 - Component tests for onboarding, scanner search field, search results, and result pages
 - E2E tests for:
-  - onboarding -> scan
-  - onboarding -> search -> result
-  - scan -> result
+  - [x] onboarding -> scan
+  - [x] onboarding -> search -> result
+  - [x] scan -> result
 - Playwright visual regression overview for:
-  - onboarding
-  - scanner
-  - scanner with search field
-  - search results
-  - safe result
-  - warning result
-  - caution result
+  - [x] onboarding
+  - [x] scanner
+  - [x] scanner with search field
+  - [x] search results
+  - [x] safe result
+  - [x] warning result
+  - [x] caution result
+- [x] Playwright E2E harness is configured in `/src/frontend/playwright.config.ts`
+- [x] Basic accessibility audit coverage is in place for the scanner route
+- [x] Basic accessibility audit coverage is in place for onboarding and result screens
+- [x] Offline cached product-result fallback is covered by component and E2E tests
+- [x] Offline cached search fallback is covered by component and E2E tests
 
 ### Backend
 - Unit tests for allergen mapping
 - Unit tests for placeholder provider
 - Integration tests for API endpoints
 - Contract tests for DTO serialization
-- Provider-switch tests for placeholder vs DABAS implementations
+- [x] Provider-switch tests for placeholder vs DABAS implementations
+- [x] DABAS-mode endpoint integration tests with stubbed HTTP responses
+- [x] Guarded real-environment DABAS smoke test path
 
 ---
 

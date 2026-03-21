@@ -6,12 +6,22 @@ import { searchProducts } from '../../shared/api/products'
 import { getSearchCardMeta, formatPreviewStatus, toStatusClassName } from '../../shared/domain/search'
 import type { SearchResult } from '../../shared/domain/contracts'
 import { saveRecentSearch } from '../../shared/search/recent-searches'
+import {
+  buildSearchResultsCacheKey,
+  readCachedSearchResults,
+  writeCachedSearchResults,
+} from '../../shared/search/search-results-cache'
 
 export function SearchResultsPage() {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
   const query = searchParams.get('q')?.trim() ?? ''
   const selectedAllergens = useMemo(() => searchParams.getAll('selectedAllergens'), [searchParams])
+  const searchCacheKey = useMemo(
+    () => buildSearchResultsCacheKey(query, selectedAllergens),
+    [query, selectedAllergens],
+  )
+  const cachedSearchResults = useMemo(() => readCachedSearchResults(searchCacheKey), [searchCacheKey])
 
   const searchQuery = useQuery({
     queryKey: ['products', 'search', query, selectedAllergens],
@@ -19,13 +29,16 @@ export function SearchResultsPage() {
     enabled: query.length > 0,
   })
 
-  const results = searchQuery.data?.results ?? []
+  const resolvedSearchResponse = searchQuery.data ?? (searchQuery.isError ? cachedSearchResults : null)
+  const results = resolvedSearchResponse?.results ?? []
+  const isShowingCachedResults = searchQuery.isError && !!cachedSearchResults
 
   useEffect(() => {
     if (query.length > 0 && searchQuery.data) {
       saveRecentSearch(query, selectedAllergens)
+      writeCachedSearchResults(searchCacheKey, searchQuery.data)
     }
-  }, [query, searchQuery.data, selectedAllergens])
+  }, [query, searchCacheKey, searchQuery.data, selectedAllergens])
 
   function handleSelectResult(result: SearchResult) {
     navigate(`/results/${encodeURIComponent(result.gtin)}`)
@@ -58,10 +71,17 @@ export function SearchResultsPage() {
         </section>
       ) : null}
 
-      {searchQuery.isError ? (
+      {searchQuery.isError && !cachedSearchResults ? (
         <section className="status-panel status-panel--error stack-sm" role="alert">
           <p className="eyebrow">Search unavailable</p>
           <p className="supporting-text">We could not load results right now. Please try again in a moment.</p>
+        </section>
+      ) : null}
+
+      {isShowingCachedResults ? (
+        <section className="content-card content-card--accent stack-sm" role="status">
+          <p className="eyebrow">Offline fallback</p>
+          <p className="supporting-text">Showing your last saved search results while the network is unavailable.</p>
         </section>
       ) : null}
 
@@ -72,7 +92,7 @@ export function SearchResultsPage() {
         </section>
       ) : null}
 
-      {!searchQuery.isLoading && !searchQuery.isError && results.length > 0 ? (
+      {!searchQuery.isLoading && results.length > 0 ? (
         <div className="search-grid">
           {results.map((result) => {
             const statusClassName = toStatusClassName(result.previewStatus)

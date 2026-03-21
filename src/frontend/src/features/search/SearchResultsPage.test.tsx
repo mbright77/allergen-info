@@ -5,6 +5,7 @@ import { RouterProvider, createMemoryRouter } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { ProfileProvider } from '../../shared/profile/ProfileProvider'
+import { SEARCH_RESULTS_CACHE_STORAGE_KEY } from '../../shared/search/search-results-cache'
 import { SearchResultsPage } from './SearchResultsPage'
 
 function renderSearchResultsPage(query = 'oat') {
@@ -38,6 +39,7 @@ function renderSearchResultsPage(query = 'oat') {
 describe('SearchResultsPage', () => {
   afterEach(() => {
     vi.restoreAllMocks()
+    window.localStorage.clear()
   })
 
   it('renders backend search results and navigates to the result route', async () => {
@@ -95,5 +97,44 @@ describe('SearchResultsPage', () => {
     renderSearchResultsPage()
 
     expect(await screen.findByText(/No results yet/i)).toBeInTheDocument()
+  })
+
+  it('falls back to cached search results when offline', async () => {
+    window.localStorage.setItem(
+      SEARCH_RESULTS_CACHE_STORAGE_KEY,
+      JSON.stringify([
+        {
+          cacheKey: 'oat::',
+          updatedAt: '2026-03-21T10:00:00Z',
+          response: {
+            query: 'oat',
+            results: [
+              {
+                gtin: '1735000111001',
+                name: 'The Original Oat Milk',
+                subtitle: 'Clean label oat drink',
+                brand: 'Oatly',
+                category: 'Beverage',
+                packageSize: '1 l',
+                articleNumber: 'OAT-1001',
+                articleType: 'BaseArticle',
+                previewStatus: 'Safe',
+                previewBadge: 'Clean Label',
+                previewNote: 'Cached search result',
+                updatedAt: '2026-03-21T10:00:00Z',
+                source: 'placeholder-search',
+              },
+            ],
+          },
+        },
+      ]),
+    )
+
+    vi.spyOn(window, 'fetch').mockRejectedValue(new Error('offline'))
+
+    renderSearchResultsPage()
+
+    expect(await screen.findByText(/showing your last saved search results/i)).toBeInTheDocument()
+    expect(screen.getByText(/The Original Oat Milk/i)).toBeInTheDocument()
   })
 })

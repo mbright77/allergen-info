@@ -67,6 +67,18 @@ button {
   padding: 1rem 1rem 7.5rem;
 }
 
+.offline-banner {
+  margin-bottom: 0.75rem;
+  padding: 0.85rem 1rem;
+  border-radius: 1rem;
+  background: rgba(255, 223, 160, 0.92);
+  color: #5c4300;
+  font-size: 0.92rem;
+  font-weight: 700;
+  line-height: 1.4;
+  box-shadow: var(--shadow-card);
+}
+
 .top-bar {
   position: sticky;
   top: 0.75rem;

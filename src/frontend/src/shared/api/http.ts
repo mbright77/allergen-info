@@ -29,13 +29,23 @@ export async function fetchJson<T>(
   schema: z.ZodType<T>,
   init?: RequestInit,
 ): Promise<T> {
-  const response = await fetch(input, {
-    headers: {
-      Accept: 'application/json',
-      ...(init?.headers ?? {}),
-    },
-    ...init,
-  })
+  let response: Response
+
+  try {
+    response = await fetch(input, {
+      headers: {
+        Accept: 'application/json',
+        ...(init?.headers ?? {}),
+      },
+      ...init,
+    })
+  } catch (error) {
+    if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+      throw new ApiError('You appear to be offline. Saved and cached data remain available.', 0)
+    }
+
+    throw new ApiError(error instanceof Error ? error.message : 'Network request failed', 0)
+  }
 
   if (!response.ok) {
     const message = await parseError(response)
