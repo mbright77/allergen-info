@@ -104,23 +104,41 @@ export function ProductResultPage() {
             </section>
           ) : null}
 
-          <div className={`hero-card hero-card--${heroCopy.className} stack-md`}>
+          <div className={`hero-card hero-card--${heroCopy.className} hero-card--result stack-md`}>
+            <div className="hero-card__icon-shell" aria-hidden="true">
+              <span className="material-symbols-outlined hero-card__icon">{getHeroIcon(resolvedAnalysis.analysis.overallStatus)}</span>
+            </div>
             <p className="eyebrow eyebrow--light">{heroCopy.eyebrow}</p>
             <h1 className="display-title display-title--light">{heroCopy.title}</h1>
             <p className="supporting-text supporting-text--light">{heroCopy.description}</p>
           </div>
 
-          <section className="content-card stack-md">
-            <p className="eyebrow">Product summary</p>
-            <h2 className="section-title">{resolvedAnalysis.product.name}</h2>
-            <p className="supporting-text">
-              {[resolvedAnalysis.product.brand, resolvedAnalysis.product.category]
-                .filter(Boolean)
-                .join(' • ') || 'Product details'}
-            </p>
-            {resolvedAnalysis.product.subtitle ? (
-              <p className="supporting-text">{resolvedAnalysis.product.subtitle}</p>
-            ) : null}
+          <section className="result-product-card">
+            <div className="result-product-card__media" aria-hidden="true">
+              <span>{getProductMonogram(resolvedAnalysis.product.brand, resolvedAnalysis.product.name)}</span>
+            </div>
+            <div className="stack-sm">
+              <p className="eyebrow">{resolvedAnalysis.product.category ?? 'Product summary'}</p>
+              <h2 className="section-title">{resolvedAnalysis.product.name}</h2>
+              <p className="supporting-text">
+                {[resolvedAnalysis.product.brand, resolvedAnalysis.product.subtitle]
+                  .filter(Boolean)
+                  .join(' • ') || 'Product details'}
+              </p>
+            </div>
+          </section>
+
+          <section className="result-bento-grid">
+            <article className="status-summary-card stack-sm">
+              <p className="eyebrow">Analysis</p>
+              <p className="status-summary-card__value">{formatOverallStatus(resolvedAnalysis.analysis.overallStatus)}</p>
+            </article>
+            <article className="status-summary-card stack-sm">
+              <p className="eyebrow">Your profile</p>
+              <p className="status-summary-card__value">
+                {resolvedAnalysis.analysis.checkedAllergens.length} allergens checked
+              </p>
+            </article>
           </section>
 
           <section className="content-card stack-md">
@@ -255,4 +273,23 @@ function formatAllergenCode(code: string) {
     .split('_')
     .map((segment) => segment.charAt(0).toUpperCase() + segment.slice(1))
     .join(' ')
+}
+
+function getHeroIcon(status: AnalysisOverallStatus) {
+  switch (status) {
+    case 'Safe':
+      return 'check_circle'
+    case 'MayContain':
+      return 'warning'
+    case 'Contains':
+      return 'error'
+    default:
+      return 'help'
+  }
+}
+
+function getProductMonogram(brand: string | null | undefined, name: string) {
+  const source = (brand ?? name).trim()
+  const parts = source.split(/\s+/).filter(Boolean)
+  return parts.slice(0, 2).map((part) => part[0]?.toUpperCase() ?? '').join('') || 'SS'
 }

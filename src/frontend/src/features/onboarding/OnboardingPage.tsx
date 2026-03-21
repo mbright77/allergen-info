@@ -18,17 +18,20 @@ export function OnboardingPage() {
   }
 
   return (
-    <section className="stack-xl">
-      <div className="content-card stack-lg">
+    <section className="stack-xl onboarding-page">
+      <div className="onboarding-hero stack-lg">
         <p className="eyebrow">Allergy Setup</p>
-        <h1 className="display-title">Create your personal safety profile.</h1>
-        <p className="supporting-text">
-          Choose the allergens to monitor so SafeScan can highlight warnings instantly.
+        <h1 className="display-title">
+          Define your <br />
+          <span className="display-accent">Safe Zone</span>
+        </h1>
+        <p className="supporting-text onboarding-hero__text">
+          Select the allergens you need to avoid. We&apos;ll alert you instantly during your next scan.
         </p>
       </div>
 
-      <section className="content-card stack-md">
-        <h2 className="section-title">Select allergens</h2>
+      <section className="stack-md">
+        <h2 className="section-title section-title--offset">Select allergens</h2>
         {allergensQuery.isLoading ? <p className="supporting-text">Loading allergen options...</p> : null}
 
         {allergensQuery.isError ? (
@@ -41,7 +44,7 @@ export function OnboardingPage() {
         ) : null}
 
         {allergensQuery.data ? (
-          <div className="chip-grid">
+          <div className="allergen-grid">
             {allergensQuery.data.map((allergen) => {
               const isSelected = selectedAllergens.includes(allergen.code)
 
@@ -49,11 +52,14 @@ export function OnboardingPage() {
                 <button
                   key={allergen.code}
                   type="button"
-                  className={isSelected ? 'selection-chip selection-chip--selected' : 'selection-chip'}
+                  className={isSelected ? 'allergen-tile allergen-tile--selected' : 'allergen-tile'}
                   aria-pressed={isSelected}
                   onClick={() => toggleAllergen(allergen.code)}
                 >
-                  {allergen.label}
+                  <span className="allergen-tile__icon material-symbols-outlined" aria-hidden="true">
+                    {getAllergenIcon(allergen.code)}
+                  </span>
+                  <span className="allergen-tile__label">{allergen.label}</span>
                 </button>
               )
             })}
@@ -61,7 +67,7 @@ export function OnboardingPage() {
         ) : null}
       </section>
 
-      <section className="content-card content-card--accent stack-sm">
+      <section className="content-card content-card--soft-highlight stack-sm onboarding-note">
         <p className="eyebrow">Privacy</p>
         <p className="supporting-text">
           Your allergy profile is stored locally first and routed through the backend API contract.
@@ -76,8 +82,35 @@ export function OnboardingPage() {
           disabled={selectedAllergens.length === 0 || allergensQuery.isLoading || allergensQuery.isError}
         >
           Save &amp; Start Scanning
+          <span className="material-symbols-outlined" aria-hidden="true">
+            arrow_forward
+          </span>
         </button>
       </div>
     </section>
   )
+}
+
+function getAllergenIcon(code: string) {
+  switch (code) {
+    case 'milk_protein':
+    case 'lactose':
+      return 'water_drop'
+    case 'egg':
+      return 'egg'
+    case 'gluten':
+      return 'bakery_dining'
+    case 'nuts':
+      return 'eco'
+    case 'soy':
+      return 'grass'
+    case 'peanuts':
+      return 'spa'
+    case 'fish':
+      return 'set_meal'
+    case 'shellfish':
+      return 'restaurant'
+    default:
+      return 'shield'
+  }
 }

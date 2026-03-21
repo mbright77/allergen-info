@@ -12,7 +12,7 @@ export function ProfilePage() {
 
   return (
     <section className="stack-xl">
-      <section className="content-card stack-lg">
+      <section className="content-card stack-lg secondary-screen-hero">
         <p className="eyebrow">Profile</p>
         <h1 className="display-title">Adjust your safety profile.</h1>
         <p className="supporting-text">Your selections are stored locally and reused across search, scan, and result analysis.</p>
@@ -22,7 +22,7 @@ export function ProfilePage() {
         <p className="eyebrow">Monitored allergens</p>
         {allergensQuery.isLoading ? <p className="supporting-text">Loading your available allergen options...</p> : null}
         {allergensQuery.data ? (
-          <div className="chip-grid">
+          <div className="allergen-grid">
             {allergensQuery.data.map((allergen) => {
               const isSelected = selectedAllergens.includes(allergen.code)
 
@@ -30,11 +30,14 @@ export function ProfilePage() {
                 <button
                   key={allergen.code}
                   type="button"
-                  className={isSelected ? 'selection-chip selection-chip--selected' : 'selection-chip'}
+                  className={isSelected ? 'allergen-tile allergen-tile--selected' : 'allergen-tile'}
                   aria-pressed={isSelected}
                   onClick={() => toggleAllergen(allergen.code)}
                 >
-                  {allergen.label}
+                  <span className="allergen-tile__icon material-symbols-outlined" aria-hidden="true">
+                    {getAllergenIcon(allergen.code)}
+                  </span>
+                  <span className="allergen-tile__label">{allergen.label}</span>
                 </button>
               )
             })}
@@ -42,7 +45,7 @@ export function ProfilePage() {
         ) : null}
       </section>
 
-      <section className="content-card content-card--accent stack-sm">
+      <section className="content-card content-card--soft-highlight stack-sm">
         <p className="eyebrow">Profile summary</p>
         <p className="supporting-text">
           {selectedAllergens.length > 0
@@ -52,4 +55,28 @@ export function ProfilePage() {
       </section>
     </section>
   )
+}
+
+function getAllergenIcon(code: string) {
+  switch (code) {
+    case 'milk_protein':
+    case 'lactose':
+      return 'water_drop'
+    case 'egg':
+      return 'egg'
+    case 'gluten':
+      return 'bakery_dining'
+    case 'nuts':
+      return 'eco'
+    case 'soy':
+      return 'grass'
+    case 'peanuts':
+      return 'spa'
+    case 'fish':
+      return 'set_meal'
+    case 'shellfish':
+      return 'restaurant'
+    default:
+      return 'shield'
+  }
 }

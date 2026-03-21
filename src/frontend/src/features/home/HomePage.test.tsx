@@ -88,6 +88,6 @@ describe('HomePage', () => {
     expect(screen.getByText(/3 allergens/i)).toBeInTheDocument()
     expect(screen.getByText(/1 items/i)).toBeInTheDocument()
     expect(screen.getByText(/2 products/i)).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'oat milk' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /recent search oat milk/i })).toBeInTheDocument()
   })
 })

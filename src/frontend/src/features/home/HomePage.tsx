@@ -11,10 +11,10 @@ export function HomePage() {
 
   return (
     <section className="stack-xl">
-      <section className="content-card stack-lg">
+      <section className="hero-card hero-card--safe home-hero stack-lg">
         <p className="eyebrow">Welcome</p>
-        <h1 className="display-title">Safe choices, faster.</h1>
-        <p className="supporting-text">
+        <h1 className="display-title display-title--light">Safe choices, faster.</h1>
+        <p className="supporting-text supporting-text--light">
           Your profile is active with {selectedAllergens.length} monitored allergens. Start from scanning or jump back into a recent product.
         </p>
         <div className="action-row">
@@ -29,7 +29,7 @@ export function HomePage() {
 
       <section className="content-card stack-md">
         <p className="eyebrow">Snapshot</p>
-        <div className="status-summary-grid">
+        <div className="result-bento-grid">
           <HomeMetricCard label="Saved profile" value={`${selectedAllergens.length} allergens`} />
           <HomeMetricCard label="Favorites" value={`${favorites.length} items`} />
           <HomeMetricCard label="Recent checks" value={`${history.length} products`} />
@@ -39,10 +39,20 @@ export function HomePage() {
       <section className="content-card stack-md">
         <p className="eyebrow">Recent searches</p>
         {recentSearches.length > 0 ? (
-          <div className="chip-row">
+          <div className="saved-item-list">
             {recentSearches.slice(0, 4).map((entry) => (
-              <Link key={`${entry.query}-${entry.updatedAt}`} to={`/search/results?q=${encodeURIComponent(entry.query)}`} className="filter-chip secondary-action--link">
-                {entry.query}
+              <Link
+                key={`${entry.query}-${entry.updatedAt}`}
+                to={`/search/results?q=${encodeURIComponent(entry.query)}`}
+                className="saved-item-card saved-item-card--compact"
+              >
+                <div className="saved-item-card__media" aria-hidden="true">
+                  <span>#{entry.query.charAt(0).toUpperCase()}</span>
+                </div>
+                <div className="stack-sm saved-item-card__body">
+                  <p className="eyebrow">Recent search</p>
+                  <h2 className="section-title">{entry.query}</h2>
+                </div>
               </Link>
             ))}
           </div>

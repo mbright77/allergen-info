@@ -35,7 +35,8 @@ describe('app router', () => {
       </QueryClientProvider>,
     )
 
-    expect(screen.getByText(/Create your personal safety profile/i)).toBeInTheDocument()
+    expect(screen.getByText(/Define your/i)).toBeInTheDocument()
+    expect(screen.getByText(/Safe Zone/i)).toBeInTheDocument()
   })
 
   it('renders an offline banner when the browser is offline', () => {

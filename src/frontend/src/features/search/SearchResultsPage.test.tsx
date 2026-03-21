@@ -77,7 +77,7 @@ describe('SearchResultsPage', () => {
     const { router } = renderSearchResultsPage()
 
     const cardButton = await screen.findByRole('button', { name: /view details for the original oat milk/i })
-    expect(screen.getByText(/Clean Label/i)).toBeInTheDocument()
+    expect(screen.getAllByText(/Clean Label/i)).toHaveLength(2)
 
     await user.click(cardButton)
 

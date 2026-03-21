@@ -94,11 +94,14 @@ export function SearchResultsPage() {
 
       {!searchQuery.isLoading && results.length > 0 ? (
         <div className="search-grid">
-          {results.map((result) => {
+          {results.map((result, index) => {
             const statusClassName = toStatusClassName(result.previewStatus)
 
             return (
-              <article key={result.gtin} className="search-card">
+              <article
+                key={result.gtin}
+                className={index === 0 ? 'search-card search-card--featured' : 'search-card'}
+              >
                 <button
                   type="button"
                   className="search-card__button"
@@ -106,6 +109,9 @@ export function SearchResultsPage() {
                   aria-label={`View details for ${result.name}`}
                 >
                   <div className={`search-card__media search-card__media--${statusClassName}`}>
+                    <div className="search-card__artwork" aria-hidden="true">
+                      <span className="search-card__monogram">{getBrandMonogram(result.brand, result.name)}</span>
+                    </div>
                     {result.previewStatus ? (
                       <span className={`status-badge status-badge--${statusClassName}`}>
                         {formatPreviewStatus(result.previewStatus)}
@@ -116,6 +122,10 @@ export function SearchResultsPage() {
                     <p className="eyebrow">{result.brand ?? 'Product'}</p>
                     <h2 className="section-title">{result.name}</h2>
                     <p className="supporting-text">{getSearchCardMeta(result)}</p>
+                    <div className="search-card__meta-row">
+                      {result.previewBadge ? <span className="search-insight search-insight--primary">{result.previewBadge}</span> : null}
+                      {result.category ? <span className="search-insight">{result.category}</span> : null}
+                    </div>
                     {result.previewNote ? <p className="search-card__note">{result.previewNote}</p> : null}
                   </div>
                 </button>
@@ -126,4 +136,10 @@ export function SearchResultsPage() {
       ) : null}
     </section>
   )
+}
+
+function getBrandMonogram(brand: string | null | undefined, name: string) {
+  const source = (brand ?? name).trim()
+  const parts = source.split(/\s+/).filter(Boolean)
+  return parts.slice(0, 2).map((part) => part[0]?.toUpperCase() ?? '').join('') || 'SS'
 }
