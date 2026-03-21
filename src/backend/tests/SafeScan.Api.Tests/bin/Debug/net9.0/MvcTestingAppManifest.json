@@ -1,6 +1,0 @@
-{
-  "SafeScan.Api, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null": "\/home\/michael\/Dev\/allergen-info\/src\/backend\/src\/SafeScan.Api",
-  "SafeScan.Application, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null": "\/home\/michael\/Dev\/allergen-info\/src\/backend\/src\/SafeScan.Application",
-  "SafeScan.Domain, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null": "\/home\/michael\/Dev\/allergen-info\/src\/backend\/src\/SafeScan.Domain",
-  "SafeScan.Infrastructure, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null": "\/home\/michael\/Dev\/allergen-info\/src\/backend\/src\/SafeScan.Infrastructure"
-}
