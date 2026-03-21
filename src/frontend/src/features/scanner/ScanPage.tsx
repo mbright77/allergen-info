@@ -88,11 +88,20 @@ export function ScanPage() {
         </button>
 
         {scanner.errorMessage ? (
-          <div className="scanner-status scanner-status--warning" role="status">
+          <div className="scanner-status scanner-status--warning" role="alert">
             <p className="eyebrow eyebrow--light">Scanner status</p>
             <p className="supporting-text supporting-text--light">{scanner.errorMessage}</p>
           </div>
-        ) : null}
+        ) : (
+          <div className="scanner-status" role="status" aria-live="polite">
+            <p className="eyebrow eyebrow--light">Scanner status</p>
+            <p className="supporting-text supporting-text--light">
+              {scanner.status === 'requesting' && 'Requesting camera access...'}
+              {scanner.status === 'active' && 'Scanner ready. Position the barcode in the frame.'}
+              {scanner.status === 'idle' && 'Scanner initializing...'}
+            </p>
+          </div>
+        )}
 
         {recentSearches.length > 0 ? (
           <section className="recent-searches stack-sm">

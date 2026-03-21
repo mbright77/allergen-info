@@ -50,10 +50,10 @@ export function SearchResultsPage() {
         <p className="supporting-text">Search results for</p>
         <h1 className="display-title display-title--italic">'{query || 'Search'}'</h1>
         <div className="chip-row">
-          <span className="filter-chip filter-chip--active">All Results</span>
-          <span className="filter-chip">Organic</span>
-          <span className="filter-chip">Unsweetened</span>
-          <span className="filter-chip">Gluten-Free</span>
+          <button type="button" className="filter-chip filter-chip--active" disabled aria-label="Filter: All Results (active)">All Results</button>
+          <button type="button" className="filter-chip" disabled aria-label="Filter: Organic (coming soon)">Organic</button>
+          <button type="button" className="filter-chip" disabled aria-label="Filter: Unsweetened (coming soon)">Unsweetened</button>
+          <button type="button" className="filter-chip" disabled aria-label="Filter: Gluten-Free (coming soon)">Gluten-Free</button>
         </div>
       </div>
 
@@ -93,46 +93,81 @@ export function SearchResultsPage() {
       ) : null}
 
       {!searchQuery.isLoading && results.length > 0 ? (
-        <div className="search-grid">
-          {results.map((result, index) => {
-            const statusClassName = toStatusClassName(result.previewStatus)
+        <>
+          <div className="search-grid">
+            {results.map((result, index) => {
+              const statusClassName = toStatusClassName(result.previewStatus)
 
-            return (
-              <article
-                key={result.gtin}
-                className={index === 0 ? 'search-card search-card--featured' : 'search-card'}
-              >
-                <button
-                  type="button"
-                  className="search-card__button"
-                  onClick={() => handleSelectResult(result)}
-                  aria-label={`View details for ${result.name}`}
+              return (
+                <article
+                  key={result.gtin}
+                  className={index === 0 ? 'search-card search-card--featured' : 'search-card'}
                 >
-                  <div className={`search-card__media search-card__media--${statusClassName}`}>
-                    <div className="search-card__artwork" aria-hidden="true">
-                      <span className="search-card__monogram">{getBrandMonogram(result.brand, result.name)}</span>
+                  <button
+                    type="button"
+                    className="search-card__button"
+                    onClick={() => handleSelectResult(result)}
+                    aria-label={`View details for ${result.name}`}
+                  >
+                    <div className={`search-card__media search-card__media--${statusClassName}`}>
+                      <div className="search-card__artwork" aria-hidden="true">
+                        <span className="search-card__monogram">{getBrandMonogram(result.brand, result.name)}</span>
+                      </div>
+                      {result.previewStatus ? (
+                        <span className={`status-badge status-badge--${statusClassName}`}>
+                          {formatPreviewStatus(result.previewStatus)}
+                        </span>
+                      ) : null}
                     </div>
-                    {result.previewStatus ? (
-                      <span className={`status-badge status-badge--${statusClassName}`}>
-                        {formatPreviewStatus(result.previewStatus)}
-                      </span>
-                    ) : null}
-                  </div>
-                  <div className="stack-sm search-card__body">
-                    <p className="eyebrow">{result.brand ?? 'Product'}</p>
-                    <h2 className="section-title">{result.name}</h2>
-                    <p className="supporting-text">{getSearchCardMeta(result)}</p>
-                    <div className="search-card__meta-row">
-                      {result.previewBadge ? <span className="search-insight search-insight--primary">{result.previewBadge}</span> : null}
-                      {result.category ? <span className="search-insight">{result.category}</span> : null}
+                    <div className="stack-sm search-card__body">
+                      <p className="eyebrow">{result.brand ?? 'Product'}</p>
+                      <h2 className="section-title">{result.name}</h2>
+                      <p className="supporting-text">{getSearchCardMeta(result)}</p>
+                      <div className="search-card__meta-row">
+                        {result.previewBadge ? <span className="search-insight search-insight--primary">{result.previewBadge}</span> : null}
+                        {result.category ? <span className="search-insight">{result.category}</span> : null}
+                      </div>
+                      {result.previewNote ? <p className="search-card__note">{result.previewNote}</p> : null}
                     </div>
-                    {result.previewNote ? <p className="search-card__note">{result.previewNote}</p> : null}
-                  </div>
-                </button>
-              </article>
-            )
-          })}
-        </div>
+                  </button>
+                </article>
+              )
+            })}
+          </div>
+
+          <section className="search-grid">
+            <article className="search-card search-card--editorial search-card--editorial-feature">
+              <div className="search-card__art-panel" aria-hidden="true">
+                <span className="search-card__art-panel-bottle">O</span>
+              </div>
+              <div className="stack-sm search-card__body">
+                <p className="search-insight search-insight--editorial">Editor&apos;s Choice</p>
+                <h2 className="display-title search-editorial-title">Milked Oats, simplified.</h2>
+                <p className="supporting-text">
+                  The cleanest oat-milk options usually keep the ingredient list short and the emulsifiers out.
+                </p>
+                <p className="search-editorial-score">98/100 Purity Score</p>
+              </div>
+            </article>
+
+            <article className="search-card search-card--notice">
+              <div className="stack-md">
+                <span className="material-symbols-outlined search-card__notice-icon" aria-hidden="true">
+                  warning
+                </span>
+                <div className="stack-sm">
+                  <h2 className="section-title search-notice-title">Notice anything?</h2>
+                  <p className="supporting-text supporting-text--light">
+                    Some oat milks contain seed oils and phosphates. Check the caution flags before buying.
+                  </p>
+                </div>
+              </div>
+              <button type="button" className="search-notice-action">
+                Learn about additives
+              </button>
+            </article>
+          </section>
+        </>
       ) : null}
     </section>
   )
