@@ -26,7 +26,7 @@ export function OnboardingPage() {
           <span className="display-accent">Safe Zone</span>
         </h1>
         <p className="supporting-text onboarding-hero__text">
-          Select the allergens you need to avoid. We&apos;ll alert you instantly during your next scan.
+          Select the allergens you need to avoid. You can search first, then launch the camera only when you want a live scan.
         </p>
       </div>
 
@@ -81,7 +81,7 @@ export function OnboardingPage() {
           onClick={handleSave}
           disabled={selectedAllergens.length === 0 || allergensQuery.isLoading || allergensQuery.isError}
         >
-          Save &amp; Start Scanning
+          Save &amp; Continue to Scan
           <span className="material-symbols-outlined" aria-hidden="true">
             arrow_forward
           </span>

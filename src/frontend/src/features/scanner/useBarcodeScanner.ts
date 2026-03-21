@@ -16,6 +16,10 @@ export function useBarcodeScanner({ enabled, onDetected }: UseBarcodeScannerOpti
 
   useEffect(() => {
     if (!enabled || typeof window === 'undefined') {
+      setStatus('idle')
+      setErrorMessage(null)
+      scannerRef.current?.stop()
+      scannerRef.current = null
       return
     }
 
@@ -35,6 +39,8 @@ export function useBarcodeScanner({ enabled, onDetected }: UseBarcodeScannerOpti
     }
 
     if (typeof navigator === 'undefined' || !navigator.mediaDevices?.getUserMedia) {
+      setStatus('unsupported')
+      setErrorMessage('Live barcode scanning is not available in this browser right now.')
       return
     }
 

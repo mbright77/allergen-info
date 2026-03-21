@@ -169,6 +169,8 @@ test('scan route can navigate directly to a product result', async ({ page }) =>
 
   await page.goto('/scan')
 
+  await page.getByRole('button', { name: /tap to scan/i }).click()
+
   await expect(page).toHaveURL(/\/results\/1735000111001$/)
   await expect(page.getByText(/Safe to enjoy/i)).toBeVisible()
 })

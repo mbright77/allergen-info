@@ -15,7 +15,7 @@ export function HomePage() {
         <p className="eyebrow">Welcome</p>
         <h1 className="display-title display-title--light">Safe choices, faster.</h1>
         <p className="supporting-text supporting-text--light">
-          Your profile is active with {selectedAllergens.length} monitored allergens. Start from scanning or jump back into a recent product.
+          Your profile is active with {selectedAllergens.length} monitored allergens. Start with search, or launch the camera only when you are ready to scan.
         </p>
         <div className="action-row">
           <Link to="/scan" className="primary-action primary-action--link">
@@ -57,7 +57,7 @@ export function HomePage() {
             ))}
           </div>
         ) : (
-          <p className="supporting-text">Recent searches will appear here after you search from the scanner screen.</p>
+          <p className="supporting-text">Recent searches will appear here after you search from the scanner screen or launch a manual scan.</p>
         )}
       </section>
     </section>

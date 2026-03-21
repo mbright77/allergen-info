@@ -100,6 +100,7 @@ It assumes:
 - App boots cleanly
 - Shell visually follows mockups
 - Mobile layout and safe areas are handled correctly
+- Service worker registers in production builds and exposes a user-facing update prompt when a new version is available
 
 ---
 
@@ -174,12 +175,13 @@ It assumes:
 
 ### Tasks
 - Integrate ZXing on scanner route only
-- Implement camera permission flow
+- Implement explicit user-controlled camera launch flow
 - Add scanner frame overlay
 - Add torch control where supported
 - Add scan throttling / duplicate suppression
 - Map scanned GTIN into backend product lookup
 - Route successful lookup into result flow
+- Implement the inactive search-first scanner state from `stitch/scanner_with_search`
 
 ### Next session checklist
 - [x] Decide barcode library/package version compatible with current frontend stack
@@ -194,6 +196,7 @@ It assumes:
 - Supported devices can scan a barcode
 - Scan flow uses backend contracts, not local-only frontend mocks
 - Permission denial and scan failure are handled clearly
+- Visiting `/scan` does not request camera access until the user explicitly starts scanning
 
 ---
 
@@ -257,13 +260,16 @@ It assumes:
 - [x] Implement `Favorites`
 - [x] Implement `Profile`
 - [x] Implement `History`
+- Implement `Help`
 - [x] Ensure navigation works end-to-end
 - [x] Reuse placeholder backend where applicable
+- Add purposeful empty states for Home, Favorites, History, and Help
 
 ### Acceptance criteria
 - Navigation sections exist and do not dead-end
 - Favorites naming is consistent across app
 - Secondary screens have basic component test coverage
+- Help content explains result meanings, privacy/storage basics, and scanner/search fallback paths
 
 ---
 
@@ -287,10 +293,28 @@ It assumes:
 
 ---
 
+## Design Fidelity Follow-Ups
+
+### Tasks
+- Fix Material Symbols rendering in the frontend and Playwright snapshots so icon text no longer appears in visual output
+- Refine shared chrome in `/src/frontend/src/app/layout/AppShell.tsx` to better match the lighter, airier `stitch/` top bar and bottom nav
+- Improve scanner/search/result visual fidelity where current UI still feels flatter than the `stitch/` references
+- Replace or enhance monogram-only product media in search and result screens with richer editorial artwork treatments when product imagery is unavailable
+- Add a richer editorial supporting card to search results to better match the asymmetry and content variety in `stitch/search_results`
+
+### Acceptance criteria
+- Playwright snapshots render Material Symbols correctly across onboarding, scanner, search, and result flows
+- Shared app shell spacing and balance better match the `stitch/` mockups without breaking navigation behavior
+- Search and result screens move closer to the mockup hierarchy and tonal layering while preserving backend-driven content
+
+---
+
 ## Testing Backlog
 
 ### Frontend
 - Component tests for onboarding, scanner search field, search results, and result pages
+- Component tests for app-update prompt visibility and dismissal behavior
+- Component tests for unknown-result rendering and secondary-screen empty states
 - E2E tests for:
   - [x] onboarding -> scan
   - [x] onboarding -> search -> result
@@ -308,6 +332,60 @@ It assumes:
 - [x] Basic accessibility audit coverage is in place for onboarding and result screens
 - [x] Offline cached product-result fallback is covered by component and E2E tests
 - [x] Offline cached search fallback is covered by component and E2E tests
+- PWA update flow verification for waiting service worker detection and reload trigger
+- Search pagination/refinement behavior once interactive refinement is implemented
+
+---
+
+## PWA Update Flow Follow-Up
+
+### Tasks
+- Keep a production-only service worker registration path compatible with the frontend build toolchain
+- Add a SafeScan web app manifest with install metadata and icons
+- Use a prompt-based update strategy instead of immediate takeover
+- Cache the app shell and safe read-only requests only; avoid caching mutating API calls
+- Add an in-app update banner with `Update now` and `Later` actions
+- Trigger `skipWaiting` only after the user accepts the update
+- Reload the page once the new service worker takes control
+- Preserve local storage-backed profile, favorites, history, recent searches, and cached results across reloads
+- Add test coverage for the update prompt state where practical
+
+### Acceptance criteria
+- A new frontend deployment produces a waiting service worker instead of silently replacing the open app
+- The app surfaces a visible update banner when a waiting worker exists
+- Clicking `Update now` activates the waiting worker and reloads the page
+- Clicking `Later` dismisses the prompt for the current page session only
+- Local storage-backed user state remains available after the update reload
+
+---
+
+## Missing Requirements Follow-Up
+
+### Product and UX tasks
+- Define and implement a first-class `Unknown` result screen and copy strategy
+- Add Help route and screen implementation
+- Formalize Home/Favorites/History/Profile empty-state behavior
+- Decide whether search refinement chips are informational or interactive, then align UI and backend behavior
+- Add returning-user launch behavior that routes users with a saved profile into the main app experience
+
+### Backend and API tasks
+- Document and expose `GET /api/reference/allergens`
+- Expose `GET /health` readiness endpoint
+- Add stable error-response shape requirements for frontend rendering
+- Add paging or bounded-count behavior to search responses
+- Expose metadata for cached/partial/enriched search responses where useful
+
+### Offline and deployment tasks
+- Add base-path-aware frontend deployment configuration
+- Add explicit cache eviction/versioning rules for local storage-backed caches
+- Add HTTPS/CORS/runtime-config deployment requirements to deployment docs or manifests
+
+### Acceptance criteria
+- Unknown results are rendered distinctly from generic request errors
+- Help exists as a real destination and does not dead-end
+- Secondary screens have documented empty and populated states
+- Search behavior is explicit about ranking, paging, and chip behavior
+- Health/reference endpoints are part of the stable contract surface
 
 ### Backend
 - Unit tests for allergen mapping

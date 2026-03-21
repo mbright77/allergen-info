@@ -62,7 +62,7 @@ describe('OnboardingPage', () => {
 
     const milkProteinButton = await screen.findByRole('button', { name: 'Milk Protein' })
     await user.click(milkProteinButton)
-    await user.click(screen.getByRole('button', { name: /save & start scanning/i }))
+    await user.click(screen.getByRole('button', { name: /save & continue to scan/i }))
 
     await waitFor(() => {
       expect(router.state.location.pathname).toBe('/scan')

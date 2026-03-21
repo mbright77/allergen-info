@@ -51,4 +51,11 @@ describe('ScanPage', () => {
     expect(router.state.location.search).toContain('q=oat+milk')
     expect(JSON.parse(window.localStorage.getItem(RECENT_SEARCHES_STORAGE_KEY) ?? '[]')).toHaveLength(1)
   })
+
+  it('keeps the camera inactive until the user explicitly starts scanning', async () => {
+    renderScanPage()
+
+    expect(screen.getByRole('button', { name: /tap to scan/i })).toBeInTheDocument()
+    expect(screen.getByText(/camera stays off until you tap the scan card/i)).toBeInTheDocument()
+  })
 })

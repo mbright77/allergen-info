@@ -9,6 +9,7 @@ export function ScanPage() {
   const navigate = useNavigate()
   const { selectedAllergens } = useProfile()
   const [searchValue, setSearchValue] = useState('')
+  const [isScannerActive, setIsScannerActive] = useState(false)
   const recentSearches = useMemo(() => readRecentSearches(), [searchValue])
 
   const handleDetectedBarcode = useCallback(
@@ -19,7 +20,7 @@ export function ScanPage() {
   )
 
   const scanner = useBarcodeScanner({
-    enabled: true,
+    enabled: isScannerActive,
     onDetected: handleDetectedBarcode,
   })
 
@@ -61,31 +62,66 @@ export function ScanPage() {
           />
           <button type="submit" className="icon-button icon-button--ghost" aria-label="Submit search">
             <span className="material-symbols-outlined" aria-hidden="true">
-              photo_camera
+              arrow_forward
             </span>
           </button>
         </form>
 
-        <div className="stack-sm scanner-copy">
-          <h1 className="display-title display-title--light">Scanning Barcode</h1>
-          <p className="supporting-text supporting-text--light">
-            Align the barcode within the frame.
-          </p>
-        </div>
+        <section className="scanner-stage">
+          <div className="scanner-stage__status">
+            <span className="scanner-stage__status-dot" aria-hidden="true" />
+            <span>System Ready</span>
+          </div>
 
-        <div className="scanner-frame">
-          <video ref={scanner.videoRef} className="scanner-video" muted playsInline aria-label="Live barcode scanner preview" />
-          <span className="scanner-corner scanner-corner--tl" />
-          <span className="scanner-corner scanner-corner--tr" />
-          <span className="scanner-corner scanner-corner--bl" />
-          <span className="scanner-corner scanner-corner--br" />
-        </div>
+          {isScannerActive ? (
+            <div className="scanner-active stack-lg">
+              <div className="stack-sm scanner-copy scanner-copy--active">
+                <h1 className="display-title display-title--light">Scanning Barcode</h1>
+                <p className="supporting-text supporting-text--light">
+                  Align the barcode within the frame.
+                </p>
+              </div>
 
-        <button type="button" className="torch-button" aria-label="Toggle flashlight">
-          <span className="material-symbols-outlined" aria-hidden="true">
-            flashlight_on
-          </span>
-        </button>
+              <div className="scanner-frame">
+                <video ref={scanner.videoRef} className="scanner-video" muted playsInline aria-label="Live barcode scanner preview" />
+                <span className="scanner-corner scanner-corner--tl" />
+                <span className="scanner-corner scanner-corner--tr" />
+                <span className="scanner-corner scanner-corner--bl" />
+                <span className="scanner-corner scanner-corner--br" />
+              </div>
+
+              <div className="scanner-stage__actions">
+                <button type="button" className="secondary-action" onClick={() => setIsScannerActive(false)}>
+                  Stop scanning
+                </button>
+                <button type="button" className="torch-button" aria-label="Toggle flashlight">
+                  <span className="material-symbols-outlined" aria-hidden="true">
+                    flashlight_on
+                  </span>
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button
+              type="button"
+              className="scanner-launch"
+              onClick={() => setIsScannerActive(true)}
+              aria-describedby="scanner-launch-description"
+            >
+              <span className="scanner-launch__icon" aria-hidden="true">
+                <span className="material-symbols-outlined">barcode_scanner</span>
+              </span>
+              <h1 className="scanner-launch__title">Tap to Scan</h1>
+              <span id="scanner-launch-description" className="scanner-launch__description">
+                Search first if you want. When you are ready, tap here and the camera will activate for a live barcode scan.
+              </span>
+              <span className="scanner-corner scanner-corner--tl" />
+              <span className="scanner-corner scanner-corner--tr" />
+              <span className="scanner-corner scanner-corner--bl" />
+              <span className="scanner-corner scanner-corner--br" />
+            </button>
+          )}
+        </section>
 
         {scanner.errorMessage ? (
           <div className="scanner-status scanner-status--warning" role="alert">
@@ -96,9 +132,10 @@ export function ScanPage() {
           <div className="scanner-status" role="status" aria-live="polite">
             <p className="eyebrow eyebrow--light">Scanner status</p>
             <p className="supporting-text supporting-text--light">
-              {scanner.status === 'requesting' && 'Requesting camera access...'}
-              {scanner.status === 'active' && 'Scanner ready. Position the barcode in the frame.'}
-              {scanner.status === 'idle' && 'Scanner initializing...'}
+              {!isScannerActive && 'Camera stays off until you tap the scan card.'}
+              {isScannerActive && scanner.status === 'requesting' && 'Requesting camera access...'}
+              {isScannerActive && scanner.status === 'active' && 'Scanner ready. Position the barcode in the frame.'}
+              {isScannerActive && scanner.status === 'idle' && 'Scanner initializing...'}
             </p>
           </div>
         )}
@@ -127,6 +164,30 @@ export function ScanPage() {
             </div>
           </section>
         ) : null}
+
+        <section className="scanner-tips stack-md">
+          <h2 className="section-title section-title--offset">Tips for Precision Scanning</h2>
+          <div className="scanner-tips__grid">
+            <article className="scanner-tip-card stack-sm">
+              <span className="material-symbols-outlined scanner-tip-card__icon" aria-hidden="true">
+                lightbulb
+              </span>
+              <h3 className="section-title scanner-tip-card__title">Good Lighting</h3>
+              <p className="supporting-text">
+                Ensure the product is in a well-lit area to help our AI identify fine print ingredients.
+              </p>
+            </article>
+            <article className="scanner-tip-card stack-sm">
+              <span className="material-symbols-outlined scanner-tip-card__icon" aria-hidden="true">
+                straighten
+              </span>
+              <h3 className="section-title scanner-tip-card__title">Keep it Steady</h3>
+              <p className="supporting-text">
+                Hold your phone parallel to the barcode for the fastest recognition speed.
+              </p>
+            </article>
+          </div>
+        </section>
       </div>
 
       <div className="analysis-banner">

@@ -166,6 +166,7 @@ The following are implied but not yet designed:
 - Profile
 - History
 - Help
+- Favorites
 
 ---
 
@@ -181,12 +182,14 @@ The following are implied but not yet designed:
 
 ## 8.2 Scan flow
 1. User opens scanner
-2. App requests camera access if needed
-3. User aligns barcode in scanning frame
-4. Barcode is detected
-5. App resolves product by GTIN
-6. App analyzes product against selected allergens
-7. User is shown the appropriate result screen
+2. App shows a search-first scanner screen with the camera inactive by default
+3. User explicitly taps a scan control to launch the camera
+4. App requests camera access if needed
+5. User aligns barcode in scanning frame
+6. Barcode is detected
+7. App resolves product by GTIN
+8. App analyzes product against selected allergens
+9. User is shown the appropriate result screen
 
 ## 8.3 Free-text search flow
 1. User opens the scanner screen and uses the inline search field, or navigates back into a prior search results view
@@ -215,6 +218,18 @@ The following are implied but not yet designed:
 2. Product has a `may contain` / trace warning
 3. User sees a yellow caution state
 4. User decides based on tolerance and context
+
+## 8.7 Unknown result flow
+1. Product data is incomplete, contradictory, or insufficient for a trustworthy determination
+2. User sees an explicit `Unknown` result state rather than a misleading safe/caution/warning conclusion
+3. The UI explains why the result is unknown in plain language
+4. The user can review raw product details, save the item, or retry later
+
+## 8.8 Returning-user launch flow
+1. User reopens the app after previously saving a profile
+2. App restores locally stored profile and collections before rendering dependent flows
+3. App opens to the normal app experience rather than forcing onboarding again unless no profile exists
+4. User can continue from Home, Scan, History, Favorites, or Profile without re-entering allergen selections
 
 ---
 
@@ -265,6 +280,9 @@ The system shall:
 - Support flashlight/torch where available
 - Prevent multiple rapid duplicate scans
 - Recover gracefully from scan failures
+- Keep the camera inactive until the user explicitly chooses to start scanning
+- Allow users to stay in a search-first mode without forcing a camera permission prompt on page load
+- Provide a clear `Tap to Scan` or equivalent launch affordance before camera activation
 
 ## 9.3 Product Lookup
 The system shall:
@@ -285,6 +303,9 @@ The system shall:
 - Prefer exact GTIN/EAN matches over partial text matches when identifiable
 - URL-encode search input safely because DABAS uses the search term as a path parameter
 - Support optional result enrichment so search cards can display preview safety states such as `Safe` or `Caution`
+- Limit the initial result set to a defined maximum page size and support backend-driven pagination or continuation when needed
+- Preserve selected allergen context when navigating between search, result, and scanner routes
+- Distinguish clearly between informational chips and functional refinements in the UI
 
 ### Search results presentation constraints from updated mockups
 - Search results are now an explicitly designed experience, not just a utility list.
@@ -293,6 +314,12 @@ The system shall:
 - The backend should treat these preview signals as optional enriched fields because the base DABAS search response does not include full allergen analysis.
 - If enrichment cannot be done immediately, the UI should degrade gracefully to identity-focused cards without misleading status badges.
 - The canonical main shell should use `SafeScan` branding and tabs for `Home`, `Scan`, `Favorites`, and `Profile`.
+
+### Search refinement requirements
+- If refinement chips are interactive, their filtering behavior must be backed by explicit frontend and backend logic rather than decorative placeholders.
+- If refinement chips are not yet interactive, they must be presented as informational tags and not resemble active controls.
+- Search ranking should prefer exact GTIN/EAN matches first, then exact brand/product-name matches, then broader text matches.
+- Search responses should expose enough metadata for the frontend to indicate whether results are partial, cached, or enriched.
 
 ### DABAS free-text search endpoints
 - `GET /DABASService/V2/articles/searchparameter/{searchparameter}/json`
@@ -318,6 +345,13 @@ The system shall:
 - `Contains`
 - `Unknown`
 
+### Unknown result rules
+- `Unknown` must be used when product data is missing, contradictory, unparseable, or otherwise insufficient for a trustworthy determination.
+- `Unknown` must not be downgraded to `Safe` merely because no explicit allergen match was found.
+- If any selected allergen is confirmed as `Contains`, the overall result must be `Contains` even if other parts of the product data are unknown.
+- If no allergen is confirmed as `Contains`, but at least one selected allergen is `MayContain`, the overall result must be `MayContain` unless contradictory data forces `Unknown`.
+- Explanation text for `Unknown` must state whether the uncertainty comes from missing ingredients, incomplete allergen statements, provider errors, or conflicting data.
+
 ### Per-allergen statuses
 - `Contains`
 - `MayContain`
@@ -342,6 +376,12 @@ The app shall store locally:
 - Cached products
 - Optional favorites entries
 
+### Local storage requirements
+- The app shall version local-storage keys so future schema migrations can be handled safely.
+- The app shall ignore or reset malformed locally stored data rather than crashing during startup.
+- The app shall cap bounded collections such as recent history and recent searches to prevent unbounded growth.
+- Cached product/search data should be eligible for eviction by age or count when practical.
+
 ## 9.8 Error States
 The app shall handle:
 - Camera permission denied
@@ -355,6 +395,25 @@ The app shall handle:
 - Backend/API unavailable
 - Incomplete product data
 - Offline usage
+
+### Error-state behavior requirements
+- User-facing errors must distinguish between offline fallback, backend failure, provider failure, and product-data incompleteness.
+- Errors that block the primary flow must provide an obvious next step such as retrying, searching manually, or returning to scan.
+- Unknown-result conditions must be presented as a first-class result state rather than a generic request error where possible.
+
+## 9.9 Secondary navigation sections
+The system shall provide:
+- A Home screen that summarizes the active allergy profile and offers quick entry points into scanning, recent history, and saved products.
+- A Favorites screen with empty, populated, and repeated-save states.
+- A History screen with empty and populated states showing prior product checks.
+- A Profile screen that allows editing the saved allergen selections after onboarding.
+- A Help screen that explains core app usage, result meanings, privacy basics, and fallback behavior when scanning/searching fails.
+
+## 9.10 Reference and operational endpoints
+The backend shall provide:
+- `GET /api/reference/allergens` for the canonical selectable allergen list.
+- `GET /health` or equivalent readiness endpoint for deployments and uptime checks.
+- Stable contract shapes for error responses that can be rendered meaningfully in the frontend.
 
 ---
 
@@ -381,22 +440,30 @@ Derived from `stitch/product_scanner/code.html` and `stitch/scanner_with_search/
 
 ### Required elements
 - Top app bar
-- Camera viewport
 - Inline search field overlaid near the top of the scanner experience
+- Large scanner placeholder card when the camera is inactive
+- Camera viewport after the user explicitly starts scanning
 - Scanner frame overlay
-- Instruction text
+- Instruction text that explains the camera launches only after tapping
 - Torch toggle
 - Scan interaction
 - Bottom navigation
 - Live analysis card
+- Editorial scanning tips or guidance blocks below the primary scanner card when space allows
+
+### Inactive scanner state requirements
+- The initial scanner screen should prioritize the search field and a large tappable scan-launch card.
+- The inactive scanner card should communicate `System Ready` or equivalent readiness without implying the camera is already active.
+- The inactive state should avoid triggering camera permission requests automatically.
 
 ### Required behavior
-- Ask for camera permission
+- Ask for camera permission only after the user explicitly chooses to start scanning
 - Decode barcode
 - Show lookup/loading state
 - Prevent accidental duplicate navigation
 - Allow text-based search entry without forcing the user to leave the scan context first
 - Support a secondary search trigger icon within the search field
+- Support returning from an active scanner state back to the inactive search-first state when practical
 
 ## 10.3 Search Results Screen
 Derived from `stitch/search_results/code.html`
@@ -417,6 +484,8 @@ Derived from `stitch/search_results/code.html`
 - Allow refinement via chips or follow-up search queries
 - Open the existing product result flow after selection
 - Gracefully handle cases where preview status badges are unavailable
+- Provide empty-state guidance for narrow, broad, and offline/cached-result scenarios
+- Preserve enough route state or URL state for refresh/share behavior to remain stable
 
 ## 10.4 Safe Result Screen
 Derived from `stitch/product_safe/code.html`
@@ -462,6 +531,79 @@ Not explicitly mocked, but required for full product logic.
 - Checked allergen list
 - Ingredients section
 - Next action CTA
+
+## 10.7 Unknown Result Screen
+
+### Required elements
+- Neutral unknown hero
+- Plain-language explanation of why the result is unknown
+- Product summary
+- Any available allergen statements or ingredients shown without overstating confidence
+- Retry / search-again CTA
+- Save/favorite option when product identity is known
+
+### Required behavior
+- Explain the uncertainty source clearly
+- Avoid implying safety through visual language or CTA wording
+- Allow the user to recover through retry, search, or scan-again actions
+
+## 10.8 Home Screen
+
+### Required elements
+- Welcome or status summary tied to the active profile
+- Quick action entry points into scan and recent activity
+- Summary cards for profile, history, and favorites
+- Clear empty-state guidance when the user has no recent activity yet
+
+### Required behavior
+- Reflect saved local profile state on load
+- Avoid dead ends when history or favorites are empty
+
+## 10.9 Favorites Screen
+
+### Required elements
+- Page header and supporting copy
+- Saved product list
+- Empty state
+- Navigation path back into product detail or scanning
+
+### Required behavior
+- Removing or adding favorites should update the local collection immediately
+- Empty and populated states must both be purposeful and informative
+
+## 10.10 History Screen
+
+### Required elements
+- Page header and supporting copy
+- Chronological list of recent product checks
+- Empty state
+
+### Required behavior
+- Most recent items appear first
+- Selecting a history item re-enters the product result flow when cached or fetchable data exists
+
+## 10.11 Profile Screen
+
+### Required elements
+- Saved allergen selections
+- Editable allergen grid or equivalent controls
+- Supporting privacy copy
+
+### Required behavior
+- Changes persist locally immediately or through an explicit save action
+- Updated profile affects subsequent scan/search/result flows
+
+## 10.12 Help Screen
+
+### Required elements
+- Overview of how scanning and search work
+- Explanation of `Safe`, `MayContain`, `Contains`, and `Unknown`
+- Privacy/storage explanation
+- Guidance for camera-denied and offline scenarios
+
+### Required behavior
+- Help content must be accessible without leaving the app shell
+- Copy must remain consistent with backend and result-state terminology
 
 ---
 
@@ -586,11 +728,28 @@ The application should target WCAG 2.1 AA where practical.
 - Announce important status changes to screen readers
 - Handle decorative images correctly
 - Keep content readable around fixed-position UI
+- Support zoom and text scaling up to at least 200% without blocking core actions
+- Respect reduced-motion preferences where animation is introduced
 
 ### Scanner-specific accessibility
 - Provide readable instructions over the camera background
 - Communicate permission and failure states in plain language
 - Offer manual retry paths
+
+### Result-state accessibility
+- Safe/caution/warning/unknown states must expose readable text labels in addition to visual styling.
+- Save/remove/favorite actions must announce state changes to screen readers.
+- Update prompts and offline banners must use polite or assertive live regions appropriate to their urgency.
+
+### PWA update behavior
+- The app must register a service worker in production builds.
+- The service worker must use a prompt-based update strategy rather than taking over open pages immediately.
+- When a new version is available, the UI should surface an in-app update notice with explicit actions such as `Update now` and `Later`.
+- Accepting an update should activate the waiting service worker and reload the page into the new version.
+- Dismissing the prompt may hide it for the current page session, but must not break the eventual update path.
+- Update-triggered reloads must preserve locally stored profile, favorites, history, recent searches, and cached product/search results.
+- Runtime caching should focus on the app shell and safe read-only requests; mutating requests must not be cached.
+- The app should clean up outdated service-worker caches when a new version is activated.
 
 ---
 
@@ -612,6 +771,9 @@ The application should target WCAG 2.1 AA where practical.
 - Installable manifest
 - Offline shell support
 - Graceful behavior for cached products offline
+- Prompt-based update discovery and activation
+- Explicit cache cleanup for obsolete app versions
+- Preserved local user state across update-triggered reloads
 
 ---
 
@@ -628,6 +790,10 @@ The application should target WCAG 2.1 AA where practical.
 - Inputs should be validated
 - External data should be treated carefully before rendering
 - Basic request throttling/logging should be supported in the backend
+- Production deployments must use HTTPS for both frontend and backend origins.
+- Backend CORS configuration must be limited to approved frontend origins.
+- Frontend runtime configuration must not embed private provider credentials.
+- A basic Content Security Policy should be supported where deployment infrastructure allows it.
 
 ---
 
@@ -675,6 +841,12 @@ The application should target WCAG 2.1 AA where practical.
 - Domain
 - Infrastructure
 - Integrations/Dabas adapter
+
+### Deployment and configuration requirements
+- The frontend must support deployment either at the site root or under a configured base path.
+- The frontend must resolve its backend API origin through environment-aware configuration rather than hard-coded production secrets.
+- The backend must support configuration-driven provider switching, origin allowlists, and environment-specific logging levels.
+- Deployments should expose health/readiness checks suitable for Kubernetes or reverse-proxy monitoring.
 
 ### Suggested backend root
 - `/src/backend`
@@ -826,6 +998,11 @@ The application should target WCAG 2.1 AA where practical.
 ## 17.2 Product search
 `GET /api/products/search?q={query}`
 
+### Query behavior
+- The endpoint should support explicit paging or bounded result counts.
+- The endpoint may accept selected allergen context for preview enrichment, but must still return identity results when enrichment is unavailable.
+- The response should indicate whether the payload was enriched, cached, partial, or from fallback data when that distinction is relevant to UX.
+
 ### Example response
 ```json
 {
@@ -914,6 +1091,35 @@ The application should target WCAG 2.1 AA where practical.
 - `POST /api/pantry`
 - `DELETE /api/pantry/{gtin}`
 
+## 17.5 Reference endpoint
+`GET /api/reference/allergens`
+
+### Example response
+```json
+{
+  "allergens": [
+    {
+      "code": "milk_protein",
+      "label": "Milk Protein"
+    },
+    {
+      "code": "lactose",
+      "label": "Lactose Intolerance"
+    }
+  ]
+}
+```
+
+## 17.6 Health endpoint
+`GET /health`
+
+### Example response
+```json
+{
+  "status": "Healthy"
+}
+```
+
 ---
 
 ## 18. Analysis Rules
@@ -932,6 +1138,7 @@ The analysis should not rely only on naive string matching. It should use:
 - synonym mappings
 - explicit `contains` vs `may contain` parsing
 - ingredient phrase normalization
+- deterministic precedence rules for `Contains`, `MayContain`, and `Unknown`
 
 ### Explicit milk-related analysis rule
 - `milk_protein` and `lactose` must be treated as separate domain concepts.
@@ -944,6 +1151,7 @@ Special handling may be needed for ambiguous or region-specific ingredient data,
 - oats vs gluten/celiac concerns
 - trace warnings
 - incomplete allergen declarations
+- conflicting provider fields or stale timestamps
 
 A dedicated allergen normalization document is recommended before production rollout.
 
@@ -1071,6 +1279,7 @@ A dedicated allergen normalization document is recommended before production rol
 - accessibility audit
 - performance tuning
 - offline support improvements
+- prompt-based PWA update flow
 - telemetry/logging
 - automated tests
 
@@ -1078,6 +1287,8 @@ A dedicated allergen normalization document is recommended before production rol
 - core flows work on real mobile devices
 - accessibility and PWA quality are acceptable
 - scan-to-result path is reliable
+- a newly deployed frontend build can be detected and applied through an in-app update prompt
+- local profile and saved collections remain available after accepting an update and reloading
 
 ---
 
@@ -1112,6 +1323,10 @@ A dedicated allergen normalization document is recommended before production rol
 - contains result
 - may contain result
 - offline with cached product
+- PWA install prompt and installed launch
+- deploy a new frontend build and verify the in-app update prompt appears
+- accept an update and verify the app reloads into the latest version
+- accept an update and verify profile, favorites, history, and cached product/search data still render after reload
 - large text / zoom
 - keyboard navigation
 - screen reader basics
