@@ -21,6 +21,8 @@ It is intended to guide an AI agent implementing:
 ### Mockups
 - `stitch/allergy_selection/code.html`
 - `stitch/product_scanner/code.html`
+- `stitch/scanner_with_search/code.html`
+- `stitch/search_results/code.html`
 - `stitch/product_safe/code.html`
 - `stitch/product_warning/code.html`
 
@@ -29,6 +31,9 @@ It is intended to guide an AI agent implementing:
 
 ### Notes
 - `stitch/safescan_allergen_scanner/code.html` appears to duplicate the onboarding screen.
+- Search is now explicitly represented in the mockups through an inline scanner search field and a dedicated search results screen.
+- `SafeScan` is the canonical product/app name for implementation. `PureScan` in one mockup should be treated as a mock artifact, not a separate product name.
+- `Favorites` is the canonical user-facing label for saved products in the main navigation. `Pantry` may still appear as CTA copy or a collection concept, but implementation routes and feature naming should use `Favorites` / `Saved Products` consistently.
 - The repo currently contains mockups and documentation, not an implementation scaffold.
 
 ---
@@ -39,7 +44,7 @@ A fast, trustworthy, mobile-first allergen scanner that helps users determine wh
 
 Core experience:
 1. User selects allergens to avoid
-2. User scans a product barcode
+2. User finds a product either by barcode scan or by free-text search
 3. System retrieves product data
 4. System evaluates product risk against the profile
 5. User receives a clear result:
@@ -53,7 +58,7 @@ Core experience:
 
 ### Primary goals
 - Allow users to define a personal allergen profile
-- Scan product barcodes using the device camera
+- Let users find products either by barcode scanning or free-text search
 - Retrieve product data by GTIN/EAN
 - Analyze ingredients and allergen data against selected allergens
 - Present highly legible, color-coded results
@@ -97,7 +102,11 @@ Core experience:
 - Onboarding / allergen selection
 - Local persistence of selected allergens
 - Scanner screen using device camera
+- Inline search entry on the scanner experience
+- Search results screen
 - GTIN-based product lookup
+- Free-text product lookup
+- .NET backend with static placeholder product/search data using the final API contracts
 - Result screens for:
   - Safe
   - Contains allergen
@@ -110,7 +119,7 @@ Core experience:
 ## 6.2 Future phases
 - Profile editing
 - Recent scan history screen
-- Pantry/favorites
+- Full favorites management
 - Nutrition detail view
 - Robust Dabas backend integration
 - Better offline behavior
@@ -124,10 +133,11 @@ Core experience:
 - Onboarding
 - Home
 - Scan
+- Search Results
 - Product Result
+- Favorites
 - Profile
 - History
-- Pantry / Saved
 - Help
 
 ### Recommended routes
@@ -135,16 +145,19 @@ Core experience:
 - `/onboarding`
 - `/home`
 - `/scan`
+- `/search/results`
 - `/results/:gtin`
+- `/favorites`
 - `/profile`
 - `/history`
-- `/pantry`
 - `/help`
 
 ### Notes
 The mockups fully define:
 - Onboarding
 - Scanner
+- Scanner with inline search
+- Search results
 - Safe result
 - Warning result
 
@@ -152,7 +165,6 @@ The following are implied but not yet designed:
 - Home
 - Profile
 - History
-- Pantry
 - Help
 
 ---
@@ -176,20 +188,29 @@ The following are implied but not yet designed:
 6. App analyzes product against selected allergens
 7. User is shown the appropriate result screen
 
-## 8.3 Safe result flow
+## 8.3 Free-text search flow
+1. User opens the scanner screen and uses the inline search field, or navigates back into a prior search results view
+2. User enters a product name, ingredient, brand, GTIN/EAN, or article number
+3. App submits the query to the backend search endpoint
+4. Backend calls the DABAS free-text search endpoint and returns normalized results
+5. User sees a search results screen with cards showing product identity and, where available, preview safety/status signals
+6. User selects a result
+7. App fetches full product detail and runs the existing allergen analysis flow
+
+## 8.4 Safe result flow
 1. Product contains no relevant allergens
 2. User sees a green-safe result
 3. User reviews ingredients and allergen checks
 4. User may save the product or scan another
 
-## 8.4 Warning result flow
+## 8.5 Warning result flow
 1. Product contains selected allergens
 2. User sees a red warning result
 3. Matching allergens are surfaced clearly
 4. Ingredients are highlighted inline
 5. User may scan another product
 
-## 8.5 Caution flow
+## 8.6 Caution flow
 1. Product does not contain a selected allergen directly
 2. Product has a `may contain` / trace warning
 3. User sees a yellow caution state
@@ -248,11 +269,43 @@ The system shall:
 ## 9.3 Product Lookup
 The system shall:
 - Retrieve product data by GTIN
+- Support free-text product search via backend-mediated DABAS integration
 - Display name, category, and ingredients
 - Display allergen-related data
 - Cache prior lookups for faster repeated access
 
-## 9.4 Allergen Analysis
+## 9.4 Free-text Search
+The system shall:
+- Allow users to search by product name, ingredient, manufacturer, brand, GTIN/EAN, or article number
+- Provide search entry directly from the scanner experience via an inline search field
+- Route all search traffic through the app backend rather than directly from the browser to DABAS
+- Normalize DABAS search results into a compact search-result DTO before returning them to the frontend
+- Support a lightweight result list that does not require full product hydration up front
+- Fetch full product detail only after the user selects a specific result
+- Prefer exact GTIN/EAN matches over partial text matches when identifiable
+- URL-encode search input safely because DABAS uses the search term as a path parameter
+- Support optional result enrichment so search cards can display preview safety states such as `Safe` or `Caution`
+
+### Search results presentation constraints from updated mockups
+- Search results are now an explicitly designed experience, not just a utility list.
+- Result cards should support visual status badges such as `SAFE` and `CAUTION`.
+- Result cards may also show secondary quality or editorial badges such as `Clean Label`, `Added Sugars`, `Certified Organic`, or similar summary metadata.
+- The backend should treat these preview signals as optional enriched fields because the base DABAS search response does not include full allergen analysis.
+- If enrichment cannot be done immediately, the UI should degrade gracefully to identity-focused cards without misleading status badges.
+- The canonical main shell should use `SafeScan` branding and tabs for `Home`, `Scan`, `Favorites`, and `Profile`.
+
+### DABAS free-text search endpoints
+- `GET /DABASService/V2/articles/searchparameter/{searchparameter}/json`
+- `GET /DABASService/V2/articles/basesearchparameter/{searchparameter}/json`
+
+### Recommended backend search strategy
+- Start with `basesearchparameter` for cleaner product-level results where appropriate
+- Fall back to `searchparameter` when broader matching is needed or when the base search returns no useful results
+- Normalize the returned `ArticleDateModel[]` into app-specific search result objects
+- After selection, resolve full product detail with `GET /DABASService/V2/article/gtin/{gtin}/json`
+- For high-fidelity search cards, optionally enrich the first N results by hydrating full product detail and running a lightweight analysis summary for each card
+
+## 9.5 Allergen Analysis
 The system shall:
 - Compare product data against selected allergens
 - Determine an overall result status
@@ -271,7 +324,7 @@ The system shall:
 - `NotFound`
 - `Unknown`
 
-## 9.5 Result Presentation
+## 9.6 Result Presentation
 The UI shall:
 - Use clear text labels, not color alone
 - Show a strong status hero
@@ -281,20 +334,24 @@ The UI shall:
 - Show readable ingredients section
 - Provide obvious next actions
 
-## 9.6 Local Persistence
+## 9.7 Local Persistence
 The app shall store locally:
 - Selected allergens
 - Recent scans
+- Recent searches
 - Cached products
-- Optional pantry/favorites entries
+- Optional favorites entries
 
-## 9.7 Error States
+## 9.8 Error States
 The app shall handle:
 - Camera permission denied
 - Camera unavailable
 - Barcode not detected
 - Unsupported barcode
 - Product not found
+- No search results
+- Search query too broad or malformed
+- Partial search enrichment failure where identity data is available but preview status is not
 - Backend/API unavailable
 - Incomplete product data
 - Offline usage
@@ -320,11 +377,12 @@ Derived from `stitch/allergy_selection/code.html`
 - Navigate to scanner when saved
 
 ## 10.2 Scanner Screen
-Derived from `stitch/product_scanner/code.html`
+Derived from `stitch/product_scanner/code.html` and `stitch/scanner_with_search/code.html`
 
 ### Required elements
 - Top app bar
 - Camera viewport
+- Inline search field overlaid near the top of the scanner experience
 - Scanner frame overlay
 - Instruction text
 - Torch toggle
@@ -337,8 +395,30 @@ Derived from `stitch/product_scanner/code.html`
 - Decode barcode
 - Show lookup/loading state
 - Prevent accidental duplicate navigation
+- Allow text-based search entry without forcing the user to leave the scan context first
+- Support a secondary search trigger icon within the search field
 
-## 10.3 Safe Result Screen
+## 10.3 Search Results Screen
+Derived from `stitch/search_results/code.html`
+
+### Required elements
+- Query context header showing the active search term
+- Filter chips or quick refinement chips
+- Editorial card-based result layout rather than a plain list
+- Status badges on cards where preview analysis is available
+- Support for mixed card sizes and editorial callout panels
+- Loading, empty, and error states
+- Clear transition from search result to analyzed product detail
+
+### Required behavior
+- Support search by product name, ingredient, manufacturer, brand, GTIN/EAN, or article number
+- Debounce or submit-based querying to avoid excessive backend calls
+- Preserve the user's query while browsing results
+- Allow refinement via chips or follow-up search queries
+- Open the existing product result flow after selection
+- Gracefully handle cases where preview status badges are unavailable
+
+## 10.4 Safe Result Screen
 Derived from `stitch/product_safe/code.html`
 
 ### Required elements
@@ -355,7 +435,7 @@ Derived from `stitch/product_safe/code.html`
 - Mark each as safe/not found when appropriate
 - Allow scan continuation via nav or CTA
 
-## 10.4 Warning Result Screen
+## 10.5 Warning Result Screen
 Derived from `stitch/product_warning/code.html`
 
 ### Required elements
@@ -372,7 +452,7 @@ Derived from `stitch/product_warning/code.html`
 - Trace warnings remain clearly separate
 - Ingredients map to highlighted allergens
 
-## 10.5 Caution Result Screen
+## 10.6 Caution Result Screen
 Not explicitly mocked, but required for full product logic.
 
 ### Required elements
@@ -406,8 +486,17 @@ This should not become a generic dashboard or standard enterprise app. The desir
 - Glassmorphism for sticky shell elements
 - Typography-led hierarchy
 - Clear semantic color use for status
+- Search should feel integrated into the scanner experience rather than bolted on as a separate utility
 
-## 11.3 Typography
+## 11.3 Search-specific design cues
+- The scanner search field should be translucent, glass-like, and visually integrated with the live camera background.
+- The search results screen should use editorial product cards, not a dense table or plain list.
+- Search result cards may mix product identity, preview safety state, and editorial guidance blocks.
+- Safety badges on search results should reuse the same semantic color system as the product result screens.
+- Filter chips should look intentional and tactile, not like generic browser pills.
+- Branding and navigation should be normalized to `SafeScan` even when mockup source files show `PureScan`.
+
+## 11.4 Typography
 Use:
 - `Manrope` for display/headlines
 - `Inter` for body/labels
@@ -418,7 +507,7 @@ Use:
 - Left-aligned body text
 - No overly dense content blocks
 
-## 11.4 Color tokens
+## 11.5 Color tokens
 Preserve these core values from the mockups/design guide:
 
 ### Surface system
@@ -449,7 +538,7 @@ Preserve these core values from the mockups/design guide:
 - `on_surface_variant`: `#41493e`
 - `outline_variant`: `#c0c9bb`
 
-## 11.5 CTA styling
+## 11.6 CTA styling
 ### Primary CTA
 - Signature gradient from `primary` to `primary_container`
 - Rounded full
@@ -461,14 +550,14 @@ Preserve these core values from the mockups/design guide:
 - Strong readable text
 - Minimal visual noise
 
-## 11.6 Layout and shell rules
+## 11.7 Layout and shell rules
 - Keep a centered mobile-column layout even on large screens
 - Use blurred top bar and bottom nav
 - Avoid heavy divider lines
 - Prefer spacing and surface changes over borders
 - Respect safe-area insets on mobile devices
 
-## 11.7 Status design rules
+## 11.8 Status design rules
 ### Safe
 - Green dominant hero
 - Green chips/badges
@@ -557,17 +646,18 @@ The application should target WCAG 2.1 AA where practical.
 - CSS variables for design tokens
 
 ### Suggested frontend structure
-- `src/app`
-- `src/features/onboarding`
-- `src/features/scanner`
-- `src/features/results`
-- `src/features/profile`
-- `src/features/history`
-- `src/features/pantry`
-- `src/shared/ui`
-- `src/shared/design`
-- `src/shared/api`
-- `src/shared/domain`
+- `/src/frontend/app`
+- `/src/frontend/features/onboarding`
+- `/src/frontend/features/search`
+- `/src/frontend/features/scanner`
+- `/src/frontend/features/results`
+- `/src/frontend/features/profile`
+- `/src/frontend/features/history`
+- `/src/frontend/features/favorites`
+- `/src/frontend/shared/ui`
+- `/src/frontend/shared/design`
+- `/src/frontend/shared/api`
+- `/src/frontend/shared/domain`
 
 ## 15.2 Backend
 ### Recommended stack
@@ -585,6 +675,20 @@ The application should target WCAG 2.1 AA where practical.
 - Domain
 - Infrastructure
 - Integrations/Dabas adapter
+
+### Suggested backend root
+- `/src/backend`
+- `/src/backend/src/SafeScan.Api`
+- `/src/backend/src/SafeScan.Application`
+- `/src/backend/src/SafeScan.Domain`
+- `/src/backend/src/SafeScan.Infrastructure`
+
+### Placeholder-backend strategy before DABAS access
+- Initial backend implementation must use static placeholder datasets and stable API contracts so frontend and backend work can proceed immediately.
+- The placeholder backend should expose the same endpoints planned for production, including GTIN lookup, free-text search, and analysis.
+- Static JSON fixtures or in-memory repositories should mirror expected normalized DTOs rather than raw mockup-specific shapes.
+- DABAS integration should be added behind a provider abstraction so switching from placeholder data to live DABAS data does not require frontend contract changes.
+- Missing DABAS API credentials must not block implementation, testing, or UI development.
 
 ---
 
@@ -645,7 +749,7 @@ The application should target WCAG 2.1 AA where practical.
   "matchedAllergens": [],
   "traceAllergens": [],
   "checkedAllergens": [
-    { "code": "milk", "status": "NotFound" },
+    { "code": "milk_protein", "status": "NotFound" },
     { "code": "egg", "status": "NotFound" }
   ],
   "ingredientHighlights": [],
@@ -654,6 +758,41 @@ The application should target WCAG 2.1 AA where practical.
   ]
 }
 ```
+
+## 16.5 SearchResult
+```json
+{
+  "gtin": "1234567890123",
+  "name": "Oatly Oat Drink",
+  "subtitle": "Enriched with vitamins and calcium",
+  "brand": "Oatly",
+  "category": "Beverage",
+  "packageSize": "1 l",
+  "articleNumber": "A-1001",
+  "articleType": "BaseArticle",
+  "previewStatus": "Safe",
+  "previewBadge": "Clean Label",
+  "previewNote": "Auto-detecting peanuts and gluten",
+  "updatedAt": "2026-03-21T10:00:00Z",
+  "source": "dabas-search"
+}
+```
+
+### Search result normalization notes
+- This DTO should be created from the DABAS `ArticleDateModel` response.
+- Recommended field mapping:
+  - `GTIN` -> `gtin`
+  - `Produktnamn` or `Artikelbenamning` -> `name`
+  - `Hyllkantstext` -> `subtitle`
+  - `Varumarke` -> `brand`
+  - `Artikelkategori` -> `category`
+  - `Forpackningsstorlek` -> `packageSize`
+  - `TillverkarensArtikelnummer` -> `articleNumber`
+  - `Artikeltyp` -> `articleType`
+  - `SenastAndradDatum` -> `updatedAt`
+- `previewStatus`, `previewBadge`, and `previewNote` are application-level enrichment fields, not raw DABAS fields.
+- Search results should remain lightweight and should not include full ingredient or allergen payloads.
+- Full product detail should be resolved only after the user selects a search result.
 
 ---
 
@@ -673,7 +812,7 @@ The application should target WCAG 2.1 AA where practical.
     "subtitle": "Classic Swedish Milk Chocolate",
     "ingredientsText": "Sugar, cocoa butter, whey powder (milk)...",
     "allergenStatements": {
-      "contains": ["milk", "soy"],
+      "contains": ["milk_protein", "soy"],
       "mayContain": ["nuts", "wheat"]
     },
     "nutritionSummary": {
@@ -684,14 +823,55 @@ The application should target WCAG 2.1 AA where practical.
 }
 ```
 
-## 17.2 Product analysis
+## 17.2 Product search
+`GET /api/products/search?q={query}`
+
+### Example response
+```json
+{
+  "query": "oatly",
+  "results": [
+    {
+      "gtin": "1234567890123",
+      "name": "Oatly Oat Drink",
+      "subtitle": "Enriched with vitamins and calcium",
+      "brand": "Oatly",
+      "category": "Beverage",
+      "packageSize": "1 l",
+      "articleNumber": "A-1001",
+      "previewStatus": "Safe",
+      "previewBadge": "Clean Label",
+      "source": "dabas-search"
+    }
+  ]
+}
+```
+
+### Backend implementation note
+- This endpoint should proxy DABAS free-text search rather than exposing DABAS directly to the frontend.
+- Use `basesearchparameter` first when appropriate, then optionally broaden to `searchparameter`.
+- Normalize `ArticleDateModel` fields such as `Produktnamn`, `Artikelbenamning`, `Varumarke`, `Artikelkategori`, `Forpackningsstorlek`, `GTIN`, and `TillverkarensArtikelnummer`.
+- If the UI needs search-card status badges, the backend may enrich search results by hydrating a subset of returned GTINs and computing a lightweight preview analysis.
+
+### Search enrichment and caching strategy
+- Use a two-tier search pipeline:
+  1. identity search: return normalized search results from placeholder data or DABAS search
+  2. optional enrichment: hydrate the top N results with lightweight analysis previews for `previewStatus`, `previewBadge`, and `previewNote`
+- Search enrichment should be best-effort and must never block the base search result list from rendering.
+- Cache normalized search responses by query string, normalized query string, and provider source.
+- Cache product detail by GTIN separately from search-result caches.
+- Cache lightweight analysis previews by `{gtin + selectedAllergens-hash}` so search badges can be reused safely.
+- When using placeholder data, search enrichment should run against local static product fixtures to preserve the same response shape expected in production.
+- When DABAS is connected later, the caching strategy should remain unchanged so only the provider implementation swaps.
+
+## 17.3 Product analysis
 `POST /api/analysis`
 
 ### Request
 ```json
 {
   "gtin": "1234567890123",
-  "selectedAllergens": ["milk", "soy", "nuts"]
+  "selectedAllergens": ["milk_protein", "soy", "nuts"]
 }
 ```
 
@@ -704,10 +884,10 @@ The application should target WCAG 2.1 AA where practical.
   },
   "analysis": {
     "overallStatus": "Contains",
-    "matchedAllergens": ["milk", "soy"],
+    "matchedAllergens": ["milk_protein", "soy"],
     "traceAllergens": ["nuts"],
     "checkedAllergens": [
-      { "code": "milk", "status": "Contains" },
+      { "code": "milk_protein", "status": "Contains" },
       { "code": "soy", "status": "Contains" },
       { "code": "nuts", "status": "MayContain" }
     ],
@@ -715,7 +895,7 @@ The application should target WCAG 2.1 AA where practical.
       {
         "text": "Whey powder (Milk)",
         "severity": "Contains",
-        "allergenCode": "milk"
+        "allergenCode": "milk_protein"
       },
       {
         "text": "Emulsifier (Soy lecithins)",
@@ -727,7 +907,7 @@ The application should target WCAG 2.1 AA where practical.
 }
 ```
 
-## 17.3 Future endpoints
+## 17.4 Future endpoints
 - `GET /api/history`
 - `POST /api/history`
 - `GET /api/pantry`
@@ -767,6 +947,16 @@ Special handling may be needed for ambiguous or region-specific ingredient data,
 
 A dedicated allergen normalization document is recommended before production rollout.
 
+## Placeholder provider rule before DABAS API key
+- Until DABAS credentials are available, the backend shall use a placeholder provider backed by static fixtures.
+- The placeholder provider must support the same use cases as the future DABAS provider:
+  - GTIN lookup
+  - free-text search
+  - product detail hydration
+  - lightweight search-result enrichment
+- Placeholder responses must use the same normalized DTOs and endpoint contracts planned for production.
+- Swapping providers should be controlled by configuration, not by frontend code changes.
+
 ---
 
 ## 19. Phased Implementation Plan
@@ -778,6 +968,7 @@ A dedicated allergen normalization document is recommended before production rol
 - result state rules
 - error state matrix
 - design token list
+- provider abstraction for placeholder vs DABAS-backed data sources
 
 ### Output
 - requirements document
@@ -792,22 +983,33 @@ A dedicated allergen normalization document is recommended before production rol
 - design tokens
 - shared UI primitives
 - PWA support
+- scanner layout that can host both camera scanning and inline search affordances
+- .NET backend skeleton with placeholder data provider and final API contracts
 
 ### Acceptance criteria
 - app boots cleanly
 - shell reflects mockup style
 - tokens exist for color, typography, spacing, radii
+- backend runs locally and serves stable placeholder responses for core endpoints
 
-## Phase 2 - Onboarding and local profile
+## Phase 2 - Onboarding, local profile, and free-text search
 ### Deliverables
 - onboarding screen
 - allergen selection state
 - local persistence
 - navigation to scanner
+- scanner-integrated search field
+- search results route and search UI
+- recent search persistence
+- backend-backed search-results list using placeholder backend data and the final app search contract
 
 ### Acceptance criteria
 - selections persist across refresh
 - UI aligns closely with onboarding mockup
+- user can search by product name, brand, ingredient, GTIN/EAN, or article number
+- selecting a search result enters the same product analysis flow used by scanning
+- scanner screen matches the updated mockup by supporting both scan and search entry points
+- no DABAS API key is required to complete and test this phase locally
 
 ## Phase 3 - Scanner experience
 ### Deliverables
@@ -816,6 +1018,7 @@ A dedicated allergen normalization document is recommended before production rol
 - scan overlay
 - torch toggle
 - loading and failure states
+- scan-to-placeholder-product lookup integration
 
 ### Acceptance criteria
 - supported devices can scan barcodes
@@ -824,11 +1027,12 @@ A dedicated allergen normalization document is recommended before production rol
 
 ## Phase 4 - Mocked result flows
 ### Deliverables
-- mock product repository
-- mock analysis engine
+- placeholder product repository
+- placeholder analysis engine
 - safe result
 - warning result
 - caution result
+- optional search-card preview enrichment using placeholder backend data
 
 ### Acceptance criteria
 - all three result types work
@@ -839,20 +1043,23 @@ A dedicated allergen normalization document is recommended before production rol
 ### Deliverables
 - ASP.NET Core API
 - GTIN product lookup
+- free-text product search endpoint
 - analysis endpoint
 - Dabas integration layer
 - caching
 
 ### Acceptance criteria
-- frontend can switch from mock to API
+- frontend already uses backend contracts and requires no contract changes when DABAS integration is enabled
 - responses are normalized and stable
 - Swagger/OpenAPI is available
+- DABAS free-text search is proxied securely through the backend
+- placeholder provider and DABAS provider can be switched by configuration
 
 ## Phase 6 - Secondary features
 ### Deliverables
 - profile edit
 - history
-- pantry
+- favorites
 - nutrition detail
 
 ### Acceptance criteria
@@ -879,17 +1086,26 @@ A dedicated allergen normalization document is recommended before production rol
 ## Frontend
 - Unit tests for view logic
 - Component tests for onboarding/results
-- End-to-end tests for scan/result flows
+- End-to-end tests for scan/result and search/result flows
 - Visual regression checks against mockups
+- Playwright can be used to capture page states and generate a visual regression overview across key screens
 
 ## Backend
 - Unit tests for allergen mapping
 - Integration tests for endpoints
 - Contract tests for DTO consistency
+- placeholder provider tests
 - Dabas adapter tests
 
 ## Manual QA scenarios
 - first launch
+- search directly from scanner screen
+- free-text search by product name
+- free-text search by GTIN/EAN
+- no search results
+- search results with preview status badges available
+- search results when preview enrichment is unavailable
+- placeholder backend enabled with no DABAS credentials present
 - camera denied
 - product not found
 - safe result
@@ -906,13 +1122,24 @@ A dedicated allergen normalization document is recommended before production rol
 
 ## Gaps in current input
 - No dedicated caution/yellow result mock
-- No full designs for Home/Profile/History/Pantry
+- No full designs for Home/Profile/History/Favorites
 - No explicit localization strategy
 - No real Dabas contract included
+
+## Resolved implementation decisions
+- Product/app name: `SafeScan`
+- Canonical saved-products navigation label: `Favorites`
+- Search entry point: integrated into scanner, with dedicated search results route
+- Initial backend data source: static placeholder provider until DABAS credentials are available
+- Frontend must integrate against backend contracts immediately; DABAS access is not a prerequisite for implementation
 
 ## Primary risks
 - Incorrect allergen matching if logic is too naive
 - Scanner inconsistency across browsers/devices
+- DABAS search ranking and result quality are undocumented
+- DABAS free-text search response does not include full allergen/ingredient detail, so search requires a second detail lookup
+- DABAS uses the search term as a path parameter, increasing encoding and special-character handling risk
+- The updated search results mockups imply enriched status badges that may require extra backend hydration and caching
 - Content hidden behind fixed footer/nav
 - Design drift away from the editorial visual system
 - Incomplete product data leading to unclear result states
@@ -924,7 +1151,8 @@ A dedicated allergen normalization document is recommended before production rol
 These should be resolved early:
 - UI language: English, Swedish, or multilingual?
 - Exact allergen taxonomy for MVP?
-- Will history/pantry be local-only first?
+- Should free-text search default to `basesearchparameter` only, or broaden automatically to `searchparameter`?
+- Will history/favorites be local-only first?
 - How should `Unknown` results be displayed?
 - What should happen when Dabas data is missing or incomplete?
 - Should backend analysis be the long-term source of truth?
@@ -934,13 +1162,13 @@ These should be resolved early:
 ## 23. Recommended Build Order for an AI Agent
 
 1. Create the React PWA shell and design tokens
-2. Implement onboarding and local profile storage
-3. Implement scanner route with mock scan flow
-4. Build safe, warning, and caution result pages
-5. Add stub Home/Profile/History pages
-6. Build .NET API and DTO contracts
-7. Replace mock data with backend integration
-8. Add history, pantry, and nutrition detail
+2. Build the .NET API skeleton with normalized DTOs and a placeholder data provider
+3. Implement onboarding, local profile storage, and search UI against backend contracts
+4. Implement scanner route with scan flow and placeholder lookup integration
+5. Build safe, warning, and caution result pages
+6. Add stub Home/Profile/History/Favorites pages
+7. Add caching, search enrichment, and provider switching in the backend
+8. Enable DABAS integration once the API key is available
 9. Harden accessibility, performance, and offline behavior
 
 ---
@@ -955,5 +1183,6 @@ These should be resolved early:
 - Isolate scanner code to reduce bundle cost
 - Add a real caution state even though it is not fully mocked
 - Define allergen normalization rules before productionizing analysis
+- Build frontend features against the backend contracts immediately; do not bypass the backend just because DABAS access is pending
 
 ---
