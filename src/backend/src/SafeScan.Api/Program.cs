@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using SafeScan.Api.Endpoints;
 using SafeScan.Application.Abstractions;
 using SafeScan.Application.Services;
@@ -7,6 +8,10 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddProblemDetails();
 builder.Services.AddOpenApi();
+builder.Services.ConfigureHttpJsonOptions(options =>
+{
+    options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
+});
 builder.Services.AddSingleton<IProductAnalysisService, ProductAnalysisService>();
 builder.Services.AddInfrastructure(builder.Configuration);
 
