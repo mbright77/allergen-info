@@ -45,7 +45,7 @@ export function SearchResultsPage() {
   }
 
   return (
-    <section className="stack-xl">
+    <section className="stack-xl search-results-page">
       <div className="content-card stack-md">
         <p className="supporting-text">Search results for</p>
         <h1 className="display-title display-title--italic">'{query || 'Search'}'</h1>

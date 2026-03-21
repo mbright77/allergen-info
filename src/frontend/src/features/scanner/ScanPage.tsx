@@ -60,12 +60,14 @@ export function ScanPage() {
             value={searchValue}
             onChange={(event) => setSearchValue(event.target.value)}
           />
-          <button type="submit" className="icon-button icon-button--ghost" aria-label="Submit search">
+          <button type="submit" className="search-bar__submit" aria-label="Submit search">
             <span className="material-symbols-outlined" aria-hidden="true">
               arrow_forward
             </span>
           </button>
         </form>
+
+        {!isScannerActive ? <h1 className="sr-only">Scan or search for a product</h1> : null}
 
         <section className="scanner-stage">
           <div className="scanner-stage__status">
@@ -102,24 +104,26 @@ export function ScanPage() {
               </div>
             </div>
           ) : (
-            <button
-              type="button"
-              className="scanner-launch"
-              onClick={() => setIsScannerActive(true)}
-              aria-describedby="scanner-launch-description"
-            >
-              <span className="scanner-launch__icon" aria-hidden="true">
-                <span className="material-symbols-outlined">barcode_scanner</span>
-              </span>
-              <h1 className="scanner-launch__title">Tap to Scan</h1>
-              <span id="scanner-launch-description" className="scanner-launch__description">
-                Search first if you want. When you are ready, tap here and the camera will activate for a live barcode scan.
-              </span>
-              <span className="scanner-corner scanner-corner--tl" />
-              <span className="scanner-corner scanner-corner--tr" />
-              <span className="scanner-corner scanner-corner--bl" />
-              <span className="scanner-corner scanner-corner--br" />
-            </button>
+            <div className="scanner-launch-shell stack-md">
+              <button
+                type="button"
+                className="scanner-launch"
+                onClick={() => setIsScannerActive(true)}
+                aria-describedby="scanner-launch-description"
+              >
+                <span className="scanner-launch__icon" aria-hidden="true">
+                  <span className="material-symbols-outlined">barcode_scanner</span>
+                </span>
+                <span className="scanner-launch__title">Tap to Scan</span>
+                <span id="scanner-launch-description" className="scanner-launch__description">
+                  Search first if you want. When you are ready, tap here and the camera will activate for a live barcode scan.
+                </span>
+                <span className="scanner-corner scanner-corner--tl" />
+                <span className="scanner-corner scanner-corner--tr" />
+                <span className="scanner-corner scanner-corner--bl" />
+                <span className="scanner-corner scanner-corner--br" />
+              </button>
+            </div>
           )}
         </section>
 
@@ -166,7 +170,7 @@ export function ScanPage() {
         ) : null}
 
         <section className="scanner-tips stack-md">
-          <h2 className="section-title section-title--offset">Tips for Precision Scanning</h2>
+          <h2 className="section-title">Tips for Precision Scanning</h2>
           <div className="scanner-tips__grid">
             <article className="scanner-tip-card stack-sm">
               <span className="material-symbols-outlined scanner-tip-card__icon" aria-hidden="true">

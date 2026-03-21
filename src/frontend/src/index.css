@@ -564,6 +564,8 @@ button {
   min-height: calc(100vh - 12rem);
   border-radius: 2rem;
   overflow: hidden;
+  width: 100%;
+  max-width: 100%;
   background: linear-gradient(180deg, #fffdfc 0%, #f7f3f1 100%);
   box-shadow: var(--shadow-soft);
 }
@@ -582,19 +584,27 @@ button {
   align-items: center;
   justify-items: center;
   padding: 1.5rem;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: clip;
+  padding-bottom: 9rem;
+}
+
+.scanner-panel > * {
+  width: 100%;
 }
 
 .search-bar {
   display: grid;
   grid-template-columns: auto 1fr auto;
   align-items: center;
-   width: 100%;
-   gap: 0.75rem;
-   padding: 0.75rem 0.85rem 0.75rem 1rem;
-   border: 1px solid rgba(192, 201, 187, 0.22);
-   border-radius: 1.25rem;
-   background: rgba(229, 226, 225, 0.72);
-   color: var(--text);
+  width: 100%;
+  gap: 0.75rem;
+  padding: 0.75rem 0.85rem 0.75rem 1rem;
+  border: 1px solid rgba(192, 201, 187, 0.22);
+  border-radius: 1.25rem;
+  background: rgba(229, 226, 225, 0.72);
+  color: var(--text);
 }
 
 .search-bar input {
@@ -612,9 +622,27 @@ button {
   outline-offset: 2px;
 }
 
+.search-bar__submit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border: none;
+  border-radius: 999px;
+  background: rgba(0, 68, 45, 0.1);
+  color: var(--primary);
+}
+
+.search-bar__submit:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
 .scanner-stage {
   position: relative;
   width: 100%;
+  max-width: 100%;
   min-height: 34rem;
   padding: 1.75rem;
   border-radius: 2.5rem;
@@ -658,7 +686,7 @@ button {
 .scanner-stage__actions {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 0.75rem;
 }
 
@@ -682,6 +710,7 @@ button {
   place-items: center;
   gap: 1rem;
   width: 100%;
+  max-width: 100%;
   min-height: 30rem;
   padding: 3rem 2rem;
   border: none;
@@ -693,6 +722,11 @@ button {
     transform 180ms ease,
     box-shadow 180ms ease,
     opacity 180ms ease;
+}
+
+.scanner-launch-shell {
+  width: 100%;
+  min-height: 100%;
 }
 
 .scanner-launch:hover {
@@ -737,6 +771,7 @@ button {
 .scanner-frame {
   position: relative;
   width: min(20rem, 100%);
+  max-width: 100%;
   margin-inline: auto;
   aspect-ratio: 1;
   border-radius: 2rem;
@@ -810,7 +845,9 @@ button {
   display: grid;
   grid-template-columns: auto 1fr;
   gap: 1rem;
-  margin: 1rem;
+  width: calc(100% - 3rem);
+  max-width: calc(100% - 3rem);
+  margin: 0 auto 1rem;
   padding: 1rem 1.15rem;
   border: 1px solid rgba(255, 255, 255, 0.7);
   border-radius: 1.5rem;
@@ -834,6 +871,10 @@ button {
 .recent-searches {
   width: 100%;
   justify-items: start;
+}
+
+.scanner-tips {
+  width: 100%;
 }
 
 .recent-search-chip {
@@ -868,6 +909,18 @@ button {
 
 .scanner-tip-card__title {
   font-size: 1.35rem;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 @keyframes scanner-stage-enter {
@@ -969,6 +1022,10 @@ button {
 .search-grid {
   display: grid;
   gap: 1rem;
+}
+
+.search-results-page {
+  padding-bottom: 7rem;
 }
 
 .search-card {
@@ -1382,5 +1439,94 @@ button {
 
   .scanner-tips__grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-height: 740px) {
+  .scanner-panel {
+    padding-top: 0.75rem;
+    padding-bottom: 10.5rem;
+  }
+
+  .scanner-stage {
+    min-height: 25rem;
+    padding: 1.25rem;
+    border-radius: 2rem;
+  }
+
+  .scanner-stage__status {
+    top: 1rem;
+    left: 1rem;
+  }
+
+  .scanner-launch {
+    min-height: 21rem;
+    padding: 2.5rem 1.25rem 1.5rem;
+  }
+
+  .scanner-launch__icon {
+    width: 5.5rem;
+    height: 5.5rem;
+  }
+
+  .scanner-launch__icon .material-symbols-outlined {
+    font-size: 2.5rem;
+  }
+
+  .scanner-launch__title {
+    font-size: clamp(1.8rem, 7vw, 2.4rem);
+  }
+
+  .scanner-launch__description {
+    max-width: 16rem;
+    font-size: 0.98rem;
+    line-height: 1.5;
+  }
+
+  .scanner-copy {
+    padding-top: 1.5rem;
+  }
+
+  .scanner-frame {
+    width: min(16rem, 100%);
+  }
+
+  .scanner-tip-card {
+    padding: 1.15rem;
+  }
+
+  .analysis-banner {
+    position: fixed;
+    right: 1rem;
+    bottom: 5.85rem;
+    left: 1rem;
+    width: auto;
+    max-width: none;
+    margin: 0;
+  }
+}
+
+@media (max-height: 680px) {
+  .top-bar {
+    position: relative;
+    top: 0;
+  }
+
+  .scanner-panel {
+    padding-top: 0.5rem;
+    padding-bottom: 11rem;
+  }
+
+  .scanner-stage {
+    min-height: 22rem;
+  }
+
+  .scanner-launch {
+    min-height: 18.5rem;
+    gap: 0.75rem;
+  }
+
+  .scanner-tips {
+    gap: 0.75rem;
   }
 }

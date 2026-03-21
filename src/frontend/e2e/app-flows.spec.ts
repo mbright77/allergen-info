@@ -94,7 +94,7 @@ test('onboarding to search to result flow works', async ({ page }) => {
   await takeStableScreenshot(page, 'onboarding.png')
 
   await page.getByRole('button', { name: 'Milk Protein' }).click()
-  await page.getByRole('button', { name: /save & start scanning/i }).click()
+  await page.getByRole('button', { name: /save & continue to scan/i }).click()
 
   await expect(page).toHaveURL(/\/scan$/)
   await takeStableScreenshot(page, 'scanner.png')
@@ -150,7 +150,7 @@ test('onboarding and result screens pass basic accessibility audits', async ({ p
   expect(onboardingA11y.violations).toEqual([])
 
   await page.getByRole('button', { name: 'Milk Protein' }).click()
-  await page.getByRole('button', { name: /save & start scanning/i }).click()
+  await page.getByRole('button', { name: /save & continue to scan/i }).click()
   await page.getByRole('searchbox', { name: /search for a product/i }).fill('oat milk')
   await page.getByRole('button', { name: /submit search/i }).click()
   await page.getByRole('button', { name: /view details for the original oat milk/i }).click()
