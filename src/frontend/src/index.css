@@ -437,6 +437,10 @@ button {
   overflow: hidden;
 }
 
+.home-hero .supporting-text {
+  color: rgba(255, 255, 255, 0.92);
+}
+
 .home-hero::after,
 .secondary-screen-hero::after {
   content: '';

@@ -12,7 +12,7 @@ export function HomePage() {
   return (
     <section className="stack-xl">
       <section className="hero-card hero-card--safe home-hero stack-lg">
-        <p className="eyebrow">Welcome</p>
+        <p className="eyebrow eyebrow--light">Welcome</p>
         <h1 className="display-title display-title--light">Safe choices, faster.</h1>
         <p className="supporting-text supporting-text--light">
           Your profile is active with {selectedAllergens.length} monitored allergens. Start with search, or launch the camera only when you are ready to scan.
