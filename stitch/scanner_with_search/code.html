@@ -3,70 +3,75 @@
 <html class="light" lang="en"><head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>SafeScan - Allergen Scanner</title>
-<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<title>SafeScan - Scanner with Search</title>
+<!-- Fonts & Icons -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <script id="tailwind-config">
       tailwind.config = {
         darkMode: "class",
         theme: {
           extend: {
             colors: {
-              "on-background": "#1b1c1c",
-              "surface-container-lowest": "#ffffff",
-              "on-error-container": "#93000a",
-              "on-secondary-fixed-variant": "#930010",
-              "tertiary-container": "#694d00",
-              "secondary": "#b6171e",
-              "background": "#fcf9f8",
-              "tertiary-fixed": "#ffdfa0",
-              "surface-container-high": "#eae7e7",
-              "on-secondary-container": "#fffbff",
-              "on-primary": "#ffffff",
-              "outline-variant": "#c0c9bb",
-              "error-container": "#ffdad6",
-              "on-tertiary": "#ffffff",
-              "inverse-on-surface": "#f3f0ef",
-              "primary-fixed": "#b1f0ce",
-              "on-primary-container": "#94d2b1",
-              "on-tertiary-container": "#f6bc28",
-              "on-surface-variant": "#41493e",
-              "primary-fixed-dim": "#95d4b3",
-              "surface-container-low": "#f6f3f2",
-              "on-error": "#ffffff",
-              "surface-container": "#f0eded",
-              "on-secondary": "#ffffff",
-              "on-primary-fixed-variant": "#0e5138",
-              "inverse-primary": "#95d4b3",
-              "surface-container-highest": "#e5e2e1",
-              "surface": "#fcf9f8",
-              "surface-variant": "#e5e2e1",
-              "surface-dim": "#dcd9d9",
-              "secondary-fixed-dim": "#ffb3ac",
-              "tertiary-fixed-dim": "#f8bd2a",
-              "on-secondary-fixed": "#410003",
-              "secondary-container": "#da3433",
-              "primary": "#1B5E20",
-              "on-primary-fixed": "#002114",
-              "on-tertiary-fixed-variant": "#5c4300",
-              "on-surface": "#1b1c1c",
+              "primary-container": "#1d5c42",
               "surface-tint": "#2c694e",
               "on-tertiary-fixed": "#261a00",
-              "primary-container": "#1d5c42",
+              "on-tertiary-fixed-variant": "#5c4300",
+              "on-primary-fixed": "#002114",
+              "on-surface": "#1b1c1c",
+              "surface-bright": "#fcf9f8",
+              "tertiary": "#4c3700",
+              "inverse-surface": "#303030",
+              "secondary-fixed": "#ffdad6",
               "error": "#ba1a1a",
               "outline": "#717a6d",
-              "secondary-fixed": "#ffdad6",
-              "inverse-surface": "#303030",
-              "surface-bright": "#fcf9f8",
-              "tertiary": "#4c3700"
+              "surface-dim": "#dcd9d9",
+              "surface-variant": "#e5e2e1",
+              "secondary-container": "#da3433",
+              "primary": "#00442d",
+              "on-secondary-fixed": "#410003",
+              "tertiary-fixed-dim": "#f8bd2a",
+              "secondary-fixed-dim": "#ffb3ac",
+              "surface-container": "#f0eded",
+              "on-error": "#ffffff",
+              "surface-container-low": "#f6f3f2",
+              "primary-fixed-dim": "#95d4b3",
+              "on-tertiary-container": "#f6bc28",
+              "on-surface-variant": "#41493e",
+              "surface": "#fcf9f8",
+              "surface-container-highest": "#e5e2e1",
+              "inverse-primary": "#95d4b3",
+              "on-secondary": "#ffffff",
+              "on-primary-fixed-variant": "#0e5138",
+              "surface-container-high": "#eae7e7",
+              "tertiary-fixed": "#ffdfa0",
+              "background": "#fcf9f8",
+              "tertiary-container": "#694d00",
+              "secondary": "#b6171e",
+              "surface-container-lowest": "#ffffff",
+              "on-background": "#1b1c1c",
+              "on-secondary-fixed-variant": "#930010",
+              "on-error-container": "#93000a",
+              "primary-fixed": "#b1f0ce",
+              "on-primary-container": "#94d2b1",
+              "inverse-on-surface": "#f3f0ef",
+              "outline-variant": "#c0c9bb",
+              "on-primary": "#ffffff",
+              "on-tertiary": "#ffffff",
+              "error-container": "#ffdad6",
+              "on-secondary-container": "#fffbff"
             },
             fontFamily: {
-              "headline": ["Manrope"],
-              "body": ["Inter"],
-              "label": ["Inter"]
+              "headline": ["Manrope", "sans-serif"],
+              "body": ["Inter", "sans-serif"],
+              "label": ["Inter", "sans-serif"]
             },
-            borderRadius: {"DEFAULT": "0.5rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
           },
         },
       }
@@ -75,108 +80,112 @@
         .material-symbols-outlined {
             font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
         }
-        .scanner-frame {
-            box-shadow: 0 0 0 1000px rgba(0, 0, 0, 0.4);
+        .filled-icon {
+            font-variation-settings: 'FILL' 1;
         }
-        .gradient-primary {
-            background: linear-gradient(135deg, #1B5E20 0%, #2E7D32 100%);
+        /* Custom subtle texture for scanner area */
+        .scanner-mesh {
+            background-image: radial-gradient(circle at 2px 2px, #c0c9bb 1px, transparent 0);
+            background-size: 24px 24px;
         }
     </style>
 </head>
-<body class="bg-background font-body text-on-background antialiased overflow-hidden">
-<!-- TopAppBar Component -->
-<header class="fixed top-0 w-full z-50 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-xl flex justify-between items-center px-6 h-16 w-full no-border tonal-shift bg-zinc-100/50 dark:bg-zinc-900/50 shadow-none">
-<div class="font-['Manrope'] font-bold text-xl tracking-tight text-emerald-900 dark:text-emerald-50">SafeScan</div>
+<body class="bg-background text-on-surface font-body selection:bg-primary-fixed selection:text-on-primary-fixed">
+<!-- TopNavBar -->
+<header class="fixed top-0 w-full z-50 bg-[#ffffffcc] dark:bg-[#1b1c1ccc] backdrop-blur-xl shadow-sm dark:shadow-none">
+<div class="flex justify-between items-center px-6 py-4 w-full max-w-screen-xl mx-auto">
+<span class="text-2xl font-extrabold text-[#00442d] dark:text-[#81c784] font-headline tracking-tight">SafeScan</span>
 <div class="flex items-center gap-4">
-<button class="text-emerald-900 dark:text-emerald-50 hover:opacity-80 transition-opacity active:scale-95 duration-200">
-<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
-</button>
-<button class="text-emerald-900 dark:text-emerald-50 hover:opacity-80 transition-opacity active:scale-95 duration-200">
-<span class="material-symbols-outlined" data-icon="help_outline">help_outline</span>
-</button>
-<div class="w-8 h-8 rounded-full bg-surface-container-high overflow-hidden">
-<img alt="User profile" class="w-full h-full object-cover" data-alt="Close up portrait of a smiling user" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCiq-AN9vL11MC3yecmxsL7cwr8Izh_ONFLQ_Fzxmx-YL3LuC55qmKF4BAvgu5ys4Js-93L1FvCw_q0ifCl5lyiuXgo9xGZGPuKajHsPgbeEfrqWgMgBZEgNTeG_YJMD8Rr_b-qEhKDH2Q-IkJpAFx95hjIuz8kmBql3rp8VVkacqOHB4dnypQyC4eBa5kewV6-OcJPsAQrgyx9-HWwqy1wrNMAlitPUKrBJBSBdYFDXCybeHmIRebZV-qv6kdUlb5Srkodi50BPTg"/>
+<button class="material-symbols-outlined p-2 rounded-full text-[#41493e] hover:bg-[#f6f3f2] transition-colors active:scale-95 duration-200">account_circle</button>
 </div>
 </div>
 </header>
-<!-- Main Content: Scanner Viewport -->
-<main class="relative h-screen w-full flex flex-col items-center pt-16 pb-32">
-<!-- Camera Viewfinder Background -->
-<div class="absolute inset-0 z-0 bg-zinc-900">
-<img alt="Grocery store shelf" class="w-full h-screen object-cover opacity-60" data-alt="Blurred grocery store aisle with food products" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCMCGuiyrb9Y2X3PdP0Xnj80rm_hNBVVoggJAJIdx2XcMEUyT4-JKkiSvXFpH0V_AMeK3JmTtTa1maCNx-s5agEVlpIkq7ZHpDk5Rt74Zhg0dcHB9DmgKpWDoj326q2BmLVq09NUvEF2i0d53VCW6YnC1kf3nX3dZzkkbIyzNSkBQ8ikvPqgzIVBVASL_AFTXIo6H1N-sxqixSK3ttt6e-QenRd1KRtpR3wYTeiuRL8N-cOJx7CJX7jT9PFHck2MBdLRNgy3xs60Ik"/>
-</div>
-<!-- Scanning UI Overlay -->
-<div class="relative z-10 flex flex-col items-center w-full px-6 max-w-md pt-6">
-<!-- Search Bar (New Feature) -->
-<div class="w-full mb-10">
-<div class="relative group">
+<main class="pt-20 pb-32 px-6 max-w-screen-xl mx-auto min-h-screen">
+<!-- Search Entry Section -->
+<section class="mb-8">
+<div class="relative w-full">
 <div class="absolute inset-y-0 left-4 flex items-center pointer-events-none">
-<span class="material-symbols-outlined text-white/70 text-xl" data-icon="search">search</span>
+<span class="material-symbols-outlined text-outline">search</span>
 </div>
-<input class="w-full bg-white/10 backdrop-blur-md border border-white/20 rounded-xl py-3.5 pl-12 pr-4 text-white placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-primary-fixed/50 transition-all text-sm font-medium" placeholder="Search for a product..." type="text"/>
-<div class="absolute inset-y-0 right-4 flex items-center">
-<button class="text-white/70 hover:text-white transition-colors">
-<span class="material-symbols-outlined text-xl" data-icon="photo_camera">photo_camera</span>
-</button>
+<input class="w-full h-14 pl-12 pr-4 bg-surface-container-high border-none rounded-2xl text-body-lg focus:ring-0 focus:border-b-2 focus:border-primary transition-all placeholder:text-outline" placeholder="Search products or ingredients..." type="text"/>
+</div>
+</section>
+<!-- Scanner Placeholder Area (The Bento Card) -->
+<section class="relative group">
+<div class="w-full aspect-[3/4] md:aspect-[16/9] bg-surface-container-low rounded-[2.5rem] flex flex-col items-center justify-center relative overflow-hidden transition-all duration-300">
+<!-- Decorative Mesh Background -->
+<div class="absolute inset-0 scanner-mesh opacity-20"></div>
+<!-- Medical-grade UI elements -->
+<div class="absolute top-8 left-8 flex items-center gap-2 px-3 py-1.5 bg-surface-container-lowest/80 backdrop-blur-md rounded-full border border-outline-variant/15">
+<span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+<span class="text-xs font-label uppercase tracking-widest font-semibold text-primary">System Ready</span>
+</div>
+<div class="z-10 flex flex-col items-center text-center px-12">
+<div class="w-24 h-24 mb-6 rounded-full bg-primary-fixed flex items-center justify-center text-primary-container shadow-xl active:scale-90 transition-transform cursor-pointer">
+<span class="material-symbols-outlined text-5xl" style="font-variation-settings: 'wght' 300;">barcode_scanner</span>
+</div>
+<h2 class="font-headline text-3xl font-bold text-primary mb-3">Tap to Scan</h2>
+<p class="text-on-surface-variant max-w-xs leading-relaxed">Place a barcode or ingredient label in view. The camera will activate automatically upon tapping.</p>
+</div>
+<!-- Corner Brackets (Scanner Styling) -->
+<div class="absolute top-12 left-12 w-8 h-8 border-t-2 border-l-2 border-primary/30 rounded-tl-lg"></div>
+<div class="absolute top-12 right-12 w-8 h-8 border-t-2 border-r-2 border-primary/30 rounded-tr-lg"></div>
+<div class="absolute bottom-12 left-12 w-8 h-8 border-b-2 border-l-2 border-primary/30 rounded-bl-lg"></div>
+<div class="absolute bottom-12 right-12 w-8 h-8 border-b-2 border-r-2 border-primary/30 rounded-br-lg"></div>
+</div>
+</section>
+<!-- Live Analysis Information Bar -->
+<section class="mt-8">
+<div class="bg-surface-container-lowest p-5 rounded-3xl flex items-center justify-between shadow-[0_10px_30px_rgba(27,28,28,0.06)] border border-outline-variant/10">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-secondary-fixed flex items-center justify-center text-on-secondary-fixed-variant">
+<span class="material-symbols-outlined text-xl filled-icon">error</span>
+</div>
+<div>
+<p class="text-xs font-label uppercase tracking-widest text-outline mb-0.5">Live Analysis</p>
+<p class="font-headline font-bold text-on-surface">Peanuts &amp; Gluten active</p>
+</div>
+</div>
+<div class="flex -space-x-2">
+<div class="w-8 h-8 rounded-full border-2 border-surface-container-lowest bg-surface-container-high flex items-center justify-center" title="Peanut-Free Check">
+<img alt="" class="w-4 h-4" data-alt="Icon of a peanut emoji" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAFlGJslbJBkm1qs7rYhinEz3RkjReWDvNJYaxAPVuga6Gljipy7bEPmHmw9wIFGadBGcYrN4hjT3Vx2R0vhuLhg8pIHHIjpIusj0wNzz7xSm14LFup_LK42Rjbl3cv7WJUPw_uTqW3eAQ-O9u8j8Fdro7Hxgl1_YTjng1zeW-yS2uCy_ovVUst-Js0KOHYEbrlB74vBP_5oq3YkvOni6g0bvDrxoOnrG7XI-QwZGcleoNkqKazD6t7giOHj_gOUSdlfEHyDzLvbpI"/>
+</div>
+<div class="w-8 h-8 rounded-full border-2 border-surface-container-lowest bg-surface-container-high flex items-center justify-center" title="Gluten-Free Check">
+<img alt="" class="w-4 h-4" data-alt="Icon of a wheat stalk emoji" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCImuAEXipZvBulsDDrjSytPYPtITktHhV1__hvTzvC_Q9n8e0Ho6sGeSSnu2bsXZaeOXjCWl0VysCaLIkqjNUCHgZ8BsQ-PJLHwoEZ7JDj5Rr6Wj8x9yV4AzaMseIehsmzjDkOj-eXcgenL_OllvA2DQH2zmnoypeVXGodlg-Vaa_GTYzSu8fCqOlwb9yJIKrC096RfJSYqX65haAtkiBLx5Ww15vhSxXBl7xUgc-J24-dlnRHoWuDF-7EsNQQGZYeEc0Pyqder3M"/>
 </div>
 </div>
 </div>
-<!-- Instructions -->
-<div class="mb-8 text-center">
-<h1 class="font-headline font-bold text-white text-2xl mb-2">Scanning Barcode</h1>
-<p class="text-white/80 text-sm font-medium">Align the barcode within the frame</p>
+</section>
+<!-- Helpful Tips (Editorial Style) -->
+<section class="mt-12 mb-12">
+<h3 class="font-headline text-xl font-bold mb-6 px-2">Tips for Precision Scanning</h3>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<div class="bg-surface-container-low p-6 rounded-3xl">
+<span class="material-symbols-outlined text-primary mb-3">lightbulb</span>
+<h4 class="font-headline font-bold text-on-surface mb-2">Good Lighting</h4>
+<p class="text-on-surface-variant text-sm leading-relaxed">Ensure the product is in a well-lit area to help our AI identify fine print ingredients.</p>
 </div>
-<!-- Viewfinder Frame -->
-<div class="relative w-full aspect-square max-w-[280px] rounded-3xl overflow-hidden scanner-frame border-2 border-primary-fixed/50">
-<!-- Corner Accents -->
-<div class="absolute top-0 left-0 w-12 h-12 border-t-4 border-l-4 border-primary-fixed rounded-tl-3xl"></div>
-<div class="absolute top-0 right-0 w-12 h-12 border-t-4 border-r-4 border-primary-fixed rounded-tr-3xl"></div>
-<div class="absolute bottom-0 left-0 w-12 h-12 border-b-4 border-l-4 border-primary-fixed rounded-bl-3xl"></div>
-<div class="absolute bottom-0 right-0 w-12 h-12 border-b-4 border-r-4 border-primary-fixed rounded-br-3xl"></div>
-<!-- Scanning Line -->
-<div class="absolute top-0 left-0 w-full h-0.5 bg-primary-fixed shadow-[0_0_15px_rgba(177,240,206,0.8)] opacity-60"></div>
+<div class="bg-surface-container-low p-6 rounded-3xl">
+<span class="material-symbols-outlined text-primary mb-3">straighten</span>
+<h4 class="font-headline font-bold text-on-surface mb-2">Keep it Steady</h4>
+<p class="text-on-surface-variant text-sm leading-relaxed">Hold your phone parallel to the barcode for the fastest recognition speed.</p>
 </div>
-<!-- Lighting Toggle -->
-<button class="mt-8 w-12 h-12 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white flex items-center justify-center active:scale-90 transition-transform">
-<span class="material-symbols-outlined" data-icon="flashlight_on">flashlight_on</span>
-</button>
 </div>
-<!-- Floating Scan Button -->
-<div class="absolute bottom-32 left-0 w-full flex flex-col items-center gap-4 z-20 pointer-events-none">
-<button class="pointer-events-auto gradient-primary text-white flex items-center gap-3 px-10 py-5 rounded-full shadow-2xl active:scale-95 transition-all group">
-<span class="material-symbols-outlined text-3xl" data-icon="barcode_scanner">barcode_scanner</span>
-<span class="font-headline font-bold text-lg">Scan Another Product</span>
-</button>
-</div>
+</section>
 </main>
-<!-- Contextual Insight Card (Editorial Detail) -->
-<div class="fixed bottom-28 left-6 right-6 z-30">
-<div class="bg-surface-container-lowest/90 backdrop-blur-xl p-4 rounded-2xl flex items-center gap-4 shadow-xl border border-white/20">
-<div class="w-10 h-10 rounded-full bg-primary-fixed flex items-center justify-center shrink-0">
-<span class="material-symbols-outlined text-on-primary-fixed-variant" data-icon="shield_check">shield</span>
-</div>
-<div class="flex-1">
-<p class="text-[11px] font-label font-medium uppercase tracking-wider text-on-surface-variant">Live Analysis</p>
-<p class="font-headline font-semibold text-sm text-on-surface">Auto-detecting peanuts &amp; gluten</p>
-</div>
-</div>
-</div>
-<!-- BottomNavBar Component -->
-<nav class="fixed bottom-0 left-0 w-full flex justify-around items-center px-4 pb-8 pt-4 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-xl z-50 rounded-t-3xl shadow-[0_-10px_30px_rgba(0,0,0,0.04)] no-border tonal-layering">
-<!-- Home Tab -->
-<a class="flex flex-col items-center justify-center text-zinc-500 dark:text-zinc-400 px-5 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors active:scale-90 duration-300 ease-out" href="#">
-<span class="material-symbols-outlined mb-1" data-icon="home">home</span>
-<span class="font-['Inter'] text-[11px] font-medium tracking-wide uppercase">Home</span>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full flex justify-around items-center px-4 pb-6 pt-3 bg-[#ffffffcc] dark:bg-[#1b1c1ccc] backdrop-blur-xl z-50 rounded-t-[2rem] shadow-[0_-10px_30px_rgba(27,28,28,0.06)]">
+<a class="flex flex-col items-center justify-center text-[#41493e] dark:text-[#c0c9bb] px-5 py-2 hover:text-[#00442d] dark:hover:text-[#81c784] transition-all active:scale-90 duration-300 ease-out" href="#">
+<span class="material-symbols-outlined mb-1">home</span>
+<span class="font-['Inter'] font-medium text-[10px] uppercase tracking-wider">Home</span>
 </a>
-<!-- Scan Tab (Active) -->
-<a class="flex flex-col items-center justify-center bg-emerald-100 dark:bg-emerald-900/30 text-emerald-900 dark:text-emerald-100 rounded-2xl px-5 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors active:scale-90 duration-300 ease-out" href="#">
-<span class="material-symbols-outlined mb-1" data-icon="barcode_scanner" style="font-variation-settings: 'FILL' 1;">barcode_scanner</span>
-<span class="font-['Inter'] text-[11px] font-medium tracking-wide uppercase">Scan</span>
+<a class="flex flex-col items-center justify-center bg-[#00442d] dark:bg-[#1d5c42] text-white rounded-full px-5 py-2 active:scale-90 duration-300 ease-out" href="#">
+<span class="material-symbols-outlined mb-1 filled-icon">search</span>
+<span class="font-['Inter'] font-medium text-[10px] uppercase tracking-wider">Search</span>
 </a>
-<!-- Profile Tab -->
-<a class="flex flex-col items-center justify-center text-zinc-500 dark:text-zinc-400 px-5 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors active:scale-90 duration-300 ease-out" href="#">
-<span class="material-symbols-outlined mb-1" data-icon="person">person</span>
-<span class="font-['Inter'] text-[11px] font-medium tracking-wide uppercase">Profile</span>
+<a class="flex flex-col items-center justify-center text-[#41493e] dark:text-[#c0c9bb] px-5 py-2 hover:text-[#00442d] dark:hover:text-[#81c784] transition-all active:scale-90 duration-300 ease-out" href="#">
+<span class="material-symbols-outlined mb-1">person</span>
+<span class="font-['Inter'] font-medium text-[10px] uppercase tracking-wider">Profile</span>
 </a>
 </nav>
 </body></html>

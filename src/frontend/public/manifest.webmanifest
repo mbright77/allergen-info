@@ -1,0 +1,19 @@
+{
+  "name": "SafeScan",
+  "short_name": "SafeScan",
+  "description": "A mobile-first allergen scanner for safer grocery decisions.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#fcf9f8",
+  "theme_color": "#00442d",
+  "lang": "en",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "48x46",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

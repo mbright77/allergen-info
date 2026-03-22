@@ -1,3 +1,4 @@
+import '@fontsource-variable/material-symbols-outlined'
 import '@fontsource/inter/400.css'
 import '@fontsource/inter/500.css'
 import '@fontsource/inter/600.css'
@@ -11,6 +12,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { RouterProvider } from 'react-router-dom'
 
 import { router } from './app/router'
+import { registerAppServiceWorker } from './app/pwa'
 import './index.css'
 import { CollectionsProvider } from './shared/collections/CollectionsProvider'
 import { ProfileProvider } from './shared/profile/ProfileProvider'
@@ -36,3 +38,5 @@ createRoot(document.getElementById('root')!).render(
     </QueryClientProvider>
   </StrictMode>,
 )
+
+void registerAppServiceWorker()

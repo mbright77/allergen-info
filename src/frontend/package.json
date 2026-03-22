@@ -5,13 +5,14 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "node ./scripts/generate-pwa-assets.mjs && tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",
     "test:e2e": "playwright test"
   },
   "dependencies": {
+    "@fontsource-variable/material-symbols-outlined": "^5.2.38",
     "@fontsource/inter": "^5.2.8",
     "@fontsource/manrope": "^5.2.8",
     "@tanstack/react-query": "^5.94.5",

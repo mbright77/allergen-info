@@ -86,6 +86,42 @@ describe('SearchResultsPage', () => {
     })
   })
 
+  it('accepts backend timestamps with explicit utc offsets', async () => {
+    vi.spyOn(window, 'fetch').mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          query: 'oat milk',
+          results: [
+            {
+              gtin: '1735000111002',
+              name: 'Barista Blend Oat Milk',
+              subtitle: 'Barista-style oat drink',
+              brand: 'Califia Farms',
+              category: 'Beverage',
+              packageSize: '1 l',
+              articleNumber: 'CAL-2002',
+              articleType: 'BaseArticle',
+              previewStatus: 'Safe',
+              previewBadge: 'Added Sugars',
+              previewNote: 'Placeholder data includes a caution preview for nut traces.',
+              updatedAt: '2026-03-21T10:05:00+00:00',
+              source: 'placeholder-search',
+            },
+          ],
+        }),
+        {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        },
+      ),
+    )
+
+    renderSearchResultsPage('oat milk')
+
+    expect(await screen.findByRole('button', { name: /view details for barista blend oat milk/i })).toBeInTheDocument()
+    expect(screen.queryByText(/Search unavailable/i)).not.toBeInTheDocument()
+  })
+
   it('renders an empty state when no results are returned', async () => {
     vi.spyOn(window, 'fetch').mockResolvedValue(
       new Response(JSON.stringify({ query: 'oat', results: [] }), {

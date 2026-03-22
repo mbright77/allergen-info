@@ -1,5 +1,9 @@
 import { z } from 'zod'
 
+const isoDateTimeStringSchema = z.string().refine((value) => !Number.isNaN(Date.parse(value)), {
+  message: 'Invalid ISO datetime string',
+})
+
 export const allergenOptionSchema = z.object({
   code: z.string(),
   label: z.string(),
@@ -50,7 +54,7 @@ export const searchResultSchema = z.object({
   previewStatus: analysisOverallStatusSchema.nullable().optional(),
   previewBadge: z.string().nullable().optional(),
   previewNote: z.string().nullable().optional(),
-  updatedAt: z.string().datetime(),
+  updatedAt: isoDateTimeStringSchema,
   source: z.string(),
 })
 

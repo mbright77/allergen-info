@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
+using System.Text.Json;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc.Testing;
 
@@ -25,6 +26,20 @@ public sealed class ProductEndpointsTests : IClassFixture<WebApplicationFactory<
 
         payload.Should().NotBeNull();
         payload!.Results.Should().NotBeEmpty();
+    }
+
+    [Fact]
+    public async Task SearchEndpoint_SerializesPreviewStatusAsString()
+    {
+        var response = await _client.GetAsync("/api/products/search?q=oat%20milk");
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        var firstResult = document.RootElement.GetProperty("results")[0];
+
+        firstResult.GetProperty("previewStatus").ValueKind.Should().Be(JsonValueKind.String);
+        firstResult.GetProperty("previewStatus").GetString().Should().NotBeNullOrWhiteSpace();
     }
 
     [Fact]
