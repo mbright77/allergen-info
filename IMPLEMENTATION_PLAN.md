@@ -795,6 +795,24 @@ The application should target WCAG 2.1 AA where practical.
 - Frontend runtime configuration must not embed private provider credentials.
 - A basic Content Security Policy should be supported where deployment infrastructure allows it.
 
+## Split deployment security model
+If the frontend is deployed as a static site on GitHub Pages and the backend is deployed separately on a VPS-hosted Kubernetes cluster:
+- The frontend must be treated as fully public and untrusted.
+- The backend API must be treated as a public internet-facing interface unless authentication is added later.
+- All provider credentials, backend secrets, and private integration details must remain server-side only.
+- Browser-visible configuration such as the API base URL must be assumed public and must not be relied on as a secret.
+- CORS must be configured for browser compatibility only and must not be treated as a substitute for authentication, rate limiting, or abuse prevention.
+- Static frontend caching and service-worker behavior must avoid storing sensitive or user-specific API responses beyond what is explicitly intended for offline usage.
+
+## Deployment requirements
+- The frontend must support deployment to GitHub Pages or another static host using an environment-aware API base URL.
+- The backend must support deployment behind a Kubernetes ingress with HTTPS termination.
+- Backend ingress should enforce request-size limits, upstream timeouts, and production-safe error handling.
+- Only the public API ingress should be exposed externally; internal data stores and supporting services should remain private to the deployment environment.
+- Health and readiness endpoints must be available for Kubernetes rollout checks and operational monitoring.
+- Production deployments should support structured logging and basic alerting for backend failures, provider failures, rate-limit events, and elevated 4xx/5xx responses.
+- GitHub repository and deployment workflows should use branch protection and restricted deployment permissions for production publishing.
+
 ---
 
 ## 15. Recommended Architecture

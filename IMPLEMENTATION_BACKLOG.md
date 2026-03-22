@@ -380,6 +380,30 @@ It assumes:
 - Add explicit cache eviction/versioning rules for local storage-backed caches
 - Add HTTPS/CORS/runtime-config deployment requirements to deployment docs or manifests
 
+### Split deployment security tasks
+- Add a deployment checklist for `frontend => GitHub Pages` and `backend => k3s/VPS`
+- Ensure the frontend uses environment-aware `VITE_API_BASE_URL` configuration and does not embed provider credentials or private backend secrets
+- Lock backend CORS to approved frontend origins only (GitHub Pages domain and any production custom domain)
+- Add backend rate limiting for public search, lookup, and analysis endpoints to reduce scraping and quota abuse risk
+- Add backend request validation limits for query length, GTIN format, request size, and malformed inputs
+- Ensure production error responses do not expose stack traces, internal hostnames, or provider secrets
+- Store DABAS credentials and other backend secrets in Kubernetes secrets or an external secret manager rather than repo files or container images
+- Add ingress-level HTTPS, request-size limits, and upstream timeout settings for the public API
+- Keep internal services private to the cluster/network and expose only the public API ingress
+- Add health/readiness probes suitable for Kubernetes rollout and uptime monitoring
+- Document that the static frontend is fully public and that the API must be treated as a public unauthenticated interface unless auth is added later
+- Add guidance to avoid caching sensitive or user-specific API responses in the service worker
+- Add logging/monitoring tasks for 4xx/5xx spikes, rate-limit events, and provider failures
+- Add GitHub repository protections for the frontend deployment path, including branch protection and restricted deploy permissions
+
+### Split deployment acceptance criteria
+- The frontend build contains no private API keys, provider credentials, or environment secrets
+- The public API is reachable only over HTTPS and responds correctly to the approved frontend origins
+- CORS is restricted to known frontend origins and does not use an unrestricted wildcard policy for production
+- Public endpoints enforce request validation and rate limits appropriate to unauthenticated traffic
+- Backend secrets are injected securely at deploy time and are not committed to the repo or baked into images
+- Production logs and error payloads do not leak sensitive backend or provider details
+
 ### Acceptance criteria
 - Unknown results are rendered distinctly from generic request errors
 - Help exists as a real destination and does not dead-end
