@@ -207,6 +207,7 @@ button {
   left: 50%;
   bottom: 0.75rem;
   transform: translateX(-50%);
+  z-index: 30;
   width: min(calc(100% - 1.5rem), 32rem);
   display: grid;
   grid-template-columns: repeat(4, 1fr);
