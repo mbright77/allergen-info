@@ -1,0 +1,12 @@
+**/bin/
+**/obj/
+**/TestResults/
+tests/
+.git/
+.github/
+Dockerfile*
+README.md
+*.user
+*.suo
+*.tmp
+*.log

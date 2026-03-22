@@ -1,5 +1,15 @@
 import { z } from 'zod'
 
+const apiBaseUrl = (import.meta.env.VITE_API_BASE_URL ?? '').replace(/\/$/, '')
+
+function toApiUrl(input: string) {
+  if (/^https?:\/\//.test(input) || !apiBaseUrl) {
+    return input
+  }
+
+  return `${apiBaseUrl}${input.startsWith('/') ? input : `/${input}`}`
+}
+
 export class ApiError extends Error {
   readonly status: number
 
@@ -32,7 +42,7 @@ export async function fetchJson<T>(
   let response: Response
 
   try {
-    response = await fetch(input, {
+    response = await fetch(toApiUrl(input), {
       headers: {
         Accept: 'application/json',
         ...(init?.headers ?? {}),

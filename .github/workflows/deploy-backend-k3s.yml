@@ -1,0 +1,153 @@
+name: Deploy Backend to k3s
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/deploy-backend-k3s.yml'
+      - 'deploy/backend/**'
+      - 'src/backend/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: backend-production
+  cancel-in-progress: true
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository_owner }}/safescan-api
+
+jobs:
+  check-deploy-enabled:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Report deployment toggle state
+        run: |
+          if [ "${{ vars.RUN_DEPLOY }}" = "true" ]; then
+            echo "Backend deployment is enabled."
+          else
+            echo "Backend deployment is disabled because RUN_DEPLOY is not set to 'true'."
+          fi
+
+  build-test-push:
+    needs: check-deploy-enabled
+    if: ${{ vars.RUN_DEPLOY == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    outputs:
+      image-ref: ${{ steps.meta.outputs.image-ref }}
+      image-tag: ${{ steps.meta.outputs.image-tag }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+
+      - name: Restore backend
+        run: dotnet restore SafeScan.sln
+        working-directory: src/backend
+
+      - name: Build backend
+        run: dotnet build SafeScan.sln --configuration Release --no-restore
+        working-directory: src/backend
+
+      - name: Test backend
+        run: dotnet test SafeScan.sln --configuration Release --no-build
+        working-directory: src/backend
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract image metadata
+        id: meta
+        run: |
+          echo "image-tag=${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
+          echo "image-ref=${REGISTRY,,}/${IMAGE_NAME,,}:${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
+
+      - name: Build and push backend image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./src/backend
+          file: ./src/backend/Dockerfile
+          push: true
+          tags: |
+            ${{ steps.meta.outputs.image-ref }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:main
+
+      - name: Package backend deployment bundle
+        run: tar -czf backend-deploy-bundle.tar.gz deploy/backend
+
+      - name: Upload backend deployment bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-deploy-bundle
+          path: backend-deploy-bundle.tar.gz
+
+  deploy:
+    needs: build-test-push
+    if: ${{ vars.RUN_DEPLOY == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download backend deployment bundle
+        uses: actions/download-artifact@v4
+        with:
+          name: backend-deploy-bundle
+
+      - name: Configure SSH key
+        env:
+          VPS_SSH_PRIVATE_KEY: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
+          VPS_PORT: ${{ vars.VPS_PORT }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$VPS_SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -p "${VPS_PORT:-22}" "${{ vars.VPS_HOST }}" >> ~/.ssh/known_hosts
+
+      - name: Copy deploy bundle to VPS
+        env:
+          VPS_PORT: ${{ vars.VPS_PORT }}
+        run: |
+          scp -P "${VPS_PORT:-22}" backend-deploy-bundle.tar.gz "${{ vars.VPS_USER }}@${{ vars.VPS_HOST }}:/tmp/backend-deploy-bundle.tar.gz"
+
+      - name: Run remote deployment
+        env:
+          IMAGE_REF: ${{ needs.build-test-push.outputs.image-ref }}
+          IMAGE_TAG: ${{ needs.build-test-push.outputs.image-tag }}
+          VPS_USER: ${{ vars.VPS_USER }}
+          VPS_HOST: ${{ vars.VPS_HOST }}
+          VPS_PORT: ${{ vars.VPS_PORT }}
+          BACKEND_HOST: ${{ vars.BACKEND_HOST }}
+          BACKEND_PATH_PREFIX: ${{ vars.BACKEND_PATH_PREFIX }}
+          BACKEND_TLS_SECRET_NAME: ${{ vars.BACKEND_TLS_SECRET_NAME }}
+          K8S_INGRESS_CLASS: ${{ vars.K8S_INGRESS_CLASS }}
+          CERT_MANAGER_CLUSTER_ISSUER: ${{ vars.CERT_MANAGER_CLUSTER_ISSUER }}
+          ASPNETCORE_ENVIRONMENT: ${{ vars.ASPNETCORE_ENVIRONMENT }}
+          PRODUCT_CATALOG_PROVIDER: ${{ vars.PRODUCT_CATALOG_PROVIDER }}
+          DABAS_BASE_URL: ${{ vars.DABAS_BASE_URL }}
+          DABAS_API_KEY_HEADER_NAME: ${{ vars.DABAS_API_KEY_HEADER_NAME }}
+          DABAS_API_KEY_QUERY_PARAMETER_NAME: ${{ vars.DABAS_API_KEY_QUERY_PARAMETER_NAME }}
+          ALLOWED_ORIGINS: ${{ vars.ALLOWED_ORIGINS }}
+          DABAS_API_KEY: ${{ secrets.DABAS_API_KEY }}
+          GHCR_USERNAME: ${{ secrets.GHCR_USERNAME }}
+          GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
+          GHCR_EMAIL: ${{ secrets.GHCR_EMAIL }}
+          GHCR_IMAGE_PULL_SECRET_NAME: ${{ vars.GHCR_IMAGE_PULL_SECRET_NAME }}
+        run: |
+          ssh -p "${VPS_PORT:-22}" "${VPS_USER}@${VPS_HOST}" \
+            "IMAGE_REF='${IMAGE_REF}' IMAGE_TAG='${IMAGE_TAG}' BACKEND_HOST='${BACKEND_HOST}' BACKEND_PATH_PREFIX='${BACKEND_PATH_PREFIX}' BACKEND_TLS_SECRET_NAME='${BACKEND_TLS_SECRET_NAME}' K8S_INGRESS_CLASS='${K8S_INGRESS_CLASS}' CERT_MANAGER_CLUSTER_ISSUER='${CERT_MANAGER_CLUSTER_ISSUER}' ASPNETCORE_ENVIRONMENT='${ASPNETCORE_ENVIRONMENT}' PRODUCT_CATALOG_PROVIDER='${PRODUCT_CATALOG_PROVIDER}' DABAS_BASE_URL='${DABAS_BASE_URL}' DABAS_API_KEY='${DABAS_API_KEY}' DABAS_API_KEY_HEADER_NAME='${DABAS_API_KEY_HEADER_NAME}' DABAS_API_KEY_QUERY_PARAMETER_NAME='${DABAS_API_KEY_QUERY_PARAMETER_NAME}' ALLOWED_ORIGINS='${ALLOWED_ORIGINS}' GHCR_USERNAME='${GHCR_USERNAME}' GHCR_TOKEN='${GHCR_TOKEN}' GHCR_EMAIL='${GHCR_EMAIL}' GHCR_IMAGE_PULL_SECRET_NAME='${GHCR_IMAGE_PULL_SECRET_NAME}' bash -s" < deploy/backend/deploy.sh
