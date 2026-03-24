@@ -10,6 +10,8 @@ import { ScanPage } from '../features/scanner/ScanPage'
 import { SearchResultsPage } from '../features/search/SearchResultsPage'
 import { ProfilePage } from '../features/profile/ProfilePage'
 
+const routerBasename = import.meta.env.BASE_URL || '/'
+
 export const router = createBrowserRouter([
   {
     path: '/',
@@ -26,4 +28,6 @@ export const router = createBrowserRouter([
       { path: 'history', element: <HistoryPage /> },
     ],
   },
-])
+], {
+  basename: routerBasename,
+})

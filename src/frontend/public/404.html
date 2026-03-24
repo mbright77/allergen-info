@@ -1,0 +1,14 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>SafeScan</title>
+    <script>
+      sessionStorage.redirect = location.href
+      const pathSegments = location.pathname.split('/').filter(Boolean)
+      const repoBase = pathSegments.length > 0 ? '/' + pathSegments[0] + '/' : '/'
+      location.replace(location.origin + repoBase)
+    </script>
+  </head>
+  <body></body>
+</html>

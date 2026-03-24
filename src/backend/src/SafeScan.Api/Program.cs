@@ -9,6 +9,7 @@ var builder = WebApplication.CreateBuilder(args);
 var allowedOrigins = builder.Configuration["AllowedOrigins"]?
     .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
     ?? [];
+var pathBase = builder.Configuration["PathBase"]?.TrimEnd('/');
 
 builder.Services.AddProblemDetails();
 builder.Services.AddOpenApi();
@@ -32,6 +33,11 @@ builder.Services.AddSingleton<IProductAnalysisService, ProductAnalysisService>()
 builder.Services.AddInfrastructure(builder.Configuration);
 
 var app = builder.Build();
+
+if (!string.IsNullOrWhiteSpace(pathBase) && pathBase != "/")
+{
+    app.UsePathBase(pathBase);
+}
 
 app.UseExceptionHandler();
 app.UseCors("Frontend");

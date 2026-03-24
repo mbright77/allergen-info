@@ -1,6 +1,7 @@
 import { APP_BUILD_VERSION } from './build-meta'
 
 const UPDATE_DISMISSED_KEY = 'safescan.update.dismissed'
+const appBasePath = import.meta.env.BASE_URL || '/'
 
 type UpdateListener = (registration: ServiceWorkerRegistration) => void
 
@@ -68,7 +69,10 @@ export async function registerAppServiceWorker() {
     return null
   }
 
-  const registration = await navigator.serviceWorker.register(`/service-worker.js?v=${APP_BUILD_VERSION}`)
+  const serviceWorkerUrl = new URL(`service-worker.js?v=${APP_BUILD_VERSION}`, window.location.origin + appBasePath)
+  const registration = await navigator.serviceWorker.register(serviceWorkerUrl.pathname + serviceWorkerUrl.search, {
+    scope: appBasePath,
+  })
   currentRegistration = registration
 
   attachUpdateFoundListener(registration)

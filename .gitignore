@@ -19,3 +19,9 @@ pnpm-debug.log*
 .DS_Store
 .idea/
 .vscode/
+
+# Local IDE metadata
+src/backend/.idea/
+
+# Reference-only local samples
+sample_deploy/

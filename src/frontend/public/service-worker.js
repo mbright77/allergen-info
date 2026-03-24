@@ -6,8 +6,14 @@ function getVersion() {
   return url.searchParams.get('v') ?? 'dev'
 }
 
+function getBasePath() {
+  const pathname = new URL(self.location.href).pathname
+  return pathname.replace(/service-worker\.js$/, '') || '/'
+}
+
 const SHELL_CACHE = `${SHELL_CACHE_PREFIX}${getVersion()}`
-const APP_SHELL_PATHS = ['/', '/manifest.webmanifest', '/favicon.svg']
+const BASE_PATH = getBasePath()
+const APP_SHELL_PATHS = [BASE_PATH, `${BASE_PATH}manifest.webmanifest`, `${BASE_PATH}favicon.svg`, `${BASE_PATH}404.html`]
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -53,7 +59,7 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
       fetch(request).catch(async () => {
         const cache = await caches.open(SHELL_CACHE)
-        return cache.match('/')
+        return cache.match(BASE_PATH)
       }),
     )
     return

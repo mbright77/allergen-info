@@ -13,6 +13,7 @@ export BACKEND_K8S_SERVICE_NAME="${BACKEND_K8S_SERVICE_NAME:-safescan-api}"
 export BACKEND_K8S_INGRESS_NAME="${BACKEND_K8S_INGRESS_NAME:-safescan-api}"
 export BACKEND_CONTAINER_PORT="${BACKEND_CONTAINER_PORT:-8080}"
 export BACKEND_PATH_PREFIX="${BACKEND_PATH_PREFIX:-/}"
+export BACKEND_ASPNETCORE_PATH_BASE="${BACKEND_ASPNETCORE_PATH_BASE:-${BACKEND_PATH_PREFIX}}"
 export K8S_INGRESS_CLASS="${K8S_INGRESS_CLASS:-nginx}"
 export PRODUCT_CATALOG_PROVIDER="${PRODUCT_CATALOG_PROVIDER:-Placeholder}"
 export ASPNETCORE_ENVIRONMENT="${ASPNETCORE_ENVIRONMENT:-Production}"
@@ -74,6 +75,7 @@ kubectl -n "${BACKEND_K8S_NAMESPACE}" create secret generic "${BACKEND_K8S_DEPLO
 
 kubectl -n "${BACKEND_K8S_NAMESPACE}" create configmap "${BACKEND_K8S_DEPLOYMENT_NAME}-config" \
   --from-literal=ASPNETCORE_ENVIRONMENT="${ASPNETCORE_ENVIRONMENT}" \
+  --from-literal=PathBase="${BACKEND_ASPNETCORE_PATH_BASE}" \
   --from-literal=ProductCatalog__Provider="${PRODUCT_CATALOG_PROVIDER}" \
   --from-literal=ProductCatalog__Dabas__BaseUrl="${DABAS_BASE_URL}" \
   --from-literal=ProductCatalog__Dabas__ApiKeyHeaderName="${DABAS_API_KEY_HEADER_NAME}" \
