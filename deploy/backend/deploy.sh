@@ -8,10 +8,10 @@ mkdir -p "${DEPLOY_ROOT}"
 tar -xzf "${BUNDLE_PATH}" -C "${DEPLOY_ROOT}" --strip-components=2
 
 # Hard-coded deployment values (explicit as requested)
-export BACKEND_K8S_NAMESPACE="safescan"
+export BACKEND_K8S_NAMESPACE="brightroom"
 export BACKEND_K8S_DEPLOYMENT_NAME="safescan-api"
 export BACKEND_K8S_SERVICE_NAME="safescan-api"
-export BACKEND_K8S_INGRESS_NAME="safescan-api"
+export BACKEND_K8S_INGRESS_NAME="brightroom-ingress"
 export BACKEND_CONTAINER_PORT="8080"
 export BACKEND_PATH_PREFIX="/safescan-api"
 export BACKEND_ASPNETCORE_PATH_BASE="/safescan-api"
@@ -21,7 +21,7 @@ export ASPNETCORE_ENVIRONMENT="Production"
 export DABAS_BASE_URL="https://api.dabas.com/"
 export DABAS_API_KEY_QUERY_PARAMETER_NAME="apikey"
 export BACKEND_HOST="hub.brightmatter.net"
-export BACKEND_TLS_SECRET_NAME="safescan-tls"
+export BACKEND_TLS_SECRET_NAME="brightroom-tls"
 
 if [[ -z "${IMAGE_REF:-}" ]]; then
   echo "IMAGE_REF is required" >&2
@@ -145,40 +145,25 @@ spec:
 EOF
 
 if [[ "${SKIP_INGRESS:-false}" != "true" ]]; then
-  cat <<EOF | kubectl apply -f -
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: ${BACKEND_K8S_INGRESS_NAME}
-  namespace: ${BACKEND_K8S_NAMESPACE}
-  annotations:
-    kubernetes.io/ingress.class: ${K8S_INGRESS_CLASS}
-    nginx.ingress.kubernetes.io/ssl-redirect: 'true'
-    nginx.ingress.kubernetes.io/force-ssl-redirect: 'true'
-    nginx.ingress.kubernetes.io/proxy-body-size: 1m
-    nginx.ingress.kubernetes.io/proxy-read-timeout: '60'
-    nginx.ingress.kubernetes.io/proxy-send-timeout: '60'
-    cert-manager.io/cluster-issuer: 'letsencrypt-prod'
-spec:
-  ingressClassName: ${K8S_INGRESS_CLASS}
-  tls:
-    - hosts:
-        - ${BACKEND_HOST}
-      secretName: ${BACKEND_TLS_SECRET_NAME}
-  rules:
-    - host: ${BACKEND_HOST}
-      http:
-        paths:
-          - path: ${BACKEND_PATH_PREFIX}
-            pathType: Prefix
-            backend:
-              service:
-                name: ${BACKEND_K8S_SERVICE_NAME}
-                port:
-                  number: 80
-EOF
+  # Append a path to the existing brightroom ingress so the cluster's nginx handles routing.
+  # Use a JSON patch to add the path; ignore errors if the rule already exists.
+  kubectl -n ${BACKEND_K8S_NAMESPACE} patch ingress brightroom-ingress --type='json' -p="[{\
+    \"op\": \"add\",\
+    \"path\": \"/spec/rules/0/http/paths/-\",\
+    \"value\": {\
+      \"path\": \"${BACKEND_PATH_PREFIX}\",\
+      \"pathType\": \"Prefix\",\
+      \"backend\": {\
+        \"service\": {\
+          \"name\": \"${BACKEND_K8S_SERVICE_NAME}\",\
+          \"port\": {\"number\": 80}\
+        }\
+      }\
+    }\
+  }]" || true
+  echo "Patched brightroom-ingress to add ${BACKEND_PATH_PREFIX} -> ${BACKEND_K8S_SERVICE_NAME} (or it already exists)."
 else
-  echo "Skipping ingress creation (SKIP_INGRESS=${SKIP_INGRESS:-false})"
+  echo "Skipping ingress modification (SKIP_INGRESS=${SKIP_INGRESS:-false})"
 fi
 
 kubectl -n "${BACKEND_K8S_NAMESPACE}" rollout status deployment/"${BACKEND_K8S_DEPLOYMENT_NAME}" --timeout=180s
