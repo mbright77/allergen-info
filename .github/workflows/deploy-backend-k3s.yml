@@ -132,7 +132,7 @@ jobs:
           VPS_USER: ${{ vars.VPS_USER }}
           VPS_HOST: ${{ vars.VPS_HOST }}
           VPS_PORT: ${{ vars.VPS_PORT }}
-          # BACKEND_HOST, PATH_PREFIX, TLS secret and ingress class are hard-coded in the deploy script
+                                                                        # BACKEND_HOST, PATH_PREFIX, TLS secret and ingress class are hard-coded in the deploy script
           CERT_MANAGER_CLUSTER_ISSUER: ${{ vars.CERT_MANAGER_CLUSTER_ISSUER }}
           ASPNETCORE_ENVIRONMENT: ${{ vars.ASPNETCORE_ENVIRONMENT }}
           PRODUCT_CATALOG_PROVIDER: ${{ vars.PRODUCT_CATALOG_PROVIDER }}

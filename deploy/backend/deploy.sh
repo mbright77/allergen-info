@@ -29,13 +29,7 @@ if [[ -z "${IMAGE_REF:-}" ]]; then
 fi
 
 # BACKEND_HOST is hard-coded above; no runtime requirement check needed here.
-
-if [[ "${SKIP_INGRESS:-false}" != "true" ]]; then
-  if [[ -z "${BACKEND_TLS_SECRET_NAME:-}" ]]; then
-    echo "BACKEND_TLS_SECRET_NAME is required when creating ingress" >&2
-    exit 1
-  fi
-fi
+# Ingress is managed externally; deploy does not create or modify ingress resources.
 
 export IMAGE_REF
 export BACKEND_HOST
@@ -138,33 +132,13 @@ spec:
   selector:
     app: ${BACKEND_K8S_DEPLOYMENT_NAME}
   ports:
-    - port: 80
+    - port: 8080
       targetPort: http
       protocol: TCP
       name: http
 EOF
 
-if [[ "${SKIP_INGRESS:-false}" != "true" ]]; then
-  # Append a path to the existing brightroom ingress so the cluster's nginx handles routing.
-  # Use a JSON patch to add the path; ignore errors if the rule already exists.
-  kubectl -n ${BACKEND_K8S_NAMESPACE} patch ingress brightroom-ingress --type='json' -p="[{\
-    \"op\": \"add\",\
-    \"path\": \"/spec/rules/0/http/paths/-\",\
-    \"value\": {\
-      \"path\": \"${BACKEND_PATH_PREFIX}\",\
-      \"pathType\": \"Prefix\",\
-      \"backend\": {\
-        \"service\": {\
-          \"name\": \"${BACKEND_K8S_SERVICE_NAME}\",\
-          \"port\": {\"number\": 80}\
-        }\
-      }\
-    }\
-  }]" || true
-  echo "Patched brightroom-ingress to add ${BACKEND_PATH_PREFIX} -> ${BACKEND_K8S_SERVICE_NAME} (or it already exists)."
-else
-  echo "Skipping ingress modification (SKIP_INGRESS=${SKIP_INGRESS:-false})"
-fi
+# Ingress is managed outside this script. No ingress resources will be created or modified.
 
 kubectl -n "${BACKEND_K8S_NAMESPACE}" rollout status deployment/"${BACKEND_K8S_DEPLOYMENT_NAME}" --timeout=180s
 
