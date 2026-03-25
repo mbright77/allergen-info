@@ -9,6 +9,7 @@ var builder = WebApplication.CreateBuilder(args);
 var allowedOrigins = builder.Configuration["AllowedOrigins"]?
     .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
     ?? [];
+Console.WriteLine("Allowed origins: " + string.Join(", ", allowedOrigins));
 var pathBase = builder.Configuration["PathBase"]?.TrimEnd('/');
 
 builder.Services.AddProblemDetails();
