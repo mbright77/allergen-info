@@ -30,9 +30,11 @@ if [[ -z "${BACKEND_HOST:-}" ]]; then
   exit 1
 fi
 
-if [[ -z "${BACKEND_TLS_SECRET_NAME:-}" ]]; then
-  echo "BACKEND_TLS_SECRET_NAME is required" >&2
-  exit 1
+if [[ "${SKIP_INGRESS:-false}" != "true" ]]; then
+  if [[ -z "${BACKEND_TLS_SECRET_NAME:-}" ]]; then
+    echo "BACKEND_TLS_SECRET_NAME is required when creating ingress" >&2
+    exit 1
+  fi
 fi
 
 export IMAGE_REF
@@ -142,7 +144,8 @@ spec:
       name: http
 EOF
 
-cat <<EOF | kubectl apply -f -
+if [[ "${SKIP_INGRESS:-false}" != "true" ]]; then
+  cat <<EOF | kubectl apply -f -
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -174,6 +177,9 @@ spec:
                 port:
                   number: 80
 EOF
+else
+  echo "Skipping ingress creation (SKIP_INGRESS=${SKIP_INGRESS:-false})"
+fi
 
 kubectl -n "${BACKEND_K8S_NAMESPACE}" rollout status deployment/"${BACKEND_K8S_DEPLOYMENT_NAME}" --timeout=180s
 
