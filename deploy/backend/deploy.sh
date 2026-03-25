@@ -7,28 +7,28 @@ BUNDLE_PATH="/tmp/backend-deploy-bundle.tar.gz"
 mkdir -p "${DEPLOY_ROOT}"
 tar -xzf "${BUNDLE_PATH}" -C "${DEPLOY_ROOT}" --strip-components=2
 
-export BACKEND_K8S_NAMESPACE="${BACKEND_K8S_NAMESPACE:-safescan}"
-export BACKEND_K8S_DEPLOYMENT_NAME="${BACKEND_K8S_DEPLOYMENT_NAME:-safescan-api}"
-export BACKEND_K8S_SERVICE_NAME="${BACKEND_K8S_SERVICE_NAME:-safescan-api}"
-export BACKEND_K8S_INGRESS_NAME="${BACKEND_K8S_INGRESS_NAME:-safescan-api}"
-export BACKEND_CONTAINER_PORT="${BACKEND_CONTAINER_PORT:-8080}"
-export BACKEND_PATH_PREFIX="${BACKEND_PATH_PREFIX:-/}"
-export BACKEND_ASPNETCORE_PATH_BASE="${BACKEND_ASPNETCORE_PATH_BASE:-${BACKEND_PATH_PREFIX}}"
-export K8S_INGRESS_CLASS="${K8S_INGRESS_CLASS:-nginx}"
-export PRODUCT_CATALOG_PROVIDER="${PRODUCT_CATALOG_PROVIDER:-Placeholder}"
-export ASPNETCORE_ENVIRONMENT="${ASPNETCORE_ENVIRONMENT:-Production}"
-export DABAS_BASE_URL="${DABAS_BASE_URL:-https://api.dabas.com/}"
-export DABAS_API_KEY_QUERY_PARAMETER_NAME="${DABAS_API_KEY_QUERY_PARAMETER_NAME:-apikey}"
+# Hard-coded deployment values (explicit as requested)
+export BACKEND_K8S_NAMESPACE="safescan"
+export BACKEND_K8S_DEPLOYMENT_NAME="safescan-api"
+export BACKEND_K8S_SERVICE_NAME="safescan-api"
+export BACKEND_K8S_INGRESS_NAME="safescan-api"
+export BACKEND_CONTAINER_PORT="8080"
+export BACKEND_PATH_PREFIX="/safescan-api"
+export BACKEND_ASPNETCORE_PATH_BASE="/safescan-api"
+export K8S_INGRESS_CLASS="nginx"
+export PRODUCT_CATALOG_PROVIDER="Placeholder"
+export ASPNETCORE_ENVIRONMENT="Production"
+export DABAS_BASE_URL="https://api.dabas.com/"
+export DABAS_API_KEY_QUERY_PARAMETER_NAME="apikey"
+export BACKEND_HOST="hub.brightmatter.net"
+export BACKEND_TLS_SECRET_NAME="safescan-tls"
 
 if [[ -z "${IMAGE_REF:-}" ]]; then
   echo "IMAGE_REF is required" >&2
   exit 1
 fi
 
-if [[ -z "${BACKEND_HOST:-}" ]]; then
-  echo "BACKEND_HOST is required" >&2
-  exit 1
-fi
+# BACKEND_HOST is hard-coded above; no runtime requirement check needed here.
 
 if [[ "${SKIP_INGRESS:-false}" != "true" ]]; then
   if [[ -z "${BACKEND_TLS_SECRET_NAME:-}" ]]; then
@@ -158,7 +158,7 @@ metadata:
     nginx.ingress.kubernetes.io/proxy-body-size: 1m
     nginx.ingress.kubernetes.io/proxy-read-timeout: '60'
     nginx.ingress.kubernetes.io/proxy-send-timeout: '60'
-    cert-manager.io/cluster-issuer: ${CERT_MANAGER_CLUSTER_ISSUER}
+    cert-manager.io/cluster-issuer: 'letsencrypt-prod'
 spec:
   ingressClassName: ${K8S_INGRESS_CLASS}
   tls:
