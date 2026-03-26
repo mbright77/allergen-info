@@ -164,7 +164,10 @@ export function useBarcodeScanner({ enabled, onDetected }: UseBarcodeScannerOpti
             try {
               const hasTorch = !!(caps && (caps as any).torch)
               if (!hasTorch) return false
-              await track.applyConstraints({ advanced: [{ torch: !!on }] })
+              // Some browsers expose non-standard constraint names (torch, zoom).
+              // Cast to any to avoid TypeScript complaining while still calling the API.
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              await (track as any).applyConstraints({ advanced: [{ torch: !!on }] } as any)
               return true
             } catch (e) {
               return false
@@ -178,7 +181,8 @@ export function useBarcodeScanner({ enabled, onDetected }: UseBarcodeScannerOpti
               const min = (zoomCap as any).min ?? 1
               const max = (zoomCap as any).max ?? 1
               const clamped = Math.max(min, Math.min(max, value))
-              await track.applyConstraints({ advanced: [{ zoom: clamped }] })
+               // eslint-disable-next-line @typescript-eslint/no-explicit-any
+               await (track as any).applyConstraints({ advanced: [{ zoom: clamped }] } as any)
               return true
             } catch (e) {
               return false
