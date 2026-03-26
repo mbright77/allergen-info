@@ -48,6 +48,34 @@ test('detect horizontal overflow on /scan', async ({ page }) => {
   console.log('BOUNDS_REPORT_START')
   console.log(JSON.stringify(rects, null, 2))
   console.log('BOUNDS_REPORT_END')
+  
+  const debugStyles = await page.evaluate(() => {
+    const pick = (sel: string) => document.querySelector(sel) as HTMLElement | null
+    const elNames = ['.app-shell', '.content-card', '.scanner-panel', '.search-bar']
+    return elNames.map((s) => {
+      const e = pick(s)
+      if (!e) return { selector: s, exists: false }
+      const cs = window.getComputedStyle(e)
+      return {
+        selector: s,
+        exists: true,
+        rect: e.getBoundingClientRect(),
+        offsetWidth: e.offsetWidth,
+        clientWidth: e.clientWidth,
+        scrollWidth: e.scrollWidth,
+        computedWidth: cs.width,
+        paddingLeft: cs.paddingLeft,
+        paddingRight: cs.paddingRight,
+        marginLeft: cs.marginLeft,
+        marginRight: cs.marginRight,
+        boxSizing: cs.boxSizing,
+      }
+    })
+  })
+
+  console.log('STYLE_DEBUG_START')
+  console.log(JSON.stringify(debugStyles, null, 2))
+  console.log('STYLE_DEBUG_END')
 
   console.log('OVERFLOW_REPORT_START')
   console.log(JSON.stringify(overflow, null, 2))
