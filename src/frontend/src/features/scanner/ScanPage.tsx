@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState, type FormEvent } from 'react'
+import { useCallback, useMemo, useState, useEffect, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 import { useProfile } from '../../shared/profile/ProfileProvider'
@@ -23,6 +23,25 @@ export function ScanPage() {
     enabled: isScannerActive,
     onDetected: handleDetectedBarcode,
   })
+
+  const [torchOn, setTorchOn] = useState(false)
+  const [zoomValue, setZoomValue] = useState<number | null>(null)
+  // initialize capability-driven UI when scanner becomes active
+  useEffect(() => {
+    if (isScannerActive && scanner.controls) {
+      const caps = scanner.controls.getCapabilities?.()
+      if (caps && (caps as any).zoom) {
+        const z = (caps as any).zoom
+        const initial = (z.min ?? 1)
+        setZoomValue(initial)
+      }
+    }
+
+    if (!isScannerActive) {
+      setZoomValue(null)
+      setTorchOn(false)
+    }
+  }, [isScannerActive, scanner.controls])
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -85,7 +104,15 @@ export function ScanPage() {
               </div>
 
               <div className="scanner-frame">
-                <video ref={scanner.videoRef} className="scanner-video" muted playsInline aria-label="Live barcode scanner preview" />
+                <video
+                  ref={scanner.videoRef}
+                  className="scanner-video"
+                  autoPlay
+                  muted
+                  playsInline
+                  aria-label="Live barcode scanner preview"
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                />
                 <span className="scanner-corner scanner-corner--tl" />
                 <span className="scanner-corner scanner-corner--tr" />
                 <span className="scanner-corner scanner-corner--bl" />
@@ -96,11 +123,47 @@ export function ScanPage() {
                 <button type="button" className="secondary-action" onClick={() => setIsScannerActive(false)}>
                   Stop scanning
                 </button>
-                <button type="button" className="torch-button" aria-label="Toggle flashlight">
+                <button
+                  type="button"
+                  className="torch-button"
+                  aria-label="Toggle flashlight"
+                  onClick={async () => {
+                    const ok = await scanner.controls?.toggleTorch?.(!torchOn)
+                    if (ok) setTorchOn((v) => !v)
+                  }}
+                >
                   <span className="material-symbols-outlined" aria-hidden="true">
-                    flashlight_on
+                    {torchOn ? 'flashlight_off' : 'flashlight_on'}
                   </span>
                 </button>
+
+                {scanner.controls?.getCapabilities && (() => {
+                  const caps = scanner.controls.getCapabilities()
+                  const zoomCap = caps && (caps as any).zoom
+                  if (!zoomCap) return null
+                  const min = zoomCap.min ?? 1
+                  const max = zoomCap.max ?? 1
+                  const step = Math.max((max - min) / 10, 0.1)
+
+                  return (
+                    <div className="zoom-control">
+                      <label className="eyebrow eyebrow--light">Zoom</label>
+                      <input
+                        type="range"
+                        min={min}
+                        max={max}
+                        step={step}
+                        value={zoomValue ?? min}
+                        onChange={async (e) => {
+                          const v = Number(e.currentTarget.value)
+                          const ok = await scanner.controls?.setZoom?.(v)
+                          if (ok) setZoomValue(v)
+                        }}
+                        aria-label="Camera zoom"
+                      />
+                    </div>
+                  )
+                })()}
               </div>
             </div>
           ) : (

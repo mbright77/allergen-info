@@ -596,7 +596,35 @@ button {
 }
 
 .scanner-panel > * {
+  /* allow children to size responsively inside the padded panel
+     avoid forcing 100% which can cause overflow when the panel has padding */
+  width: auto;
+  /* ensure children respect the panel's horizontal padding (2 * 1.5rem) */
+  max-width: calc(100% - 3rem);
+  box-sizing: border-box;
+  margin-inline: 0;
+}
+
+/* Tighten bounds for known wide elements inside the scanner panel */
+.scanner-panel .search-bar,
+.scanner-panel .scanner-stage,
+.scanner-panel .scanner-status,
+.scanner-panel .scanner-tips,
+.scanner-panel .scanner-launch,
+.scanner-panel .scanner-launch-shell {
+  max-width: 100%;
+  box-sizing: border-box;
   width: 100%;
+}
+
+/* Narrow viewport fixes: ensure the search bar respects the panel padding and does not overflow */
+.scanner-panel .search-bar {
+  /* make the search bar fill the available content box and use border-box
+     so its internal padding doesn't increase its visual width */
+  width: 100%;
+  max-width: 100%;
+  margin-inline: 0;
+  box-sizing: border-box;
 }
 
 .search-bar {
@@ -604,6 +632,7 @@ button {
   grid-template-columns: auto 1fr auto;
   align-items: center;
   width: 100%;
+  max-width: 100%;
   gap: 0.75rem;
   padding: 0.75rem 0.85rem 0.75rem 1rem;
   border: 1px solid rgba(192, 201, 187, 0.22);
