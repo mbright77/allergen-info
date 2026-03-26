@@ -66,7 +66,7 @@ export function ScanPage() {
   return (
     <section className="scanner-page">
       <div className="scanner-backdrop" aria-hidden="true" />
-      <div className="scanner-panel stack-lg">
+      <div className="content-card scanner-panel stack-lg">
         <form className="search-bar" onSubmit={handleSubmit}>
           <span className="material-symbols-outlined" aria-hidden="true">
             search
