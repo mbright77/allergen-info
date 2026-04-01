@@ -599,22 +599,41 @@ button {
   /* allow children to size responsively inside the padded panel
      avoid forcing 100% which can cause overflow when the panel has padding */
   width: auto;
-  /* ensure children respect the panel's horizontal padding (2 * 1.5rem) */
-  max-width: calc(100% - 3rem);
+  /* ensure children respect the panel's horizontal padding */
+  max-width: 100%;
   box-sizing: border-box;
   margin-inline: 0;
 }
 
-/* Tighten bounds for known wide elements inside the scanner panel */
+/* When scanner-panel is used as a content-card child, avoid double padding from both
+   the .content-card and .scanner-panel. Use the content-card's padding and keep a
+   padded bottom for action area spacing. */
+.content-card.scanner-panel {
+  padding-top: 0;
+  padding-right: 0;
+  padding-left: 0;
+  padding-bottom: 9rem; /* preserve bottom spacing */
+}
+
+.content-card.scanner-panel > * {
+  max-width: 100%;
+}
+
+/* Tighten bounds for known wide elements inside the scanner panel
+   and allow grid/flex children to shrink below their intrinsic min-width
+   so padding + internal content don't force horizontal overflow. */
 .scanner-panel .search-bar,
 .scanner-panel .scanner-stage,
 .scanner-panel .scanner-status,
 .scanner-panel .scanner-tips,
 .scanner-panel .scanner-launch,
-.scanner-panel .scanner-launch-shell {
+.scanner-panel .scanner-launch-shell,
+.scanner-panel .scanner-tips__grid,
+.scanner-panel .scanner-tip-card {
   max-width: 100%;
   box-sizing: border-box;
   width: 100%;
+  min-width: 0;
 }
 
 /* Narrow viewport fixes: ensure the search bar respects the panel padding and does not overflow */

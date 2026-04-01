@@ -85,7 +85,6 @@ export function ScanPage() {
             </span>
           </button>
         </form>
-
         {!isScannerActive ? <h1 className="sr-only">Scan or search for a product</h1> : null}
 
         <section className="scanner-stage">
