@@ -22,10 +22,12 @@ type ExtendedMediaTrackConstraints = MediaTrackConstraints & {
 
 const SCANNER_ELEMENT_ID = 'barcode-scanner-region'
 const DETECTION_COOLDOWN_MS = 2500
+const DETECTION_CONFIRMATION_WINDOW_MS = 900
+const REQUIRED_MATCHING_READS = 2
 
 function getBarcodeScanBox(viewfinderWidth: number, viewfinderHeight: number) {
-  const width = Math.max(220, Math.min(Math.floor(viewfinderWidth * 0.86), 420))
-  const height = Math.max(80, Math.min(Math.floor(viewfinderHeight * 0.24), 160))
+  const width = Math.max(200, Math.min(Math.floor(viewfinderWidth * 0.72), 340))
+  const height = Math.max(60, Math.min(Math.floor(viewfinderHeight * 0.16), 110))
 
   return {
     width: Math.min(width, viewfinderWidth),
@@ -75,6 +77,7 @@ export function useBarcodeScanner({ enabled, onDetected }: UseBarcodeScannerOpti
   const containerRef = useRef<HTMLDivElement | null>(null)
   const scannerInstanceRef = useRef<Html5QrcodeInstance | null>(null)
   const controlsRef = useRef<ScannerControls | null>(null)
+  const candidateDetectionRef = useRef<{ value: string; count: number; timestamp: number } | null>(null)
   const lastDetectedRef = useRef<{ value: string; timestamp: number } | null>(null)
   const [status, setStatus] = useState<ScannerStatus>('idle')
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
@@ -86,6 +89,7 @@ export function useBarcodeScanner({ enabled, onDetected }: UseBarcodeScannerOpti
       void stopAndClearScanner(scannerInstanceRef.current)
       scannerInstanceRef.current = null
       controlsRef.current = null
+      candidateDetectionRef.current = null
       return
     }
 
@@ -140,7 +144,7 @@ export function useBarcodeScanner({ enabled, onDetected }: UseBarcodeScannerOpti
         await instance.start(
           { facingMode: { ideal: 'environment' } },
           {
-            fps: 8,
+            fps: 5,
             disableFlip: true,
             qrbox: getBarcodeScanBox,
             videoConstraints: {
@@ -154,13 +158,37 @@ export function useBarcodeScanner({ enabled, onDetected }: UseBarcodeScannerOpti
           (decodedText) => {
             const nextValue = String(decodedText).trim()
             const now = Date.now()
+            const candidateDetection = candidateDetectionRef.current
             const lastDetected = lastDetectedRef.current
 
             if (!nextValue || (lastDetected && lastDetected.value === nextValue && now - lastDetected.timestamp < DETECTION_COOLDOWN_MS)) {
               return
             }
 
+            if (
+              candidateDetection &&
+              candidateDetection.value === nextValue &&
+              now - candidateDetection.timestamp < DETECTION_CONFIRMATION_WINDOW_MS
+            ) {
+              candidateDetectionRef.current = {
+                value: nextValue,
+                count: candidateDetection.count + 1,
+                timestamp: now,
+              }
+            } else {
+              candidateDetectionRef.current = {
+                value: nextValue,
+                count: 1,
+                timestamp: now,
+              }
+            }
+
+            if ((candidateDetectionRef.current?.count ?? 0) < REQUIRED_MATCHING_READS) {
+              return
+            }
+
             lastDetectedRef.current = { value: nextValue, timestamp: now }
+            candidateDetectionRef.current = null
             onDetected(nextValue)
           },
           () => {
