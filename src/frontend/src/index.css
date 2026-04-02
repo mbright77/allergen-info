@@ -1279,9 +1279,19 @@ button {
 
 .result-product-card {
   display: grid;
-  grid-template-columns: auto 1fr;
+  grid-template-columns: 5.75rem minmax(0, 1fr);
   gap: 1rem;
   align-items: start;
+}
+
+.result-product-card > * {
+  min-width: 0;
+}
+
+.result-product-card .section-title,
+.result-product-card .supporting-text,
+.status-summary-card__value {
+  overflow-wrap: anywhere;
 }
 
 .result-product-card__media {
@@ -1317,12 +1327,24 @@ button {
 .checked-allergen-item,
 .highlight-item {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 0.75rem;
   padding: 0.9rem 1rem;
   border-radius: 1rem;
   background: rgba(246, 243, 242, 0.95);
+}
+
+.checked-allergen-item > :first-child,
+.highlight-item > :last-child {
+  min-width: 0;
+  flex: 1 1 auto;
+  overflow-wrap: anywhere;
+}
+
+.checked-allergen-item .inline-status,
+.highlight-item .inline-status {
+  flex: 0 0 auto;
 }
 
 .inline-status {
