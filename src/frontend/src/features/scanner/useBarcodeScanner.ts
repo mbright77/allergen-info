@@ -131,10 +131,6 @@ export function useBarcodeScanner({ enabled, onDetected }: UseBarcodeScannerOpti
         const instance = new Html5Qrcode(SCANNER_ELEMENT_ID, {
           formatsToSupport: [
             Html5QrcodeSupportedFormats.EAN_13,
-            Html5QrcodeSupportedFormats.EAN_8,
-            Html5QrcodeSupportedFormats.UPC_A,
-            Html5QrcodeSupportedFormats.UPC_E,
-            Html5QrcodeSupportedFormats.CODE_128,
           ],
           verbose: false,
         })
