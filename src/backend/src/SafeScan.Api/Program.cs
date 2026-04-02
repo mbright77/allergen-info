@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.HttpOverrides;
 using SafeScan.Api.Endpoints;
 using SafeScan.Application.Abstractions;
 using SafeScan.Application.Services;
@@ -14,6 +15,12 @@ var pathBase = builder.Configuration["PathBase"]?.TrimEnd('/');
 
 builder.Services.AddProblemDetails();
 builder.Services.AddOpenApi();
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.KnownNetworks.Clear();
+    options.KnownProxies.Clear();
+});
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("Frontend", policy =>
@@ -35,6 +42,8 @@ builder.Services.AddInfrastructure(builder.Configuration);
 
 var app = builder.Build();
 
+app.UseForwardedHeaders();
+
 if (!string.IsNullOrWhiteSpace(pathBase) && pathBase != "/")
 {
     app.UsePathBase(pathBase);
@@ -46,9 +55,8 @@ app.UseCors("Frontend");
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
+    app.UseHttpsRedirection();
 }
-
-app.UseHttpsRedirection();
 
 var apiGroup = app.MapGroup("/api");
 

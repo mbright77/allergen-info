@@ -16,7 +16,6 @@ export BACKEND_CONTAINER_PORT="8080"
 export BACKEND_PATH_PREFIX="/safescan-api"
 export BACKEND_ASPNETCORE_PATH_BASE="/safescan-api"
 export K8S_INGRESS_CLASS="nginx"
-export PRODUCT_CATALOG_PROVIDER="Placeholder"
 export ASPNETCORE_ENVIRONMENT="Production"
 export DABAS_BASE_URL="https://api.dabas.com/"
 export DABAS_API_KEY_QUERY_PARAMETER_NAME="apikey"
@@ -34,6 +33,7 @@ fi
 export IMAGE_REF
 export BACKEND_HOST
 export BACKEND_TLS_SECRET_NAME
+export PRODUCT_CATALOG_PROVIDER="${PRODUCT_CATALOG_PROVIDER:-Dabas}"
 export CERT_MANAGER_CLUSTER_ISSUER="${CERT_MANAGER_CLUSTER_ISSUER:-}"
 export ALLOWED_ORIGINS="${ALLOWED_ORIGINS:-}"
 export DABAS_API_KEY="${DABAS_API_KEY:-}"
@@ -110,13 +110,13 @@ ${IMAGE_PULL_SECRETS_BLOCK}
                 name: ${BACKEND_K8S_DEPLOYMENT_NAME}-secrets
           readinessProbe:
             httpGet:
-              path: /health
+              path: ${BACKEND_ASPNETCORE_PATH_BASE}/health
               port: http
             initialDelaySeconds: 10
             periodSeconds: 10
           livenessProbe:
             httpGet:
-              path: /health
+              path: ${BACKEND_ASPNETCORE_PATH_BASE}/health
               port: http
             initialDelaySeconds: 20
             periodSeconds: 20
