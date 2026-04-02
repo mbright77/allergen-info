@@ -14,7 +14,7 @@ export function ScanPage() {
 
   const handleDetectedBarcode = useCallback(
     (detectedValue: string) => {
-      navigate(`/results/${encodeURIComponent(detectedValue)}`)
+      navigate(`/results/scan/${encodeURIComponent(detectedValue)}`)
     },
     [navigate],
   )

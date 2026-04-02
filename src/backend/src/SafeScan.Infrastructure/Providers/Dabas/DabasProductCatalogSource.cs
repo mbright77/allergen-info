@@ -138,8 +138,30 @@ public sealed class DabasProductCatalogSource : IProductCatalogSource
         return EnumerateRecords(document.RootElement, SearchCollectionPropertyNames)
             .Select(MapSearchResult)
             .Where(static item => !string.IsNullOrWhiteSpace(item.Gtin) && !string.IsNullOrWhiteSpace(item.Name))
-            .OrderBy(static item => item.Name, StringComparer.OrdinalIgnoreCase)
+            .OrderByDescending(item => IsExactMatch(item.Gtin, query: ExtractQueryFromRequestUri(requestUri)))
+            .ThenByDescending(item => IsExactMatch(item.ArticleNumber, query: ExtractQueryFromRequestUri(requestUri)))
+            .ThenByDescending(item => IsExactMatch(item.Name, query: ExtractQueryFromRequestUri(requestUri)))
+            .ThenBy(item => item.Name, StringComparer.OrdinalIgnoreCase)
             .ToArray();
+    }
+
+    private static bool IsExactMatch(string? value, string query)
+    {
+        return !string.IsNullOrWhiteSpace(value)
+            && value.Trim().Equals(query, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static string ExtractQueryFromRequestUri(string requestUri)
+    {
+        var normalized = requestUri.TrimEnd('/');
+        var marker = "/json";
+        var markerIndex = normalized.LastIndexOf(marker, StringComparison.OrdinalIgnoreCase);
+        var pathPortion = markerIndex >= 0 ? normalized[..markerIndex] : normalized;
+        var lastSlashIndex = pathPortion.LastIndexOf('/');
+
+        return lastSlashIndex >= 0
+            ? Uri.UnescapeDataString(pathPortion[(lastSlashIndex + 1)..]).Trim()
+            : string.Empty;
     }
 
     private static ProductRecord MapProductRecord(JsonElement record)

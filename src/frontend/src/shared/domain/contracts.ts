@@ -88,9 +88,29 @@ export const analysisRequestSchema = z.object({
   selectedAllergens: z.array(z.string()),
 })
 
+export const scanAnalysisRequestSchema = z.object({
+  code: z.string(),
+  selectedAllergens: z.array(z.string()),
+})
+
 export const analysisResponseSchema = z.object({
   product: productSchema,
   analysis: analysisResultSchema,
+})
+
+export const scanResolutionModeSchema = z.enum(['Full', 'Basic', 'NotFound'])
+
+export const scanResolutionSchema = z.object({
+  mode: scanResolutionModeSchema,
+  scannedCode: z.string(),
+  resolvedGtin: z.string().nullable().optional(),
+  message: z.string().nullable().optional(),
+})
+
+export const scanAnalysisResponseSchema = z.object({
+  resolution: scanResolutionSchema,
+  product: productSchema.nullable().optional(),
+  analysis: analysisResultSchema.nullable().optional(),
 })
 
 export type AllergenOption = z.infer<typeof allergenOptionSchema>
@@ -99,5 +119,7 @@ export type ProductLookupResponse = z.infer<typeof productLookupResponseSchema>
 export type SearchResult = z.infer<typeof searchResultSchema>
 export type ProductSearchResponse = z.infer<typeof productSearchResponseSchema>
 export type AnalysisRequest = z.infer<typeof analysisRequestSchema>
+export type ScanAnalysisRequest = z.infer<typeof scanAnalysisRequestSchema>
 export type AnalysisResponse = z.infer<typeof analysisResponseSchema>
 export type AnalysisOverallStatus = z.infer<typeof analysisOverallStatusSchema>
+export type ScanAnalysisResponse = z.infer<typeof scanAnalysisResponseSchema>

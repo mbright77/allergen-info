@@ -4,7 +4,10 @@ import {
   analysisResponseSchema,
   productLookupResponseSchema,
   productSearchResponseSchema,
+  scanAnalysisRequestSchema,
+  scanAnalysisResponseSchema,
   type AnalysisRequest,
+  type ScanAnalysisRequest,
 } from '../domain/contracts'
 import { fetchJson } from './http'
 
@@ -30,6 +33,18 @@ export function analyzeProduct(request: AnalysisRequest) {
   const payload = analysisRequestSchema.parse(request)
 
   return fetchJson('/api/analysis', analysisResponseSchema, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  })
+}
+
+export function analyzeScannedProduct(request: ScanAnalysisRequest) {
+  const payload = scanAnalysisRequestSchema.parse(request)
+
+  return fetchJson('/api/analysis/scan', scanAnalysisResponseSchema, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

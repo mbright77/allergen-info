@@ -2,11 +2,25 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { RouterProvider, createMemoryRouter } from 'react-router-dom'
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { ProfileProvider } from '../../shared/profile/ProfileProvider'
 import { RECENT_SEARCHES_STORAGE_KEY } from '../../shared/search/recent-searches'
 import { ScanPage } from './ScanPage'
+
+let detectedCallback: ((value: string) => void) | null = null
+
+vi.mock('./useBarcodeScanner', () => ({
+  useBarcodeScanner: ({ onDetected }: { onDetected: (value: string) => void }) => {
+    detectedCallback = onDetected
+    return {
+      containerRef: { current: null },
+      status: 'idle',
+      errorMessage: null,
+      controls: null,
+    }
+  },
+}))
 
 function renderScanPage() {
   const queryClient = new QueryClient({
@@ -21,6 +35,7 @@ function renderScanPage() {
     [
       { path: '/scan', element: <ScanPage /> },
       { path: '/search/results', element: <p>Search results route</p> },
+      { path: '/results/scan/:code', element: <p>Scan result route</p> },
     ],
     { initialEntries: ['/scan'] },
   )
@@ -39,6 +54,7 @@ function renderScanPage() {
 describe('ScanPage', () => {
   afterEach(() => {
     window.localStorage.clear()
+    detectedCallback = null
   })
 
   it('stores recent searches when submitting the search form', async () => {
@@ -57,5 +73,13 @@ describe('ScanPage', () => {
 
     expect(screen.getByRole('button', { name: /tap to scan/i })).toBeInTheDocument()
     expect(screen.getByText(/camera stays off until you tap the scan card/i)).toBeInTheDocument()
+  })
+
+  it('routes scanned barcodes through the scan resolution page', async () => {
+    const { router } = renderScanPage()
+
+    detectedCallback?.('1735000111001')
+
+    expect(router.state.location.pathname).toBe('/results/scan/1735000111001')
   })
 })

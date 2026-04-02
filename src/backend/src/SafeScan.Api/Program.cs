@@ -38,6 +38,7 @@ builder.Services.ConfigureHttpJsonOptions(options =>
     options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
 });
 builder.Services.AddSingleton<IProductAnalysisService, ProductAnalysisService>();
+builder.Services.AddSingleton<IScanProductAnalysisService, ScanProductAnalysisService>();
 builder.Services.AddInfrastructure(builder.Configuration);
 
 var app = builder.Build();

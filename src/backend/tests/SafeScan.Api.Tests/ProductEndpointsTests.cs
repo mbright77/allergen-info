@@ -65,7 +65,28 @@ public sealed class ProductEndpointsTests : IClassFixture<WebApplicationFactory<
         payload!.Should().Contain(item => item.Code == "milk_protein");
     }
 
+    [Fact]
+    public async Task ScanAnalysisEndpoint_ReturnsNotFoundWhenNoProductMatches()
+    {
+        var response = await _client.PostAsJsonAsync("/api/analysis/scan", new
+        {
+            code = "0000000000000",
+            selectedAllergens = Array.Empty<string>()
+        });
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var payload = await response.Content.ReadFromJsonAsync<ScanAnalysisPayload>();
+
+        payload.Should().NotBeNull();
+        payload!.Resolution.Mode.Should().Be("NotFound");
+    }
+
     private sealed record ProductSearchPayload(string Query, IReadOnlyList<object> Results);
+
+    private sealed record ScanResolutionPayload(string Mode, string ScannedCode, string? ResolvedGtin, string? Message);
+
+    private sealed record ScanAnalysisPayload(ScanResolutionPayload Resolution);
 
     private sealed record AllergenPayload(string Code, string Label);
 }

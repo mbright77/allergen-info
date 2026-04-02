@@ -20,6 +20,10 @@ public static class ProductEndpoints
             .WithName("AnalyzeProduct")
             .WithOpenApi();
 
+        group.MapPost("/analysis/scan", AnalyzeScannedProduct)
+            .WithName("AnalyzeScannedProduct")
+            .WithOpenApi();
+
         return group;
     }
 
@@ -82,5 +86,14 @@ public static class ProductEndpoints
         var analysis = analysisService.Analyze(product, request.SelectedAllergens);
 
         return Results.Ok(new AnalysisResponse(product.ToDto(), analysis));
+    }
+
+    private static async Task<IResult> AnalyzeScannedProduct(
+        ScanAnalysisRequest request,
+        IScanProductAnalysisService scanAnalysisService,
+        CancellationToken cancellationToken)
+    {
+        var response = await scanAnalysisService.AnalyzeScanAsync(request, cancellationToken);
+        return Results.Ok(response);
     }
 }

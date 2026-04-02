@@ -112,6 +112,39 @@ public sealed class DabasProductCatalogSourceTests
     }
 
     [Fact]
+    public async Task SearchProductsAsync_RanksExactGtinMatchFirst()
+    {
+        var handler = new StubHttpMessageHandler(_ =>
+            new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent(
+                    """
+                    {
+                      "ArticleDateModel": [
+                        {
+                          "GTIN": "9999999999999",
+                          "Produktnamn": "Another Product"
+                        },
+                        {
+                          "GTIN": "1735000111001",
+                          "Produktnamn": "The Original Oat Milk"
+                        }
+                      ]
+                    }
+                    """,
+                    Encoding.UTF8,
+                    "application/json")
+            });
+
+        var source = CreateDabasSource(handler);
+
+        var results = await source.SearchProductsAsync("1735000111001", []);
+
+        results.Should().HaveCount(2);
+        results[0].Gtin.Should().Be("1735000111001");
+    }
+
+    [Fact]
     public async Task GetProductByGtinAsync_MapsProductDetailsAndAllergenStatements()
     {
         var handler = new StubHttpMessageHandler(_ =>
