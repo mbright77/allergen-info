@@ -103,14 +103,11 @@ export function ScanPage() {
               </div>
 
               <div className="scanner-frame">
-                <video
-                  ref={scanner.videoRef}
-                  className="scanner-video"
-                  autoPlay
-                  muted
-                  playsInline
-                  aria-label="Live barcode scanner preview"
-                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                <div
+                  id="barcode-scanner-region"
+                  ref={scanner.containerRef}
+                  className="scanner-video scanner-video--mount"
+                  aria-hidden="true"
                 />
                 <span className="scanner-corner scanner-corner--tl" />
                 <span className="scanner-corner scanner-corner--tr" />

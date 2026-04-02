@@ -14,12 +14,68 @@ type ScannerControls = {
   getCapabilities?: () => MediaTrackCapabilities | null
 }
 
+type Html5QrcodeModule = typeof import('html5-qrcode')
+type Html5QrcodeInstance = InstanceType<Html5QrcodeModule['Html5Qrcode']>
+type ExtendedMediaTrackConstraints = MediaTrackConstraints & {
+  resizeMode?: 'crop-and-scale' | 'none'
+}
+
+const SCANNER_ELEMENT_ID = 'barcode-scanner-region'
+const DETECTION_COOLDOWN_MS = 2500
+
+function getBarcodeScanBox(viewfinderWidth: number, viewfinderHeight: number) {
+  const width = Math.max(220, Math.min(Math.floor(viewfinderWidth * 0.86), 420))
+  const height = Math.max(80, Math.min(Math.floor(viewfinderHeight * 0.24), 160))
+
+  return {
+    width: Math.min(width, viewfinderWidth),
+    height: Math.min(height, viewfinderHeight),
+  }
+}
+
+async function stopAndClearScanner(instance: Html5QrcodeInstance | null) {
+  if (!instance) {
+    return
+  }
+
+  try {
+    const state = instance.getState()
+    if (state === 2 || state === 3) {
+      await instance.stop()
+    }
+  } catch {
+    // ignore stop errors during teardown
+  }
+
+  try {
+    instance.clear()
+  } catch {
+    // ignore clear errors when the region was never rendered
+  }
+}
+
+async function tryApplyContinuousAutofocus(instance: Html5QrcodeInstance) {
+  try {
+    const caps = instance.getRunningTrackCapabilities()
+    const focusModes = (caps as MediaTrackCapabilities & { focusMode?: string[] }).focusMode
+
+    if (!focusModes?.includes('continuous')) {
+      return
+    }
+
+    await instance.applyVideoConstraints({
+      advanced: [{ focusMode: 'continuous' } as MediaTrackConstraints],
+    })
+  } catch {
+    // best effort only
+  }
+}
+
 export function useBarcodeScanner({ enabled, onDetected }: UseBarcodeScannerOptions) {
-  const videoRef = useRef<HTMLVideoElement | null>(null)
+  const containerRef = useRef<HTMLDivElement | null>(null)
+  const scannerInstanceRef = useRef<Html5QrcodeInstance | null>(null)
+  const controlsRef = useRef<ScannerControls | null>(null)
   const lastDetectedRef = useRef<{ value: string; timestamp: number } | null>(null)
-  const scannerRef = useRef<ScannerControls | null>(null)
-  const mediaStreamRef = useRef<MediaStream | null>(null)
-  const trackRef = useRef<MediaStreamTrack | null>(null)
   const [status, setStatus] = useState<ScannerStatus>('idle')
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
@@ -27,13 +83,9 @@ export function useBarcodeScanner({ enabled, onDetected }: UseBarcodeScannerOpti
     if (!enabled || typeof window === 'undefined') {
       setStatus('idle')
       setErrorMessage(null)
-      scannerRef.current?.stop()
-      scannerRef.current = null
-      if (videoRef.current?.srcObject) {
-        const tracks = (videoRef.current.srcObject as MediaStream).getTracks()
-        tracks.forEach((t) => t.stop())
-        videoRef.current.srcObject = null
-      }
+      void stopAndClearScanner(scannerInstanceRef.current)
+      scannerInstanceRef.current = null
+      controlsRef.current = null
       return
     }
 
@@ -52,7 +104,7 @@ export function useBarcodeScanner({ enabled, onDetected }: UseBarcodeScannerOpti
       }
     }
 
-    if (typeof navigator === 'undefined' || !navigator.mediaDevices?.getUserMedia) {
+    if (typeof navigator === 'undefined' || !navigator.mediaDevices?.getUserMedia || !containerRef.current) {
       setStatus('unsupported')
       setErrorMessage('Live barcode scanning is not available in this browser right now.')
       return
@@ -65,134 +117,116 @@ export function useBarcodeScanner({ enabled, onDetected }: UseBarcodeScannerOpti
       setErrorMessage(null)
 
       try {
-        const [{ BrowserMultiFormatReader }, library] = await Promise.all([
-          import('@zxing/browser'),
-          import('@zxing/library'),
-        ])
+        const html5QrcodeModule = await import('html5-qrcode')
 
-        if (isCancelled || !videoRef.current) {
+        if (isCancelled || !containerRef.current) {
           return
         }
 
-        // Prepare hints to improve detection speed/accuracy
-        const { DecodeHintType, BarcodeFormat } = library
-        const hints = new Map()
-        hints.set(DecodeHintType.TRY_HARDER, true)
-        hints.set(DecodeHintType.POSSIBLE_FORMATS, [
-          BarcodeFormat.CODE_128,
-          BarcodeFormat.EAN_13,
-          BarcodeFormat.QR_CODE,
-        ])
-
-        const reader = new BrowserMultiFormatReader(hints)
-
-        // Acquire camera ourselves so we can query track capabilities
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: {
-            facingMode: { ideal: 'environment' },
-            width: { ideal: 1920 },
-            height: { ideal: 1080 },
-          },
+        const { Html5Qrcode, Html5QrcodeSupportedFormats } = html5QrcodeModule
+        const instance = new Html5Qrcode(SCANNER_ELEMENT_ID, {
+          formatsToSupport: [
+            Html5QrcodeSupportedFormats.EAN_13,
+            Html5QrcodeSupportedFormats.EAN_8,
+            Html5QrcodeSupportedFormats.UPC_A,
+            Html5QrcodeSupportedFormats.UPC_E,
+            Html5QrcodeSupportedFormats.CODE_128,
+          ],
+          verbose: false,
         })
 
-        if (isCancelled) {
-          stream.getTracks().forEach((t) => t.stop())
-          return
-        }
+        scannerInstanceRef.current = instance
 
-        mediaStreamRef.current = stream
-        videoRef.current.srcObject = stream
-        await videoRef.current.play()
-
-        const track = stream.getVideoTracks()[0]
-        trackRef.current = track
-
-        let caps: MediaTrackCapabilities | null = null
-        try {
-          caps = track.getCapabilities ? track.getCapabilities() : null
-        } catch (e) {
-          caps = null
-        }
-
-        const controls = await reader.decodeFromVideoElement(videoRef.current, (result: any, error: any) => {
-          if (result) {
-            const nextValue = String(result.getText()).trim()
+        await instance.start(
+          { facingMode: { ideal: 'environment' } },
+          {
+            fps: 8,
+            disableFlip: true,
+            qrbox: getBarcodeScanBox,
+            videoConstraints: {
+              facingMode: { ideal: 'environment' },
+              width: { ideal: 1280, max: 1280 },
+              height: { ideal: 720, max: 720 },
+              frameRate: { ideal: 24, max: 30 },
+              resizeMode: 'crop-and-scale',
+            } as ExtendedMediaTrackConstraints,
+          },
+          (decodedText) => {
+            const nextValue = String(decodedText).trim()
             const now = Date.now()
             const lastDetected = lastDetectedRef.current
 
-            if (
-              !nextValue ||
-              (lastDetected && lastDetected.value === nextValue && now - lastDetected.timestamp < 2500)
-            ) {
+            if (!nextValue || (lastDetected && lastDetected.value === nextValue && now - lastDetected.timestamp < DETECTION_COOLDOWN_MS)) {
               return
             }
 
             lastDetectedRef.current = { value: nextValue, timestamp: now }
             onDetected(nextValue)
-          }
-
-          // Ignore common NotFoundException as non-fatal (library provides name)
-          if (error && error.name && error.name !== 'NotFoundException') {
-            // Non-fatal: log for diagnostics but don't flip to fatal error state
-            // console.warn('Scanner error', error)
-          }
-        })
+          },
+          () => {
+            // not found callback is expected during normal scanning
+          },
+        )
 
         if (isCancelled) {
-          controls.stop()
-          stream.getTracks().forEach((t) => t.stop())
+          await stopAndClearScanner(instance)
           return
         }
 
-        // Create a small wrapper controls object that exposes applyConstraints helpers
-        const wrapper: ScannerControls = {
+        await tryApplyContinuousAutofocus(instance)
+
+        controlsRef.current = {
           stop: () => {
+            void stopAndClearScanner(instance)
+          },
+          getCapabilities: () => {
             try {
-              controls.stop()
-            } catch (e) {
-              // ignore
-            }
-            try {
-              stream.getTracks().forEach((t) => t.stop())
-            } catch (e) {
-              // ignore
+              return instance.getRunningTrackCapabilities()
+            } catch {
+              return null
             }
           },
-          getCapabilities: () => caps,
           toggleTorch: async (on?: boolean) => {
-            if (!track) return false
             try {
-              const hasTorch = !!(caps && (caps as any).torch)
-              if (!hasTorch) return false
-              // Some browsers expose non-standard constraint names (torch, zoom).
-              // Cast to any to avoid TypeScript complaining while still calling the API.
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              await (track as any).applyConstraints({ advanced: [{ torch: !!on }] } as any)
+              const caps = instance.getRunningTrackCapabilities() as MediaTrackCapabilities & { torch?: boolean }
+              if (!caps?.torch) {
+                return false
+              }
+
+              await instance.applyVideoConstraints({
+                advanced: [{ torch: !!on } as MediaTrackConstraints],
+              })
               return true
-            } catch (e) {
+            } catch {
               return false
             }
           },
           setZoom: async (value: number) => {
-            if (!track) return false
             try {
-              const zoomCap = caps && (caps as any).zoom
-              if (!zoomCap) return false
-              const min = (zoomCap as any).min ?? 1
-              const max = (zoomCap as any).max ?? 1
+              const caps = instance.getRunningTrackCapabilities() as MediaTrackCapabilities & {
+                zoom?: { min?: number; max?: number }
+              }
+              const zoomCap = caps?.zoom
+              if (!zoomCap) {
+                return false
+              }
+
+              const min = zoomCap.min ?? 1
+              const max = zoomCap.max ?? 1
               const clamped = Math.max(min, Math.min(max, value))
-               // eslint-disable-next-line @typescript-eslint/no-explicit-any
-               await (track as any).applyConstraints({ advanced: [{ zoom: clamped }] } as any)
+
+              await instance.applyVideoConstraints({
+                advanced: [{ zoom: clamped } as MediaTrackConstraints],
+              })
               return true
-            } catch (e) {
+            } catch {
               return false
             }
           },
         }
 
-        scannerRef.current = wrapper
         setStatus('active')
-      } catch (error: any) {
+      } catch (error) {
         if (isCancelled) {
           return
         }
@@ -208,33 +242,20 @@ export function useBarcodeScanner({ enabled, onDetected }: UseBarcodeScannerOpti
       }
     }
 
-    startScanner()
+    void startScanner()
 
     return () => {
       isCancelled = true
-      try {
-        scannerRef.current?.stop()
-      } catch (e) {
-        // ignore
-      }
-      scannerRef.current = null
-
-      try {
-        if (videoRef.current?.srcObject) {
-          const tracks = (videoRef.current.srcObject as MediaStream).getTracks()
-          tracks.forEach((track) => track.stop())
-          videoRef.current.srcObject = null
-        }
-      } catch (e) {
-        // ignore
-      }
+      void stopAndClearScanner(scannerInstanceRef.current)
+      scannerInstanceRef.current = null
+      controlsRef.current = null
     }
   }, [enabled, onDetected])
 
   return {
-    videoRef,
+    containerRef,
     status,
     errorMessage,
-    controls: scannerRef.current,
+    controls: controlsRef.current,
   }
 }
