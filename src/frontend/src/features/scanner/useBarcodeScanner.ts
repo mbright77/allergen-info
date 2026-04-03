@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 
+import { resolvePreferredRearCameraSelection } from './cameraSelection'
+
 type ScannerStatus = 'idle' | 'requesting' | 'active' | 'unsupported' | 'denied' | 'error'
 
 type UseBarcodeScannerOptions = {
@@ -19,6 +21,7 @@ type Html5QrcodeInstance = InstanceType<Html5QrcodeModule['Html5Qrcode']>
 type ExtendedMediaTrackConstraints = MediaTrackConstraints & {
   resizeMode?: 'crop-and-scale' | 'none'
 }
+type FocusMode = 'continuous' | 'single-shot'
 
 const SCANNER_ELEMENT_ID = 'barcode-scanner-region'
 const DETECTION_COOLDOWN_MS = 2500
@@ -56,18 +59,23 @@ async function stopAndClearScanner(instance: Html5QrcodeInstance | null) {
   }
 }
 
-async function tryApplyContinuousAutofocus(instance: Html5QrcodeInstance) {
+async function tryApplyAutofocusEnhancements(instance: Html5QrcodeInstance) {
   try {
     const caps = instance.getRunningTrackCapabilities()
-    const focusModes = (caps as MediaTrackCapabilities & { focusMode?: string[] }).focusMode
+    const focusModes = (caps as MediaTrackCapabilities & { focusMode?: FocusMode[] }).focusMode
 
-    if (!focusModes?.includes('continuous')) {
+    if (focusModes?.includes('continuous')) {
+      await instance.applyVideoConstraints({
+        advanced: [{ focusMode: 'continuous' } as MediaTrackConstraints],
+      })
       return
     }
 
-    await instance.applyVideoConstraints({
-      advanced: [{ focusMode: 'continuous' } as MediaTrackConstraints],
-    })
+    if (focusModes?.includes('single-shot')) {
+      await instance.applyVideoConstraints({
+        advanced: [{ focusMode: 'single-shot' } as MediaTrackConstraints],
+      })
+    }
   } catch {
     // best effort only
   }
@@ -137,8 +145,10 @@ export function useBarcodeScanner({ enabled, onDetected }: UseBarcodeScannerOpti
 
         scannerInstanceRef.current = instance
 
+        const cameraSelection = await resolvePreferredRearCameraSelection()
+
         await instance.start(
-          { facingMode: { ideal: 'environment' } },
+          cameraSelection,
           {
             fps: 8,
             qrbox: getBarcodeScanBox,
@@ -196,7 +206,7 @@ export function useBarcodeScanner({ enabled, onDetected }: UseBarcodeScannerOpti
           return
         }
 
-        await tryApplyContinuousAutofocus(instance)
+        await tryApplyAutofocusEnhancements(instance)
 
         controlsRef.current = {
           stop: () => {
