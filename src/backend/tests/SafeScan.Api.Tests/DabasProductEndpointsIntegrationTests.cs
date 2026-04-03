@@ -92,7 +92,7 @@ public sealed class DabasProductEndpointsIntegrationTests
                     {
                       "ArticleDateModel": [
                         {
-                          "GTIN": "1735000111001",
+                          "GTIN": "1735000111004",
                           "Produktnamn": "The Original Oat Milk",
                           "Varumarke": "Oatly",
                           "Artikelkategori": "Beverage"
@@ -119,7 +119,72 @@ public sealed class DabasProductEndpointsIntegrationTests
 
         payload.Should().NotBeNull();
         payload!.Resolution.Mode.Should().Be("Basic");
-        payload.Resolution.ResolvedGtin.Should().Be("1735000111001");
+        payload.Resolution.ResolvedGtin.Should().Be("1735000111004");
+        payload.Analysis!.OverallStatus.Should().Be("Unknown");
+    }
+
+    [Fact]
+    public async Task ScanAnalysisEndpoint_ReturnsUnknownWhenBarcodeLookupMissesButSearchFindsProduct()
+    {
+        using var factory = new DabasApiWebApplicationFactory(request =>
+        {
+            if (request.RequestUri!.ToString().Contains("basesearchparameter/1735000111001/json", StringComparison.Ordinal))
+            {
+                return DabasApiWebApplicationFactory.Json(
+                    """
+                    {
+                      "ArticleDateModel": [
+                        {
+                          "GTIN": "1735000111004",
+                          "Produktnamn": "Cookie Bites",
+                          "Varumarke": "Test Brand",
+                          "Artikelkategori": "Cookies"
+                        }
+                      ]
+                    }
+                    """);
+            }
+
+            if (request.RequestUri!.ToString().Contains("article/gtin/1735000111004/json", StringComparison.Ordinal))
+            {
+                return DabasApiWebApplicationFactory.Json(
+                    """
+                    {
+                      "Article": {
+                        "GTIN": "1735000111004",
+                        "Produktnamn": "Cookie Bites",
+                        "Varumarke": "Test Brand",
+                        "Artikelkategori": "Cookies",
+                        "Ingrediensforteckning": "Wheat flour, sugar, butter.",
+                        "AllergenInformation": {
+                          "Innehaller": [],
+                          "KanInnehalla": []
+                        }
+                      }
+                    }
+                    """);
+            }
+
+            return new HttpResponseMessage(HttpStatusCode.NotFound);
+        });
+
+        using var client = factory.CreateClient();
+
+        var response = await client.PostAsJsonAsync("/api/analysis/scan", new
+        {
+            code = "1735000111001",
+            selectedAllergens = new[] { "gluten" }
+        });
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var payload = await response.Content.ReadFromJsonAsync<ScanAnalysisPayload>();
+
+        payload.Should().NotBeNull();
+        payload!.Resolution.Mode.Should().Be("Unverified");
+        payload.Resolution.ResolvedGtin.Should().Be("1735000111004");
+        payload.Product.Should().NotBeNull();
+        payload.Product!.Name.Should().Be("Cookie Bites");
         payload.Analysis!.OverallStatus.Should().Be("Unknown");
     }
 

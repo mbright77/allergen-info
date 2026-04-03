@@ -135,6 +135,52 @@ describe('ScannedResultPage', () => {
     expect(screen.getByText(/Showing basic product information only/i)).toBeInTheDocument()
   })
 
+  it('renders an unknown state when the barcode falls back to an unverified search match', async () => {
+    vi.spyOn(window, 'fetch').mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          resolution: {
+            mode: 'Unverified',
+            scannedCode: '1735000111001',
+            resolvedGtin: '1735000111004',
+            message: 'This barcode did not resolve to a verified GTIN match. The product was found via search only, so the status is unknown.',
+          },
+          product: {
+            gtin: '1735000111004',
+            name: 'Cookie Bites',
+            brand: 'Test Brand',
+            category: 'Cookies',
+            subtitle: 'Crunchy wheat cookies',
+            ingredientsText: 'Wheat flour, sugar, butter.',
+            allergenStatements: { contains: [], mayContain: [] },
+            nutritionSummary: null,
+            imageUrl: null,
+            source: 'dabas',
+          },
+          analysis: {
+            overallStatus: 'Unknown',
+            matchedAllergens: [],
+            traceAllergens: [],
+            checkedAllergens: [{ code: 'gluten', status: 'Unknown' }],
+            ingredientHighlights: [],
+            explanations: ['This barcode did not resolve to a verified GTIN match. The product was found via search only, so the status is unknown.'],
+          },
+        }),
+        {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        },
+      ),
+    )
+
+    renderScannedResultPage()
+
+    expect(await screen.findByRole('heading', { name: /barcode could not be verified/i })).toBeInTheDocument()
+    expect(screen.getByText(/Cookie Bites/i)).toBeInTheDocument()
+    expect(screen.getByText(/status is unknown/i)).toBeInTheDocument()
+    expect(screen.getAllByText(/^Unknown$/i).length).toBeGreaterThan(0)
+  })
+
   it('renders a not found state when the barcode cannot be matched', async () => {
     vi.spyOn(window, 'fetch').mockResolvedValue(
       new Response(

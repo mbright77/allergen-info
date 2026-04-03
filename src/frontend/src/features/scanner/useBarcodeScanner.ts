@@ -26,8 +26,8 @@ const DETECTION_CONFIRMATION_WINDOW_MS = 900
 const REQUIRED_MATCHING_READS = 2
 
 function getBarcodeScanBox(viewfinderWidth: number, viewfinderHeight: number) {
-  const width = Math.max(200, Math.min(Math.floor(viewfinderWidth * 0.72), 340))
-  const height = Math.max(60, Math.min(Math.floor(viewfinderHeight * 0.16), 110))
+  const width = Math.max(240, Math.min(Math.floor(viewfinderWidth * 0.86), 420))
+  const height = Math.max(90, Math.min(Math.floor(viewfinderHeight * 0.24), 150))
 
   return {
     width: Math.min(width, viewfinderWidth),
@@ -140,8 +140,7 @@ export function useBarcodeScanner({ enabled, onDetected }: UseBarcodeScannerOpti
         await instance.start(
           { facingMode: { ideal: 'environment' } },
           {
-            fps: 5,
-            disableFlip: true,
+            fps: 8,
             qrbox: getBarcodeScanBox,
             videoConstraints: {
               facingMode: { ideal: 'environment' },

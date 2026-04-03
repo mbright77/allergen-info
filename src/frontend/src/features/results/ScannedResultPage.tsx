@@ -32,7 +32,7 @@ export function ScannedResultPage() {
   }, [navigate, scanQuery.data])
 
   useEffect(() => {
-    if (scanQuery.data?.resolution.mode === 'Basic' && scanQuery.data.product && scanQuery.data.analysis) {
+    if (scanQuery.data?.resolution.mode !== 'Full' && scanQuery.data?.product && scanQuery.data?.analysis) {
       addHistoryEntry(toSavedProductItem({ product: scanQuery.data.product, analysis: scanQuery.data.analysis }))
     }
   }, [addHistoryEntry, scanQuery.data])
@@ -97,15 +97,17 @@ function ScannedFallbackResult({ response }: { response: ScanAnalysisResponse })
     return null
   }
 
+  const copy = getFallbackCopy(resolution.mode)
+
   return (
     <section className="stack-xl">
       <div className="hero-card hero-card--unknown hero-card--result stack-md">
         <div className="hero-card__icon-shell" aria-hidden="true">
           <span className="material-symbols-outlined hero-card__icon">help</span>
         </div>
-        <p className="eyebrow eyebrow--light">No allergen info found</p>
-        <h1 className="display-title display-title--light">We found the product, but not the detailed allergen data.</h1>
-        <p className="supporting-text supporting-text--light">{resolution.message ?? 'Showing basic product information only.'}</p>
+        <p className="eyebrow eyebrow--light">{copy.eyebrow}</p>
+        <h1 className="display-title display-title--light">{copy.title}</h1>
+        <p className="supporting-text supporting-text--light">{resolution.message ?? copy.message}</p>
       </div>
 
       <section className="result-product-card">
@@ -155,7 +157,7 @@ function ScannedFallbackResult({ response }: { response: ScanAnalysisResponse })
 
       <section className="content-card stack-md">
         <p className="eyebrow">Next actions</p>
-        <p className="supporting-text">Search manually or try another scan if you need a product with detailed allergen data.</p>
+        <p className="supporting-text">{copy.nextAction}</p>
         <div className="action-row">
           <Link to="/scan" className="primary-action primary-action--link">
             Scan another product
@@ -180,6 +182,26 @@ function StatusSummaryCard({ label, value }: { label: string; value: string }) {
 
 function formatOverallStatus(status: AnalysisOverallStatus) {
   return status === 'Unknown' ? 'Unknown' : status
+}
+
+function getFallbackCopy(mode: ScanAnalysisResponse['resolution']['mode']) {
+  switch (mode) {
+    case 'Unverified':
+      return {
+        eyebrow: 'Barcode not verified',
+        title: 'We found a likely product match, but the barcode could not be verified.',
+        message: 'This scan only found a search-based match, so the allergen status stays unknown.',
+        nextAction: 'Search manually or check the package label before relying on this result.',
+      }
+    case 'Basic':
+    default:
+      return {
+        eyebrow: 'No allergen info found',
+        title: 'We found the product, but not the detailed allergen data.',
+        message: 'Showing basic product information only.',
+        nextAction: 'Search manually or try another scan if you need a product with detailed allergen data.',
+      }
+  }
 }
 
 function formatAllergenCode(code: string) {

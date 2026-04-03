@@ -98,7 +98,7 @@ export const analysisResponseSchema = z.object({
   analysis: analysisResultSchema,
 })
 
-export const scanResolutionModeSchema = z.enum(['Full', 'Basic', 'NotFound'])
+export const scanResolutionModeSchema = z.enum(['Full', 'Unverified', 'Basic', 'NotFound'])
 
 export const scanResolutionSchema = z.object({
   mode: scanResolutionModeSchema,

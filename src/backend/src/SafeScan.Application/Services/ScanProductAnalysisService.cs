@@ -6,8 +6,9 @@ namespace SafeScan.Application.Services;
 
 public sealed class ScanProductAnalysisService : IScanProductAnalysisService
 {
-    private const string BasicFallbackMessage = "No allergen info found. Showing basic product information only.";
+    private const string BasicFallbackMessage = "We found a possible product match, but detailed allergen data was unavailable. Treat this result as unknown.";
     private const string NotFoundMessage = "No product was found for this barcode.";
+    private const string UnverifiedMatchMessage = "This barcode did not resolve to a verified GTIN match. The product was found via search only, so the status is unknown.";
 
     private readonly IProductCatalogProvider _provider;
     private readonly IProductAnalysisService _analysisService;
@@ -31,6 +32,16 @@ public sealed class ScanProductAnalysisService : IScanProductAnalysisService
                 null);
         }
 
+            var directProduct = await _provider.GetProductByGtinAsync(normalizedCode, cancellationToken);
+
+            if (directProduct is not null)
+            {
+                return new ScanAnalysisResponse(
+                new ScanResolutionDto(ScanResolutionMode.Full, normalizedCode, directProduct.Gtin, null),
+                directProduct.ToDto(),
+                _analysisService.Analyze(directProduct, selectedAllergens));
+            }
+
         var searchResults = await _provider.SearchProductsAsync(normalizedCode, selectedAllergens, cancellationToken);
         var resolvedResult = searchResults.FirstOrDefault();
 
@@ -42,21 +53,53 @@ public sealed class ScanProductAnalysisService : IScanProductAnalysisService
                 null);
         }
 
+        if (resolvedResult.Gtin.Equals(normalizedCode, StringComparison.OrdinalIgnoreCase))
+        {
+            var unverifiedProduct = BuildFallbackProduct(resolvedResult);
+            return BuildUnknownResponse(
+                ScanResolutionMode.Unverified,
+                normalizedCode,
+                unverifiedProduct.Gtin,
+                unverifiedProduct,
+                selectedAllergens,
+                UnverifiedMatchMessage);
+        }
+
         var product = await _provider.GetProductByGtinAsync(resolvedResult.Gtin, cancellationToken);
 
         if (product is not null)
         {
-            return new ScanAnalysisResponse(
-                new ScanResolutionDto(ScanResolutionMode.Full, normalizedCode, product.Gtin, null),
-                product.ToDto(),
-                _analysisService.Analyze(product, selectedAllergens));
+            return BuildUnknownResponse(
+                ScanResolutionMode.Unverified,
+                normalizedCode,
+                product.Gtin,
+                product,
+                selectedAllergens,
+                UnverifiedMatchMessage);
         }
 
         var fallbackProduct = BuildFallbackProduct(resolvedResult);
+        return BuildUnknownResponse(
+            ScanResolutionMode.Basic,
+            normalizedCode,
+            fallbackProduct.Gtin,
+            fallbackProduct,
+            selectedAllergens,
+            BasicFallbackMessage);
+    }
+
+    private static ScanAnalysisResponse BuildUnknownResponse(
+        ScanResolutionMode resolutionMode,
+        string scannedCode,
+        string? resolvedGtin,
+        ProductRecord product,
+        IReadOnlyCollection<string> selectedAllergens,
+        string message)
+    {
         return new ScanAnalysisResponse(
-            new ScanResolutionDto(ScanResolutionMode.Basic, normalizedCode, fallbackProduct.Gtin, BasicFallbackMessage),
-            fallbackProduct.ToDto(),
-            BuildFallbackAnalysis(selectedAllergens));
+            new ScanResolutionDto(resolutionMode, scannedCode, resolvedGtin, message),
+            product.ToDto(),
+            BuildFallbackAnalysis(selectedAllergens, message));
     }
 
     private static ProductRecord BuildFallbackProduct(SearchResultDto result)
@@ -78,7 +121,7 @@ public sealed class ScanProductAnalysisService : IScanProductAnalysisService
             result.PreviewNote);
     }
 
-    private static AnalysisResultDto BuildFallbackAnalysis(IReadOnlyCollection<string> selectedAllergens)
+    private static AnalysisResultDto BuildFallbackAnalysis(IReadOnlyCollection<string> selectedAllergens, string message)
     {
         var normalizedSelections = selectedAllergens
             .Where(static allergen => !string.IsNullOrWhiteSpace(allergen))
@@ -92,6 +135,6 @@ public sealed class ScanProductAnalysisService : IScanProductAnalysisService
             [],
             normalizedSelections.Select(static allergen => new CheckedAllergenDto(allergen, AllergenMatchStatus.Unknown)).ToArray(),
             [],
-            [BasicFallbackMessage]);
+            [message]);
     }
 }
