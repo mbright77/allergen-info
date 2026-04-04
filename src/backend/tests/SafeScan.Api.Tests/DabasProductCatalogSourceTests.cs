@@ -13,7 +13,7 @@ namespace SafeScan.Api.Tests;
 public sealed class DabasProductCatalogSourceTests
 {
     [Fact]
-    public async Task SearchProductsAsync_UsesBaseSearchAndMapsNormalizedResults()
+    public async Task SearchProductsAsync_UsesSearchParameterAndMapsNormalizedResults()
     {
         var handler = new StubHttpMessageHandler(request =>
         {
@@ -31,6 +31,18 @@ public sealed class DabasProductCatalogSourceTests
                           "Hyllkantstext": "Clean label oat drink",
                           "Varumarke": "Oatly",
                           "Artikelkategori": "Beverage",
+                          "Bilder": [
+                            {
+                              "Informationstyp": "PRODUCT_IMAGE_THUMB",
+                              "Lank": "https://cdn.example.test/oat-thumb.jpg",
+                              "Sekvensnummer": 1
+                            },
+                            {
+                              "Informationstyp": "PRODUCT_IMAGE_MEDIUM",
+                              "Lank": "https://cdn.example.test/oat-medium.jpg",
+                              "Sekvensnummer": 1
+                            }
+                          ],
                           "Forpackningsstorlek": "1 l",
                           "TillverkarensArtikelnummer": "OAT-1001",
                           "Artikeltyp": "BaseArticle",
@@ -53,6 +65,7 @@ public sealed class DabasProductCatalogSourceTests
         result.Gtin.Should().Be("1735000111001");
         result.Name.Should().Be("The Original Oat Milk");
         result.Brand.Should().Be("Oatly");
+        result.ImageUrl.Should().Be("https://cdn.example.test/oat-medium.jpg");
         result.Source.Should().Be("dabas-search");
         handler.Requests.Should().HaveCount(1);
     }

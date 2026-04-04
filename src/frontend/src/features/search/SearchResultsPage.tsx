@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 
 import { searchProducts } from '../../shared/api/products'
@@ -110,9 +110,7 @@ export function SearchResultsPage() {
                     aria-label={`View details for ${result.name}`}
                   >
                     <div className={`search-card__media search-card__media--${statusClassName}`}>
-                      <div className="search-card__artwork" aria-hidden="true">
-                        <span className="search-card__monogram">{getBrandMonogram(result.brand, result.name)}</span>
-                      </div>
+                      <SearchCardArtwork result={result} />
                       {result.previewStatus ? (
                         <span className={`status-badge status-badge--${statusClassName}`}>
                           {formatPreviewStatus(result.previewStatus)}
@@ -177,4 +175,24 @@ function getBrandMonogram(brand: string | null | undefined, name: string) {
   const source = (brand ?? name).trim()
   const parts = source.split(/\s+/).filter(Boolean)
   return parts.slice(0, 2).map((part) => part[0]?.toUpperCase() ?? '').join('') || 'SS'
+}
+
+function SearchCardArtwork({ result }: { result: SearchResult }) {
+  const [imageFailed, setImageFailed] = useState(false)
+  const showImage = !!result.imageUrl && !imageFailed
+
+  return (
+    <div className="search-card__artwork" aria-hidden="true">
+      {showImage ? (
+        <img
+          className="search-card__image"
+          src={result.imageUrl ?? undefined}
+          alt=""
+          loading="lazy"
+          onError={() => setImageFailed(true)}
+        />
+      ) : null}
+      {!showImage ? <span className="search-card__monogram">{getBrandMonogram(result.brand, result.name)}</span> : null}
+    </div>
+  )
 }

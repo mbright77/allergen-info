@@ -56,6 +56,7 @@ describe('SearchResultsPage', () => {
               subtitle: 'Clean label oat drink',
               brand: 'Oatly',
               category: 'Beverage',
+              imageUrl: 'https://cdn.example.test/oat-medium.jpg',
               packageSize: '1 l',
               articleNumber: 'OAT-1001',
               articleType: 'BaseArticle',
@@ -78,6 +79,7 @@ describe('SearchResultsPage', () => {
 
     const cardButton = await screen.findByRole('button', { name: /view details for the original oat milk/i })
     expect(screen.getAllByText(/Clean Label/i)).toHaveLength(2)
+    expect(document.querySelector('.search-card__image')).toHaveAttribute('src', 'https://cdn.example.test/oat-medium.jpg')
 
     await user.click(cardButton)
 
@@ -98,6 +100,7 @@ describe('SearchResultsPage', () => {
               subtitle: 'Barista-style oat drink',
               brand: 'Califia Farms',
               category: 'Beverage',
+              imageUrl: null,
               packageSize: '1 l',
               articleNumber: 'CAL-2002',
               articleType: 'BaseArticle',
@@ -151,6 +154,7 @@ describe('SearchResultsPage', () => {
                 subtitle: 'Clean label oat drink',
                 brand: 'Oatly',
                 category: 'Beverage',
+                imageUrl: null,
                 packageSize: '1 l',
                 articleNumber: 'OAT-1001',
                 articleType: 'BaseArticle',

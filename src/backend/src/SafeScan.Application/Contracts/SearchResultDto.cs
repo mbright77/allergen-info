@@ -8,6 +8,7 @@ public sealed record SearchResultDto(
     string? Subtitle,
     string? Brand,
     string? Category,
+    string? ImageUrl,
     string? PackageSize,
     string? ArticleNumber,
     string? ArticleType,

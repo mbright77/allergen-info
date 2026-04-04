@@ -27,6 +27,14 @@ public sealed class DabasProductCatalogSource : IProductCatalogSource
         "Item"
     ];
 
+    private static readonly string[] PreferredSearchImageTypes =
+    [
+        "PRODUCT_IMAGE_MEDIUM",
+        "PRODUCT_IMAGE",
+        "PRODUCT_IMAGE_LARGE",
+        "PRODUCT_IMAGE_THUMB"
+    ];
+
     private readonly HttpClient _httpClient;
     private readonly DabasOptions _options;
 
@@ -171,6 +179,7 @@ public sealed class DabasProductCatalogSource : IProductCatalogSource
             GetString(record, "Hyllkantstext", "Subtitle"),
             GetString(record, "Varumarke", "Brand"),
             GetString(record, "Artikelkategori", "Category"),
+            SelectSearchImageUrl(record),
             GetString(record, "Forpackningsstorlek", "PackageSize"),
             GetString(record, "TillverkarensArtikelnummer", "ArticleNumber"),
             GetString(record, "Artikeltyp", "ArticleType"),
@@ -212,6 +221,35 @@ public sealed class DabasProductCatalogSource : IProductCatalogSource
         return calories is null && sugar is null
             ? null
             : new NutritionSummaryDto(calories, sugar);
+    }
+
+    private static string? SelectSearchImageUrl(JsonElement record)
+    {
+        if (!TryGetPropertyIgnoreCase(record, "Bilder", out var imagesValue) || imagesValue.ValueKind != JsonValueKind.Array)
+        {
+            return GetString(record, "BildURL", "ImageUrl");
+        }
+
+        var images = imagesValue
+            .EnumerateArray()
+            .Where(static image => image.ValueKind == JsonValueKind.Object)
+            .ToArray();
+
+        foreach (var preferredType in PreferredSearchImageTypes)
+        {
+            var imageUrl = images
+                .Where(image => string.Equals(GetString(image, "Informationstyp", "Type"), preferredType, StringComparison.OrdinalIgnoreCase))
+                .OrderBy(image => ParseInt(image, "Sekvensnummer", "SequenceNumber") ?? int.MaxValue)
+                .Select(image => GetString(image, "Lank", "Link", "Url"))
+                .FirstOrDefault(static url => !string.IsNullOrWhiteSpace(url));
+
+            if (!string.IsNullOrWhiteSpace(imageUrl))
+            {
+                return imageUrl;
+            }
+        }
+
+        return GetString(record, "BildURL", "ImageUrl");
     }
 
     private static IReadOnlyList<ProductAllergenFact> ParseAllergenFacts(JsonElement record)

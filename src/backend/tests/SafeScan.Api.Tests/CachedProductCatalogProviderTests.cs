@@ -103,6 +103,7 @@ public sealed class CachedProductCatalogProviderTests
                     "Test product",
                     "SafeScan",
                     "Chocolate",
+                    null,
                     "100 g",
                     "TEST-1",
                     "BaseArticle",

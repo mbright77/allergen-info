@@ -184,6 +184,7 @@ public sealed class PlaceholderProductCatalogProvider : IProductCatalogSource
                 Subtitle,
                 Brand,
                 Category,
+                ImageUrl,
                 PackageSize,
                 ArticleNumber,
                 ArticleType,

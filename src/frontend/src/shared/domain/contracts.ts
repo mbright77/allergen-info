@@ -48,6 +48,7 @@ export const searchResultSchema = z.object({
   subtitle: z.string().nullable().optional(),
   brand: z.string().nullable().optional(),
   category: z.string().nullable().optional(),
+  imageUrl: z.string().nullable().optional(),
   packageSize: z.string().nullable().optional(),
   articleNumber: z.string().nullable().optional(),
   articleType: z.string().nullable().optional(),

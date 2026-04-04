@@ -22,6 +22,13 @@ public sealed class DabasProductEndpointsIntegrationTests
                           "Produktnamn": "The Original Oat Milk",
                           "Varumarke": "Oatly",
                           "Artikelkategori": "Beverage",
+                          "Bilder": [
+                            {
+                              "Informationstyp": "PRODUCT_IMAGE_MEDIUM",
+                              "Lank": "https://cdn.example.test/oat-medium.jpg",
+                              "Sekvensnummer": 1
+                            }
+                          ],
                           "SenastAndradDatum": "2026-03-21T10:00:00Z"
                         }
                       ]
@@ -41,6 +48,7 @@ public sealed class DabasProductEndpointsIntegrationTests
         payload.Should().NotBeNull();
         payload!.Results.Should().ContainSingle();
         payload.Results[0].Gtin.Should().Be("1735000111001");
+        payload.Results[0].ImageUrl.Should().Be("https://cdn.example.test/oat-medium.jpg");
         payload.Results[0].Source.Should().Be("dabas-search");
         factory.Requests.Should().ContainSingle(request => request.Contains("searchparameter/oat milk/json"));
     }
