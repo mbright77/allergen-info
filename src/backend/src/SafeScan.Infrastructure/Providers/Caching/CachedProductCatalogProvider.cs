@@ -89,13 +89,14 @@ public sealed class CachedProductCatalogProvider : IProductCatalogProvider
                 entry.AbsoluteExpirationRelativeToNow = SearchCacheDuration;
 
                 var results = await _innerProvider.SearchProductsAsync(normalizedQuery, selectedAllergens, cancellationToken);
-                return await EnrichResultsAsync(results, selectedAllergens, cancellationToken);
+                return await EnrichResultsAsync(results, normalizedQuery, selectedAllergens, cancellationToken);
             })
             ?? [];
     }
 
     private async Task<IReadOnlyList<SearchResultDto>> EnrichResultsAsync(
         IReadOnlyList<SearchResultDto> results,
+        string normalizedQuery,
         IReadOnlyCollection<string> selectedAllergens,
         CancellationToken cancellationToken)
     {
@@ -108,7 +109,7 @@ public sealed class CachedProductCatalogProvider : IProductCatalogProvider
 
         for (var index = 0; index < results.Count; index++)
         {
-            enrichedResults[index] = index < PreviewEnrichmentCount
+            enrichedResults[index] = ShouldEnrichResult(results[index], index, normalizedQuery)
                 ? await EnrichResultAsync(results[index], selectedAllergens, cancellationToken)
                 : results[index];
         }
@@ -116,20 +117,31 @@ public sealed class CachedProductCatalogProvider : IProductCatalogProvider
         return enrichedResults;
     }
 
+    private bool ShouldEnrichResult(SearchResultDto result, int index, string normalizedQuery)
+    {
+        if (index < PreviewEnrichmentCount)
+        {
+            return true;
+        }
+
+        if (result.Gtin.Equals(normalizedQuery, StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        return !string.IsNullOrWhiteSpace(result.ArticleNumber)
+            && result.ArticleNumber.Equals(normalizedQuery, StringComparison.OrdinalIgnoreCase);
+    }
+
     private async Task<SearchResultDto> EnrichResultAsync(
         SearchResultDto result,
         IReadOnlyCollection<string> selectedAllergens,
         CancellationToken cancellationToken)
     {
-        if (result.PreviewStatus is not null && result.PreviewBadge is not null && result.PreviewNote is not null)
-        {
-            return result;
-        }
-
         var selectedAllergenKey = _queryNormalizer.NormalizeSelectedAllergens(selectedAllergens);
-        var cacheKey = $"search-preview:{result.Gtin}:allergens:{selectedAllergenKey}";
+        var cacheKey = $"search-enrichment:{result.Gtin}:allergens:{selectedAllergenKey}";
 
-        var preview = await _cache.GetOrCreateAsync(
+        var enrichment = await _cache.GetOrCreateAsync(
             cacheKey,
             async entry =>
             {
@@ -143,22 +155,24 @@ public sealed class CachedProductCatalogProvider : IProductCatalogProvider
                 }
 
                 var analysis = _analysisService.Analyze(product, selectedAllergens);
-                return new PreviewEnrichment(
+                return new SearchEnrichment(
+                    product.ImageUrl,
                     analysis.OverallStatus,
                     BuildPreviewBadge(analysis.OverallStatus),
                     analysis.Explanations.FirstOrDefault() ?? "Preview analysis is available for this product.");
             });
 
-        if (preview is null)
+        if (enrichment is null)
         {
             return result;
         }
 
         return result with
         {
-            PreviewStatus = result.PreviewStatus ?? preview.Status,
-            PreviewBadge = result.PreviewBadge ?? preview.Badge,
-            PreviewNote = result.PreviewNote ?? preview.Note,
+            ImageUrl = result.ImageUrl ?? enrichment.ImageUrl,
+            PreviewStatus = result.PreviewStatus ?? enrichment.Status,
+            PreviewBadge = result.PreviewBadge ?? enrichment.Badge,
+            PreviewNote = result.PreviewNote ?? enrichment.Note,
         };
     }
 
@@ -173,5 +187,5 @@ public sealed class CachedProductCatalogProvider : IProductCatalogProvider
         };
     }
 
-    private sealed record PreviewEnrichment(AnalysisOverallStatus Status, string Badge, string Note);
+    private sealed record SearchEnrichment(string? ImageUrl, AnalysisOverallStatus Status, string Badge, string Note);
 }

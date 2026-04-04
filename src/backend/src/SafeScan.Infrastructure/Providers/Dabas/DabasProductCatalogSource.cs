@@ -163,7 +163,7 @@ public sealed class DabasProductCatalogSource : IProductCatalogSource
             mayContainAllergens,
             BuildIngredientHighlights(containsAllergens, mayContainAllergens),
             TryBuildNutritionSummary(record),
-            GetString(record, "BildURL", "ImageUrl"),
+            SelectImageUrl(record),
             "dabas",
             null,
             null);
@@ -179,7 +179,7 @@ public sealed class DabasProductCatalogSource : IProductCatalogSource
             GetString(record, "Hyllkantstext", "Subtitle"),
             GetString(record, "Varumarke", "Brand"),
             GetString(record, "Artikelkategori", "Category"),
-            SelectSearchImageUrl(record),
+            SelectImageUrl(record),
             GetString(record, "Forpackningsstorlek", "PackageSize"),
             GetString(record, "TillverkarensArtikelnummer", "ArticleNumber"),
             GetString(record, "Artikeltyp", "ArticleType"),
@@ -223,7 +223,7 @@ public sealed class DabasProductCatalogSource : IProductCatalogSource
             : new NutritionSummaryDto(calories, sugar);
     }
 
-    private static string? SelectSearchImageUrl(JsonElement record)
+    private static string? SelectImageUrl(JsonElement record)
     {
         if (!TryGetPropertyIgnoreCase(record, "Bilder", out var imagesValue) || imagesValue.ValueKind != JsonValueKind.Array)
         {

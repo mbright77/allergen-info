@@ -184,13 +184,15 @@ function SearchCardArtwork({ result }: { result: SearchResult }) {
   return (
     <div className="search-card__artwork" aria-hidden="true">
       {showImage ? (
-        <img
-          className="search-card__image"
-          src={result.imageUrl ?? undefined}
-          alt=""
-          loading="lazy"
-          onError={() => setImageFailed(true)}
-        />
+        <div className="search-card__image-frame">
+          <img
+            className="search-card__image"
+            src={result.imageUrl ?? undefined}
+            alt=""
+            loading="lazy"
+            onError={() => setImageFailed(true)}
+          />
+        </div>
       ) : null}
       {!showImage ? <span className="search-card__monogram">{getBrandMonogram(result.brand, result.name)}</span> : null}
     </div>

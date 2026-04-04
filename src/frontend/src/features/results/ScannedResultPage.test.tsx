@@ -109,7 +109,7 @@ describe('ScannedResultPage', () => {
             ingredientsText: 'Detailed ingredients were unavailable for this product.',
             allergenStatements: { contains: [], mayContain: [] },
             nutritionSummary: null,
-            imageUrl: null,
+            imageUrl: 'https://cdn.example.test/oat-milk.jpg',
             source: 'dabas-search',
           },
           analysis: {
@@ -133,6 +133,7 @@ describe('ScannedResultPage', () => {
     expect(await screen.findByRole('heading', { name: /We found the product, but not the detailed allergen data/i })).toBeInTheDocument()
     expect(screen.getByText(/The Original Oat Milk/i)).toBeInTheDocument()
     expect(screen.getByText(/Showing basic product information only/i)).toBeInTheDocument()
+    expect(document.querySelector('.result-product-card__image')).toHaveAttribute('src', 'https://cdn.example.test/oat-milk.jpg')
   })
 
   it('renders an unknown state when the barcode falls back to an unverified search match', async () => {

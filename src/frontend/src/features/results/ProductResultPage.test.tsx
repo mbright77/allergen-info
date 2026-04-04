@@ -66,7 +66,7 @@ describe('ProductResultPage', () => {
               energyKcal: 550,
               sugarGrams: 58,
             },
-            imageUrl: null,
+            imageUrl: 'https://cdn.example.test/chocolate.jpg',
             source: 'placeholder',
           },
           analysis: {
@@ -98,6 +98,7 @@ describe('ProductResultPage', () => {
     expect(screen.getByText(/Milk Chocolate Bar/i)).toBeInTheDocument()
     expect(screen.getByText(/Overall status/i)).toBeInTheDocument()
     expect(screen.getByText(/Ingredient review/i)).toBeInTheDocument()
+    expect(document.querySelector('.result-product-card__image')).toHaveAttribute('src', 'https://cdn.example.test/chocolate.jpg')
   })
 
   it('falls back to a cached analysis when offline', async () => {

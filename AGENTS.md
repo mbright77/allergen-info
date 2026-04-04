@@ -194,9 +194,10 @@ Important scan behavior:
 
 Image enrichment strategy:
 
-- DABAS search responses can include `Bilder[]`
+- DABAS search responses may omit image data even when GTIN detail includes it
 - search result cards should prefer `PRODUCT_IMAGE_MEDIUM`, then `PRODUCT_IMAGE`, then `PRODUCT_IMAGE_LARGE`, then `PRODUCT_IMAGE_THUMB`
-- backend may still hydrate top-N results via article detail for preview analysis
+- backend should hydrate top-N search results via GTIN detail for preview analysis and image enrichment
+- exact GTIN or article-number search matches should also hydrate image data even outside the default top-N enrichment window
 - enrichment must be best-effort and budget-limited
 - fallback is `imageUrl: null`
 
@@ -319,5 +320,5 @@ Possible later-phase product features:
 - prefer placeholder-compatible contracts over provider-specific shapes
 - do not commit generated build output
 - keep deployment samples or unrelated infrastructure out of this repo
-- keep `AGENTS.md` up to date whenever code behavior, architecture, workflows, deployment, or product expectations change
+- keep `AGENTS.md` up to date whenever code behavior, architecture, workflows, deployment, or product expectations change; this is a required part of the same change set, not a separate optional follow-up
 - when in doubt, treat `stitch/` as design direction and the existing code as the current implementation truth

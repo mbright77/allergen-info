@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 
 import { analyzeScannedProduct } from '../../shared/api/products'
@@ -112,9 +112,7 @@ function ScannedFallbackResult({ response }: { response: ScanAnalysisResponse })
       </div>
 
       <section className="result-product-card">
-        <div className="result-product-card__media" aria-hidden="true">
-          <span>{getProductMonogram(product.brand, product.name)}</span>
-        </div>
+        <ResultProductArtwork product={product} />
         <div className="stack-sm">
           <p className="eyebrow">{product.category ?? 'Product summary'}</p>
           <h2 className="section-title">{product.name}</h2>
@@ -209,4 +207,32 @@ function getProductMonogram(brand: string | null | undefined, name: string) {
   const source = (brand ?? name).trim()
   const parts = source.split(/\s+/).filter(Boolean)
   return parts.slice(0, 2).map((part) => part[0]?.toUpperCase() ?? '').join('') || 'SS'
+}
+
+function ResultProductArtwork({
+  product,
+}: {
+  product: {
+    brand?: string | null
+    name: string
+    imageUrl?: string | null
+  }
+}) {
+  const [imageFailed, setImageFailed] = useState(false)
+  const showImage = !!product.imageUrl && !imageFailed
+
+  return (
+    <div className="result-product-card__media" aria-hidden="true">
+      {showImage ? (
+        <img
+          className="result-product-card__image"
+          src={product.imageUrl ?? undefined}
+          alt=""
+          loading="lazy"
+          onError={() => setImageFailed(true)}
+        />
+      ) : null}
+      {!showImage ? <span>{getProductMonogram(product.brand, product.name)}</span> : null}
+    </div>
+  )
 }
