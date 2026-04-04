@@ -24,9 +24,9 @@ test.beforeEach(async ({ page }) => {
 
       if (url.includes('/api/reference/allergens')) {
         return okJson([
-          { code: 'milk_protein', label: 'Milk Protein' },
-          { code: 'gluten', label: 'Gluten' },
-          { code: 'soy', label: 'Soy' },
+          { code: 'milk', label: 'Milk' },
+          { code: 'cereals_containing_gluten', label: 'Cereals containing gluten' },
+          { code: 'soybeans', label: 'Soybeans' },
         ])
       }
 
@@ -45,7 +45,7 @@ test.beforeEach(async ({ page }) => {
               articleType: 'BaseArticle',
               previewStatus: 'Safe',
               previewBadge: 'Clean Label',
-              previewNote: 'Auto-detecting peanuts and gluten',
+              previewNote: 'Auto-detecting peanuts and cereals containing gluten',
               updatedAt: '2026-03-21T10:00:00Z',
               source: 'placeholder-search',
             },
@@ -63,7 +63,7 @@ test.beforeEach(async ({ page }) => {
             subtitle: 'Clean label oat drink',
             ingredientsText: 'Water, oats 10%, rapeseed oil, calcium carbonate, vitamins, salt.',
             allergenStatements: {
-              contains: ['gluten'],
+              contains: ['cereals_containing_gluten'],
               mayContain: [],
             },
             nutritionSummary: {
@@ -77,7 +77,7 @@ test.beforeEach(async ({ page }) => {
             overallStatus: 'Safe',
             matchedAllergens: [],
             traceAllergens: [],
-            checkedAllergens: [{ code: 'milk_protein', status: 'NotFound' }],
+            checkedAllergens: [{ code: 'milk', status: 'NotFound' }],
             ingredientHighlights: [],
             explanations: ['No selected allergens were detected in the available product data.'],
           },
@@ -93,7 +93,7 @@ test('onboarding to search to result flow works', async ({ page }) => {
   await page.goto('/onboarding')
   await takeStableScreenshot(page, 'onboarding.png')
 
-  await page.getByRole('button', { name: 'Milk Protein' }).click()
+  await page.getByRole('button', { name: 'Milk' }).click()
   await page.getByRole('button', { name: /save & continue to scan/i }).click()
 
   await expect(page).toHaveURL(/\/scan$/)
@@ -121,7 +121,7 @@ test('scan route exposes recent searches and basic accessibility passes', async 
       JSON.stringify([
         {
           query: 'oat milk',
-          selectedAllergens: ['milk_protein'],
+          selectedAllergens: ['milk'],
           updatedAt: '2026-03-21T10:00:00Z',
         },
       ]),
@@ -149,7 +149,7 @@ test('onboarding and result screens pass basic accessibility audits', async ({ p
 
   expect(onboardingA11y.violations).toEqual([])
 
-  await page.getByRole('button', { name: 'Milk Protein' }).click()
+  await page.getByRole('button', { name: 'Milk' }).click()
   await page.getByRole('button', { name: /save & continue to scan/i }).click()
   await page.getByRole('searchbox', { name: /search for a product/i }).fill('oat milk')
   await page.getByRole('button', { name: /submit search/i }).click()
@@ -178,8 +178,8 @@ test('scan route can navigate directly to a product result', async ({ page }) =>
 test('warning and caution result states render stable screenshots', async ({ page }) => {
   await page.addInitScript(() => {
     window.localStorage.setItem(
-      'safescan.profile.v1',
-      JSON.stringify({ selectedAllergens: ['milk_protein', 'nuts'] }),
+        'safescan.profile.v2',
+        JSON.stringify({ selectedAllergens: ['milk', 'tree_nuts'] }),
     )
 
     const okJson = (body: unknown) =>
@@ -204,8 +204,8 @@ test('warning and caution result states render stable screenshots', async ({ pag
               subtitle: 'Classic milk chocolate',
               ingredientsText: 'Sugar, cocoa butter, whey powder (milk), soy lecithin, flavoring.',
               allergenStatements: {
-                contains: ['milk_protein', 'soy'],
-                mayContain: ['nuts'],
+                contains: ['milk', 'soybeans'],
+                mayContain: ['tree_nuts'],
               },
               nutritionSummary: {
                 energyKcal: 550,
@@ -216,16 +216,16 @@ test('warning and caution result states render stable screenshots', async ({ pag
             },
             analysis: {
               overallStatus: 'Contains',
-              matchedAllergens: ['milk_protein'],
-              traceAllergens: ['nuts'],
+              matchedAllergens: ['milk'],
+              traceAllergens: ['tree_nuts'],
               checkedAllergens: [
-                { code: 'milk_protein', status: 'Contains' },
-                { code: 'nuts', status: 'MayContain' },
+                { code: 'milk', status: 'Contains' },
+                { code: 'tree_nuts', status: 'MayContain' },
               ],
               ingredientHighlights: [
-                { text: 'whey powder (milk)', severity: 'Contains', allergenCode: 'milk_protein' },
+                { text: 'whey powder (milk)', severity: 'Contains', allergenCode: 'milk' },
               ],
-              explanations: ['The product contains selected allergens: milk_protein.'],
+              explanations: ['The product contains selected allergens: Milk.'],
             },
           })
         }
@@ -241,7 +241,7 @@ test('warning and caution result states render stable screenshots', async ({ pag
               ingredientsText: 'Water, oats, sunflower oil, acidity regulator, natural flavors.',
               allergenStatements: {
                 contains: [],
-                mayContain: ['nuts'],
+                mayContain: ['tree_nuts'],
               },
               nutritionSummary: {
                 energyKcal: 59,
@@ -253,12 +253,12 @@ test('warning and caution result states render stable screenshots', async ({ pag
             analysis: {
               overallStatus: 'MayContain',
               matchedAllergens: [],
-              traceAllergens: ['nuts'],
-              checkedAllergens: [{ code: 'nuts', status: 'MayContain' }],
+              traceAllergens: ['tree_nuts'],
+              checkedAllergens: [{ code: 'tree_nuts', status: 'MayContain' }],
               ingredientHighlights: [
-                { text: 'May contain nuts', severity: 'MayContain', allergenCode: 'nuts' },
+                { text: 'May contain nuts', severity: 'MayContain', allergenCode: 'tree_nuts' },
               ],
-              explanations: ['The product may contain traces of: nuts.'],
+              explanations: ['The product may contain traces of: Tree nuts.'],
             },
           })
         }
@@ -268,8 +268,8 @@ test('warning and caution result states render stable screenshots', async ({ pag
 
       if (url.includes('/api/reference/allergens')) {
         return okJson([
-          { code: 'milk_protein', label: 'Milk Protein' },
-          { code: 'nuts', label: 'Nuts' },
+          { code: 'milk', label: 'Milk' },
+          { code: 'tree_nuts', label: 'Tree nuts' },
         ])
       }
 
@@ -292,14 +292,14 @@ test('warning and caution result states render stable screenshots', async ({ pag
 test('offline cached analysis fallback renders when a saved result exists', async ({ page }) => {
   await page.addInitScript(() => {
     window.localStorage.setItem(
-      'safescan.profile.v1',
-      JSON.stringify({ selectedAllergens: ['milk_protein'] }),
+        'safescan.profile.v2',
+        JSON.stringify({ selectedAllergens: ['milk'] }),
     )
     window.localStorage.setItem(
       'safescan.analysis-cache.v1',
       JSON.stringify([
         {
-          cacheKey: '1735000111004::milk_protein',
+          cacheKey: '1735000111004::milk',
           updatedAt: '2026-03-21T10:00:00Z',
           response: {
             product: {
@@ -310,7 +310,7 @@ test('offline cached analysis fallback renders when a saved result exists', asyn
               subtitle: 'Classic milk chocolate',
               ingredientsText: 'Sugar, cocoa butter, whey powder (milk), soy lecithin, flavoring.',
               allergenStatements: {
-                contains: ['milk_protein'],
+                contains: ['milk'],
                 mayContain: [],
               },
               nutritionSummary: {
@@ -322,13 +322,13 @@ test('offline cached analysis fallback renders when a saved result exists', asyn
             },
             analysis: {
               overallStatus: 'Contains',
-              matchedAllergens: ['milk_protein'],
+              matchedAllergens: ['milk'],
               traceAllergens: [],
-              checkedAllergens: [{ code: 'milk_protein', status: 'Contains' }],
+              checkedAllergens: [{ code: 'milk', status: 'Contains' }],
               ingredientHighlights: [
-                { text: 'whey powder (milk)', severity: 'Contains', allergenCode: 'milk_protein' },
+                { text: 'whey powder (milk)', severity: 'Contains', allergenCode: 'milk' },
               ],
-              explanations: ['The product contains selected allergens: milk_protein.'],
+              explanations: ['The product contains selected allergens: Milk.'],
             },
           },
         },
@@ -357,7 +357,7 @@ test('offline cached search fallback renders saved search results', async ({ pag
       'safescan.search-results-cache.v1',
       JSON.stringify([
         {
-          cacheKey: 'oat milk::milk_protein',
+          cacheKey: 'oat milk::milk',
           updatedAt: '2026-03-21T10:00:00Z',
           response: {
             query: 'oat milk',
@@ -393,7 +393,7 @@ test('offline cached search fallback renders saved search results', async ({ pag
     }
   })
 
-  await page.goto('/search/results?q=oat%20milk&selectedAllergens=milk_protein')
+  await page.goto('/search/results?q=oat%20milk&selectedAllergens=milk')
 
   await expect(page.getByText(/showing your last saved search results/i)).toBeVisible()
   await expect(page.getByText(/The Original Oat Milk/i)).toBeVisible()

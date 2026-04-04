@@ -42,7 +42,7 @@ describe('HomePage', () => {
   it('renders persisted profile, collections, and recent searches', async () => {
     window.localStorage.setItem(
       PROFILE_STORAGE_KEY,
-      JSON.stringify({ selectedAllergens: ['milk_protein', 'soy', 'gluten'] }),
+      JSON.stringify({ selectedAllergens: ['milk', 'soybeans', 'cereals_containing_gluten'] }),
     )
     window.localStorage.setItem(
       FAVORITES_STORAGE_KEY,
@@ -77,7 +77,7 @@ describe('HomePage', () => {
       JSON.stringify([
         {
           query: 'oat milk',
-          selectedAllergens: ['milk_protein'],
+          selectedAllergens: ['milk'],
           updatedAt: '2026-03-21T13:00:00Z',
         },
       ]),

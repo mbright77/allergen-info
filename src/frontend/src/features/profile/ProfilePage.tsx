@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 
 import { getAllergens } from '../../shared/api/products'
+import { getAllergenIcon } from '../../shared/allergens/metadata'
 import { useProfile } from '../../shared/profile/ProfileProvider'
 
 export function ProfilePage() {
@@ -55,28 +56,4 @@ export function ProfilePage() {
       </section>
     </section>
   )
-}
-
-function getAllergenIcon(code: string) {
-  switch (code) {
-    case 'milk_protein':
-    case 'lactose':
-      return 'water_drop'
-    case 'egg':
-      return 'egg'
-    case 'gluten':
-      return 'bakery_dining'
-    case 'nuts':
-      return 'eco'
-    case 'soy':
-      return 'grass'
-    case 'peanuts':
-      return 'spa'
-    case 'fish':
-      return 'set_meal'
-    case 'shellfish':
-      return 'restaurant'
-    default:
-      return 'shield'
-  }
 }

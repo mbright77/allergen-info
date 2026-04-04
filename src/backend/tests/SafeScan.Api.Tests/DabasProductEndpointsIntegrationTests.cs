@@ -12,7 +12,7 @@ public sealed class DabasProductEndpointsIntegrationTests
     {
         using var factory = new DabasApiWebApplicationFactory(request =>
         {
-            return request.RequestUri!.ToString().Contains("basesearchparameter", StringComparison.Ordinal)
+            return request.RequestUri!.ToString().Contains("searchparameter", StringComparison.Ordinal)
                 ? DabasApiWebApplicationFactory.Json(
                     """
                     {
@@ -42,7 +42,7 @@ public sealed class DabasProductEndpointsIntegrationTests
         payload!.Results.Should().ContainSingle();
         payload.Results[0].Gtin.Should().Be("1735000111001");
         payload.Results[0].Source.Should().Be("dabas-search");
-        factory.Requests.Should().ContainSingle(request => request.Contains("basesearchparameter/oat milk/json"));
+        factory.Requests.Should().ContainSingle(request => request.Contains("searchparameter/oat milk/json"));
     }
 
     [Fact]
@@ -58,10 +58,29 @@ public sealed class DabasProductEndpointsIntegrationTests
                     "Varumarke": "Marabou",
                     "Artikelkategori": "Chocolate",
                     "Ingrediensforteckning": "Sugar, whey powder (milk), soy lecithin.",
-                    "AllergenInformation": {
-                      "Innehaller": ["Milk", "Soy"],
-                      "KanInnehalla": ["Nuts"]
-                    }
+                    "Allergener": [
+                      {
+                        "Allergen": "Milk",
+                        "Allergenkod": "AM",
+                        "Niva": "Contains",
+                        "Nivakod": "CONTAINS",
+                        "NivakodText": "Contains"
+                      },
+                      {
+                        "Allergen": "Soybeans",
+                        "Allergenkod": "AY",
+                        "Niva": "Contains",
+                        "Nivakod": "CONTAINS",
+                        "NivakodText": "Contains"
+                      },
+                      {
+                        "Allergen": "Tree nuts",
+                        "Allergenkod": "AN",
+                        "Niva": "May contain",
+                        "Nivakod": "MAY_CONTAIN",
+                        "NivakodText": "May contain"
+                      }
+                    ]
                   }
                 }
                 """));
@@ -77,7 +96,7 @@ public sealed class DabasProductEndpointsIntegrationTests
         payload.Should().NotBeNull();
         payload!.Product.Name.Should().Be("Milk Chocolate Bar");
         payload.Product.Source.Should().Be("dabas");
-        payload.Product.AllergenStatements.Contains.Should().BeEquivalentTo(["milk_protein", "soy"]);
+        payload.Product.AllergenStatements.Contains.Should().BeEquivalentTo(["milk", "soybeans"]);
     }
 
     [Fact]
@@ -85,7 +104,7 @@ public sealed class DabasProductEndpointsIntegrationTests
     {
         using var factory = new DabasApiWebApplicationFactory(request =>
         {
-            if (request.RequestUri!.ToString().Contains("basesearchparameter/1735000111001/json", StringComparison.Ordinal))
+            if (request.RequestUri!.ToString().Contains("searchparameter/1735000111001/json", StringComparison.Ordinal))
             {
                 return DabasApiWebApplicationFactory.Json(
                     """
@@ -110,7 +129,7 @@ public sealed class DabasProductEndpointsIntegrationTests
         var response = await client.PostAsJsonAsync("/api/analysis/scan", new
         {
             code = "1735000111001",
-            selectedAllergens = new[] { "milk_protein" }
+            selectedAllergens = new[] { "milk" }
         });
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -124,11 +143,87 @@ public sealed class DabasProductEndpointsIntegrationTests
     }
 
     [Fact]
+    public async Task ScanAnalysisEndpoint_UsesResolvedSearchGtinForDetailLookupWhenSearchReturnsSameGtin()
+    {
+        var gtinLookupCount = 0;
+
+        using var factory = new DabasApiWebApplicationFactory(request =>
+        {
+            if (request.RequestUri!.ToString().Contains("article/gtin/1735000111001/json", StringComparison.Ordinal))
+            {
+                gtinLookupCount++;
+
+                return gtinLookupCount == 1
+                    ? new HttpResponseMessage(HttpStatusCode.NotFound)
+                    : DabasApiWebApplicationFactory.Json(
+                        """
+                        {
+                          "Article": {
+                            "GTIN": "1735000111001",
+                            "Produktnamn": "The Original Oat Milk",
+                            "Varumarke": "Oatly",
+                            "Artikelkategori": "Beverage",
+                            "Ingrediensforteckning": "Water, oats 10%, rapeseed oil.",
+                            "Allergener": [
+                              {
+                                "Allergen": "Milk",
+                                "Allergenkod": "AM",
+                                "Niva": "Contains",
+                                "Nivakod": "CONTAINS",
+                                "NivakodText": "Contains"
+                              }
+                            ]
+                          }
+                        }
+                        """);
+            }
+
+            if (request.RequestUri!.ToString().Contains("searchparameter/1735000111001/json", StringComparison.Ordinal))
+            {
+                return DabasApiWebApplicationFactory.Json(
+                    """
+                    {
+                      "ArticleDateModel": [
+                        {
+                          "GTIN": "1735000111001",
+                          "Produktnamn": "The Original Oat Milk",
+                          "Varumarke": "Oatly",
+                          "Artikelkategori": "Beverage"
+                        }
+                      ]
+                    }
+                    """);
+            }
+
+            return new HttpResponseMessage(HttpStatusCode.NotFound);
+        });
+
+        using var client = factory.CreateClient();
+
+        var response = await client.PostAsJsonAsync("/api/analysis/scan", new
+        {
+            code = "1735000111001",
+            selectedAllergens = new[] { "milk" }
+        });
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var payload = await response.Content.ReadFromJsonAsync<ScanAnalysisPayload>();
+
+        payload.Should().NotBeNull();
+        payload!.Resolution.Mode.Should().Be("Full");
+        payload.Resolution.ResolvedGtin.Should().Be("1735000111001");
+        payload.Analysis!.OverallStatus.Should().Be("Contains");
+        factory.Requests.Should().Contain(request => request.Contains("searchparameter/1735000111001/json", StringComparison.Ordinal));
+        factory.Requests.Count(request => request.Contains("article/gtin/1735000111001/json", StringComparison.Ordinal)).Should().Be(2);
+    }
+
+    [Fact]
     public async Task ScanAnalysisEndpoint_ReturnsUnknownWhenBarcodeLookupMissesButSearchFindsProduct()
     {
         using var factory = new DabasApiWebApplicationFactory(request =>
         {
-            if (request.RequestUri!.ToString().Contains("basesearchparameter/1735000111001/json", StringComparison.Ordinal))
+            if (request.RequestUri!.ToString().Contains("searchparameter/1735000111001/json", StringComparison.Ordinal))
             {
                 return DabasApiWebApplicationFactory.Json(
                     """
@@ -156,10 +251,7 @@ public sealed class DabasProductEndpointsIntegrationTests
                         "Varumarke": "Test Brand",
                         "Artikelkategori": "Cookies",
                         "Ingrediensforteckning": "Wheat flour, sugar, butter.",
-                        "AllergenInformation": {
-                          "Innehaller": [],
-                          "KanInnehalla": []
-                        }
+                        "Allergener": []
                       }
                     }
                     """);
@@ -173,7 +265,7 @@ public sealed class DabasProductEndpointsIntegrationTests
         var response = await client.PostAsJsonAsync("/api/analysis/scan", new
         {
             code = "1735000111001",
-            selectedAllergens = new[] { "gluten" }
+            selectedAllergens = new[] { "cereals_containing_gluten" }
         });
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);

@@ -1,7 +1,7 @@
 using SafeScan.Application.Abstractions;
+using SafeScan.Application.Allergens;
 using SafeScan.Application.Contracts;
 using SafeScan.Domain.Products;
-using SafeScan.Infrastructure.Providers;
 
 namespace SafeScan.Infrastructure.Providers.Placeholder;
 
@@ -19,11 +19,11 @@ public sealed class PlaceholderProductCatalogProvider : IProductCatalogSource
             ArticleNumber: "OAT-1001",
             ArticleType: "BaseArticle",
             IngredientsText: "Water, oats 10%, rapeseed oil, calcium carbonate, vitamins, salt.",
-            ContainsAllergens: ["gluten"],
+            ContainsAllergens: ["cereals_containing_gluten"],
             MayContainAllergens: [],
             IngredientHighlights:
             [
-                new IngredientHighlightDto("oats 10%", AllergenMatchStatus.Contains, "gluten")
+                new IngredientHighlightDto("oats 10%", AllergenMatchStatus.Contains, "cereals_containing_gluten")
             ],
             NutritionSummary: new NutritionSummaryDto(46, 4.0m),
             ImageUrl: null,
@@ -42,10 +42,10 @@ public sealed class PlaceholderProductCatalogProvider : IProductCatalogSource
             ArticleType: "BaseArticle",
             IngredientsText: "Water, oats, sunflower oil, acidity regulator, natural flavors.",
             ContainsAllergens: [],
-            MayContainAllergens: ["nuts"],
+            MayContainAllergens: ["tree_nuts"],
             IngredientHighlights:
             [
-                new IngredientHighlightDto("May contain nuts", AllergenMatchStatus.MayContain, "nuts")
+                new IngredientHighlightDto("May contain nuts", AllergenMatchStatus.MayContain, "tree_nuts")
             ],
             NutritionSummary: new NutritionSummaryDto(59, 5.2m),
             ImageUrl: null,
@@ -63,11 +63,11 @@ public sealed class PlaceholderProductCatalogProvider : IProductCatalogSource
             ArticleNumber: "MIN-3003",
             ArticleType: "BaseArticle",
             IngredientsText: "Water, organic oats, sea salt.",
-            ContainsAllergens: ["gluten"],
+            ContainsAllergens: ["cereals_containing_gluten"],
             MayContainAllergens: [],
             IngredientHighlights:
             [
-                new IngredientHighlightDto("organic oats", AllergenMatchStatus.Contains, "gluten")
+                new IngredientHighlightDto("organic oats", AllergenMatchStatus.Contains, "cereals_containing_gluten")
             ],
             NutritionSummary: new NutritionSummaryDto(44, 3.8m),
             ImageUrl: null,
@@ -85,13 +85,13 @@ public sealed class PlaceholderProductCatalogProvider : IProductCatalogSource
             ArticleNumber: "MAR-4004",
             ArticleType: "BaseArticle",
             IngredientsText: "Sugar, cocoa butter, whey powder (milk), cocoa mass, soy lecithin, flavoring. May contain nuts.",
-            ContainsAllergens: ["milk_protein", "soy"],
-            MayContainAllergens: ["nuts"],
+            ContainsAllergens: ["milk", "soybeans"],
+            MayContainAllergens: ["tree_nuts"],
             IngredientHighlights:
             [
-                new IngredientHighlightDto("whey powder (milk)", AllergenMatchStatus.Contains, "milk_protein"),
-                new IngredientHighlightDto("soy lecithin", AllergenMatchStatus.Contains, "soy"),
-                new IngredientHighlightDto("May contain nuts", AllergenMatchStatus.MayContain, "nuts")
+                new IngredientHighlightDto("whey powder (milk)", AllergenMatchStatus.Contains, "milk"),
+                new IngredientHighlightDto("soy lecithin", AllergenMatchStatus.Contains, "soybeans"),
+                new IngredientHighlightDto("May contain nuts", AllergenMatchStatus.MayContain, "tree_nuts")
             ],
             NutritionSummary: new NutritionSummaryDto(550, 58m),
             ImageUrl: null,
@@ -164,6 +164,7 @@ public sealed class PlaceholderProductCatalogProvider : IProductCatalogSource
             Category,
             Subtitle,
             IngredientsText,
+            [.. AllergenCatalog.BuildFacts(ContainsAllergens, AllergenMatchStatus.Contains), .. AllergenCatalog.BuildFacts(MayContainAllergens, AllergenMatchStatus.MayContain)],
             ContainsAllergens,
             MayContainAllergens,
             IngredientHighlights,

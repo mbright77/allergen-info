@@ -1,6 +1,7 @@
 using FluentAssertions;
 using Microsoft.Extensions.Caching.Memory;
 using SafeScan.Application.Abstractions;
+using SafeScan.Application.Allergens;
 using SafeScan.Application.Contracts;
 using SafeScan.Application.Services;
 using SafeScan.Infrastructure.Providers.Caching;
@@ -20,8 +21,8 @@ public sealed class CachedProductCatalogProviderTests
             new ProductAnalysisService(),
             new SearchQueryNormalizer());
 
-        var firstResult = await provider.SearchProductsAsync("  Oat   Milk  ", ["gluten"]);
-        var secondResult = await provider.SearchProductsAsync("oat milk", ["gluten"]);
+        var firstResult = await provider.SearchProductsAsync("  Oat   Milk  ", ["cereals_containing_gluten"]);
+        var secondResult = await provider.SearchProductsAsync("oat milk", ["cereals_containing_gluten"]);
 
         firstResult.Should().HaveCount(1);
         secondResult.Should().HaveCount(1);
@@ -39,8 +40,8 @@ public sealed class CachedProductCatalogProviderTests
             new ProductAnalysisService(),
             new SearchQueryNormalizer());
 
-        var firstResult = await provider.SearchProductsAsync("chocolate", ["milk_protein"]);
-        var secondResult = await provider.SearchProductsAsync("chocolate", ["milk_protein"]);
+        var firstResult = await provider.SearchProductsAsync("chocolate", ["milk"]);
+        var secondResult = await provider.SearchProductsAsync("chocolate", ["milk"]);
 
         firstResult.Single().PreviewStatus.Should().Be(SafeScan.Domain.Products.AnalysisOverallStatus.Contains);
         firstResult.Single().PreviewBadge.Should().NotBeNullOrWhiteSpace();
@@ -63,7 +64,7 @@ public sealed class CachedProductCatalogProviderTests
         public int ProductLookupCallCount { get; private set; }
 
         public Task<IReadOnlyList<AllergenOptionDto>> GetAllergensAsync(CancellationToken cancellationToken = default)
-            => Task.FromResult<IReadOnlyList<AllergenOptionDto>>([new("gluten", "Gluten")]);
+            => Task.FromResult<IReadOnlyList<AllergenOptionDto>>([new("cereals_containing_gluten", "Cereals containing gluten")]);
 
         public Task<ProductRecord?> GetProductByGtinAsync(string gtin, CancellationToken cancellationToken = default)
         {
@@ -76,9 +77,10 @@ public sealed class CachedProductCatalogProviderTests
                 "Chocolate",
                 "Test product",
                 "Sugar, whey powder (milk)",
-                ["milk_protein"],
+                AllergenCatalog.BuildFacts(["milk"], SafeScan.Domain.Products.AllergenMatchStatus.Contains),
+                ["milk"],
                 [],
-                [new IngredientHighlightDto("whey powder (milk)", SafeScan.Domain.Products.AllergenMatchStatus.Contains, "milk_protein")],
+                [new IngredientHighlightDto("whey powder (milk)", SafeScan.Domain.Products.AllergenMatchStatus.Contains, "milk")],
                 new NutritionSummaryDto(500, 45m),
                 null,
                 "test",

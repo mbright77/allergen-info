@@ -41,22 +41,30 @@ public sealed class CachedProductCatalogProvider : IProductCatalogProvider
             })!;
     }
 
-    public Task<ProductRecord?> GetProductByGtinAsync(string gtin, CancellationToken cancellationToken = default)
+    public async Task<ProductRecord?> GetProductByGtinAsync(string gtin, CancellationToken cancellationToken = default)
     {
         var normalizedGtin = _queryNormalizer.NormalizeGtin(gtin);
 
         if (normalizedGtin.Length == 0)
         {
-            return Task.FromResult<ProductRecord?>(null);
+            return null;
         }
 
-        return _cache.GetOrCreateAsync(
-            $"product:gtin:{normalizedGtin}",
-            async entry =>
-            {
-                entry.AbsoluteExpirationRelativeToNow = ProductCacheDuration;
-                return await _innerProvider.GetProductByGtinAsync(normalizedGtin, cancellationToken);
-            })!;
+        var cacheKey = $"product:gtin:{normalizedGtin}";
+
+        if (_cache.TryGetValue(cacheKey, out ProductRecord? cachedProduct))
+        {
+            return cachedProduct;
+        }
+
+        var product = await _innerProvider.GetProductByGtinAsync(normalizedGtin, cancellationToken);
+
+        if (product is not null)
+        {
+            _cache.Set(cacheKey, product, ProductCacheDuration);
+        }
+
+        return product;
     }
 
     public async Task<IReadOnlyList<SearchResultDto>> SearchProductsAsync(

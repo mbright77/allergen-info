@@ -7,6 +7,7 @@ public sealed record ProductRecord(
     string? Category,
     string? Subtitle,
     string IngredientsText,
+    IReadOnlyList<ProductAllergenFact> AllergenFacts,
     IReadOnlyList<string> ContainsAllergens,
     IReadOnlyList<string> MayContainAllergens,
     IReadOnlyList<IngredientHighlightDto> IngredientHighlights,

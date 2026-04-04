@@ -1,4 +1,5 @@
 using SafeScan.Application.Abstractions;
+using SafeScan.Application.Allergens;
 using SafeScan.Application.Contracts;
 using SafeScan.Domain.Products;
 
@@ -25,8 +26,9 @@ public sealed class ProductAnalysisService : IProductAnalysisService
                 ["No allergens were selected for analysis."]);
         }
 
-        var contains = new HashSet<string>(product.ContainsAllergens, StringComparer.OrdinalIgnoreCase);
-        var mayContain = new HashSet<string>(product.MayContainAllergens, StringComparer.OrdinalIgnoreCase);
+        var productFacts = product.AllergenFacts
+            .Where(static fact => !string.IsNullOrWhiteSpace(fact.Gs1Code))
+            .ToArray();
 
         var checkedAllergens = new List<CheckedAllergenDto>(normalizedSelections.Length);
         var matchedAllergens = new List<string>();
@@ -34,14 +36,26 @@ public sealed class ProductAnalysisService : IProductAnalysisService
 
         foreach (var allergen in normalizedSelections)
         {
-            if (contains.Contains(allergen))
+            var gs1Codes = AllergenCatalog.GetGs1Codes(allergen);
+
+            if (gs1Codes.Count == 0)
+            {
+                checkedAllergens.Add(new CheckedAllergenDto(allergen, AllergenMatchStatus.Unknown));
+                continue;
+            }
+
+            if (productFacts.Any(fact =>
+                    fact.Status == AllergenMatchStatus.Contains
+                    && gs1Codes.Contains(fact.Gs1Code, StringComparer.OrdinalIgnoreCase)))
             {
                 matchedAllergens.Add(allergen);
                 checkedAllergens.Add(new CheckedAllergenDto(allergen, AllergenMatchStatus.Contains));
                 continue;
             }
 
-            if (mayContain.Contains(allergen))
+            if (productFacts.Any(fact =>
+                    fact.Status == AllergenMatchStatus.MayContain
+                    && gs1Codes.Contains(fact.Gs1Code, StringComparer.OrdinalIgnoreCase)))
             {
                 traceAllergens.Add(allergen);
                 checkedAllergens.Add(new CheckedAllergenDto(allergen, AllergenMatchStatus.MayContain));
@@ -81,13 +95,13 @@ public sealed class ProductAnalysisService : IProductAnalysisService
         {
             AnalysisOverallStatus.Contains =>
             [
-                $"The product contains selected allergens: {string.Join(", ", matchedAllergens)}.",
+                $"The product contains selected allergens: {string.Join(", ", matchedAllergens.Select(AllergenCatalog.GetLabel))}.",
                 traceAllergens.Count > 0
-                    ? $"It also carries trace warnings for: {string.Join(", ", traceAllergens)}."
+                    ? $"It also carries trace warnings for: {string.Join(", ", traceAllergens.Select(AllergenCatalog.GetLabel))}."
                     : "The warning is based on confirmed allergen matches in the product data."
             ],
             AnalysisOverallStatus.MayContain =>
-            [$"The product may contain traces of: {string.Join(", ", traceAllergens)}."],
+            [$"The product may contain traces of: {string.Join(", ", traceAllergens.Select(AllergenCatalog.GetLabel))}."],
             AnalysisOverallStatus.Safe => ["No selected allergens were detected in the available product data."],
             _ => ["The product could not be analyzed with the available data."]
         };

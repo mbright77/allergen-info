@@ -3,6 +3,7 @@ import { useEffect, useMemo } from 'react'
 import { Link, useParams } from 'react-router-dom'
 
 import { analyzeProduct } from '../../shared/api/products'
+import { formatAllergenCode } from '../../shared/allergens/metadata'
 import { buildAnalysisCacheKey, readCachedAnalysis, writeCachedAnalysis } from '../../shared/results/analysis-cache'
 import type { AnalysisOverallStatus } from '../../shared/domain/contracts'
 import { toSavedProductItem, useCollections } from '../../shared/collections/CollectionsProvider'
@@ -266,13 +267,6 @@ function toStatusTone(status: 'Contains' | 'MayContain' | 'NotFound' | 'Unknown'
     default:
       return 'neutral'
   }
-}
-
-function formatAllergenCode(code: string) {
-  return code
-    .split('_')
-    .map((segment) => segment.charAt(0).toUpperCase() + segment.slice(1))
-    .join(' ')
 }
 
 function getHeroIcon(status: AnalysisOverallStatus) {

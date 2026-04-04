@@ -1,8 +1,9 @@
 using System.Globalization;
-using System.Text;
 using System.Text.Json;
 using SafeScan.Application.Abstractions;
+using SafeScan.Application.Allergens;
 using SafeScan.Application.Contracts;
+using SafeScan.Domain.Products;
 using SafeScan.Infrastructure.Configuration;
 
 namespace SafeScan.Infrastructure.Providers.Dabas;
@@ -25,38 +26,6 @@ public sealed class DabasProductCatalogSource : IProductCatalogSource
         "Data",
         "Item"
     ];
-
-    private static readonly IReadOnlyDictionary<string, string> AllergenCodeMap =
-        new Dictionary<string, string>(StringComparer.Ordinal)
-        {
-            ["milk"] = "milk_protein",
-            ["milk protein"] = "milk_protein",
-            ["dairy"] = "milk_protein",
-            ["mjolk"] = "milk_protein",
-            ["mjolkprotein"] = "milk_protein",
-            ["lactose"] = "lactose",
-            ["laktos"] = "lactose",
-            ["egg"] = "egg",
-            ["agg"] = "egg",
-            ["gluten"] = "gluten",
-            ["wheat"] = "gluten",
-            ["vete"] = "gluten",
-            ["nuts"] = "nuts",
-            ["nut"] = "nuts",
-            ["notter"] = "nuts",
-            ["not"] = "nuts",
-            ["soy"] = "soy",
-            ["soya"] = "soy",
-            ["soja"] = "soy",
-            ["peanut"] = "peanuts",
-            ["peanuts"] = "peanuts",
-            ["jordnot"] = "peanuts",
-            ["jordnotter"] = "peanuts",
-            ["fish"] = "fish",
-            ["fisk"] = "fish",
-            ["shellfish"] = "shellfish",
-            ["skaldjur"] = "shellfish"
-        };
 
     private readonly HttpClient _httpClient;
     private readonly DabasOptions _options;
@@ -107,15 +76,6 @@ public sealed class DabasProductCatalogSource : IProductCatalogSource
         }
 
         var normalizedQuery = query.Trim();
-
-        var baseResults = await ExecuteSearchAsync(
-            $"DABASService/V2/articles/basesearchparameter/{Uri.EscapeDataString(normalizedQuery)}/json",
-            cancellationToken);
-
-        if (baseResults.Count > 0)
-        {
-            return baseResults;
-        }
 
         return await ExecuteSearchAsync(
             $"DABASService/V2/articles/searchparameter/{Uri.EscapeDataString(normalizedQuery)}/json",
@@ -171,9 +131,17 @@ public sealed class DabasProductCatalogSource : IProductCatalogSource
         var ingredientsText = GetString(record, "Ingrediensforteckning", "IngrediensforteckningText", "Ingredients", "IngredientsText")
             ?? "Ingredients unavailable from DABAS.";
 
-        var allergenContainer = ResolveSingleRecord(record, "AllergenInformation", "Allergener", "AllergenStatements");
-        var containsAllergens = ParseAllergenCodes(allergenContainer, "Contains", "Innehaller", "Inneh\u00e5ller");
-        var mayContainAllergens = ParseAllergenCodes(allergenContainer, "MayContain", "KanInnehalla", "KanInneh\u00e5lla");
+        var allergenFacts = ParseAllergenFacts(record);
+        var containsAllergens = allergenFacts
+            .Where(static fact => fact.Status == AllergenMatchStatus.Contains)
+            .Select(static fact => fact.AllergenCode)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+        var mayContainAllergens = allergenFacts
+            .Where(static fact => fact.Status == AllergenMatchStatus.MayContain)
+            .Select(static fact => fact.AllergenCode)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
 
         return new ProductRecord(
             gtin,
@@ -182,6 +150,7 @@ public sealed class DabasProductCatalogSource : IProductCatalogSource
             GetString(record, "Artikelkategori", "Category"),
             GetString(record, "Hyllkantstext", "Subtitle"),
             ingredientsText,
+            allergenFacts,
             containsAllergens,
             mayContainAllergens,
             BuildIngredientHighlights(containsAllergens, mayContainAllergens),
@@ -218,8 +187,8 @@ public sealed class DabasProductCatalogSource : IProductCatalogSource
     {
         var highlights = new List<IngredientHighlightDto>(containsAllergens.Count + mayContainAllergens.Count);
 
-        highlights.AddRange(containsAllergens.Select(static allergen => new IngredientHighlightDto(allergen, SafeScan.Domain.Products.AllergenMatchStatus.Contains, allergen)));
-        highlights.AddRange(mayContainAllergens.Select(static allergen => new IngredientHighlightDto(allergen, SafeScan.Domain.Products.AllergenMatchStatus.MayContain, allergen)));
+        highlights.AddRange(containsAllergens.Select(allergen => new IngredientHighlightDto(AllergenCatalog.GetLabel(allergen), AllergenMatchStatus.Contains, allergen)));
+        highlights.AddRange(mayContainAllergens.Select(allergen => new IngredientHighlightDto(AllergenCatalog.GetLabel(allergen), AllergenMatchStatus.MayContain, allergen)));
 
         return highlights;
     }
@@ -245,48 +214,91 @@ public sealed class DabasProductCatalogSource : IProductCatalogSource
             : new NutritionSummaryDto(calories, sugar);
     }
 
-    private static IReadOnlyList<string> ParseAllergenCodes(JsonElement container, params string[] propertyNames)
+    private static IReadOnlyList<ProductAllergenFact> ParseAllergenFacts(JsonElement record)
     {
-        if (container.ValueKind is JsonValueKind.Undefined or JsonValueKind.Null)
+        var allergenFacts = new List<ProductAllergenFact>();
+
+        if (TryGetPropertyIgnoreCase(record, "Allergener", out var allergensValue) && allergensValue.ValueKind == JsonValueKind.Array)
+        {
+            foreach (var allergen in allergensValue.EnumerateArray())
+            {
+                var fact = MapAllergenFact(allergen);
+
+                if (fact is not null)
+                {
+                    allergenFacts.Add(fact);
+                }
+            }
+        }
+
+        var allergenContainer = ResolveSingleRecord(record, "AllergenInformation", "AllergenStatements");
+
+        if (allergenContainer.ValueKind is not JsonValueKind.Undefined and not JsonValueKind.Null)
+        {
+            allergenFacts.AddRange(ParseLegacyAllergenFacts(allergenContainer, "Contains", "Innehaller", "Inneh\u00e5ller", AllergenMatchStatus.Contains));
+            allergenFacts.AddRange(ParseLegacyAllergenFacts(allergenContainer, "MayContain", "KanInnehalla", "KanInneh\u00e5lla", AllergenMatchStatus.MayContain));
+        }
+
+        return allergenFacts
+            .DistinctBy(static fact => (fact.AllergenCode, fact.Gs1Code, fact.Status))
+            .ToArray();
+    }
+
+    private static ProductAllergenFact? MapAllergenFact(JsonElement allergen)
+    {
+        var gs1Code = GetString(allergen, "Allergenkod", "AllergenCode")?.Trim().ToUpperInvariant();
+        var canonicalCode = AllergenCatalog.MapGs1Code(gs1Code);
+
+        if (string.IsNullOrWhiteSpace(gs1Code) || string.IsNullOrWhiteSpace(canonicalCode))
+        {
+            return null;
+        }
+
+        var levelCode = GetString(allergen, "Nivakod", "LevelCode")?.Trim().ToUpperInvariant();
+        var levelText = GetString(allergen, "NivakodText", "Niva", "NivaText", "LevelText");
+        var status = MapContainmentStatus(levelCode, levelText);
+
+        return status is null
+            ? null
+            : new ProductAllergenFact(canonicalCode, gs1Code, status.Value);
+    }
+
+    private static IReadOnlyList<ProductAllergenFact> ParseLegacyAllergenFacts(
+        JsonElement container,
+        string propertyName,
+        string swedishPropertyName,
+        string swedishPropertyNameWithAccent,
+        AllergenMatchStatus status)
+    {
+        if (!TryGetPropertyIgnoreCase(container, propertyName, out var value)
+            && !TryGetPropertyIgnoreCase(container, swedishPropertyName, out value)
+            && !TryGetPropertyIgnoreCase(container, swedishPropertyNameWithAccent, out value))
         {
             return [];
         }
 
-        var codes = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-
-        foreach (var propertyName in propertyNames)
-        {
-            if (!TryGetPropertyIgnoreCase(container, propertyName, out var value))
-            {
-                continue;
-            }
-
-            foreach (var code in ExtractAllergenCodes(value))
-            {
-                codes.Add(code);
-            }
-        }
-
-        return codes.ToArray();
+        return ExtractLegacyCanonicalCodes(value)
+            .SelectMany(allergenCode => AllergenCatalog.BuildFacts([allergenCode], status))
+            .ToArray();
     }
 
-    private static IEnumerable<string> ExtractAllergenCodes(JsonElement value)
+    private static IEnumerable<string> ExtractLegacyCanonicalCodes(JsonElement value)
     {
         switch (value.ValueKind)
         {
             case JsonValueKind.String:
-                return SplitAllergenValues(value.GetString());
+                return SplitLegacyAllergenValues(value.GetString());
             case JsonValueKind.Array:
-                return value.EnumerateArray().SelectMany(ExtractAllergenCodes);
+                return value.EnumerateArray().SelectMany(ExtractLegacyCanonicalCodes);
             case JsonValueKind.Object:
                 var objectText = GetString(value, "Code", "code", "Name", "name", "Text", "text", "Label", "label");
-                return string.IsNullOrWhiteSpace(objectText) ? [] : SplitAllergenValues(objectText);
+                return string.IsNullOrWhiteSpace(objectText) ? [] : SplitLegacyAllergenValues(objectText);
             default:
                 return [];
         }
     }
 
-    private static IEnumerable<string> SplitAllergenValues(string? rawValue)
+    private static IEnumerable<string> SplitLegacyAllergenValues(string? rawValue)
     {
         if (string.IsNullOrWhiteSpace(rawValue))
         {
@@ -295,36 +307,45 @@ public sealed class DabasProductCatalogSource : IProductCatalogSource
 
         return rawValue
             .Split([',', ';', '/', '|'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-            .Select(NormalizeAllergenToken)
-            .Where(static token => token.Length > 0)
-            .Select(MapAllergenCode)
-            .Where(static code => code.Length > 0)
+            .Select(MapLegacyAllergenCode)
+            .OfType<string>()
             .Distinct(StringComparer.OrdinalIgnoreCase);
     }
 
-    private static string MapAllergenCode(string token)
+    private static string? MapLegacyAllergenCode(string rawToken)
     {
-        return AllergenCodeMap.TryGetValue(token, out var code) ? code : token;
+        return rawToken.Trim().ToLowerInvariant() switch
+        {
+            "milk" => "milk",
+            "soy" => "soybeans",
+            "nuts" => "tree_nuts",
+            "egg" => "eggs",
+            "gluten" => "cereals_containing_gluten",
+            "fish" => "fish",
+            "peanuts" => "peanuts",
+            _ => null
+        };
     }
 
-    private static string NormalizeAllergenToken(string rawToken)
+    private static AllergenMatchStatus? MapContainmentStatus(string? levelCode, string? levelText)
     {
-        var normalized = rawToken.Normalize(NormalizationForm.FormD);
-        var builder = new StringBuilder(normalized.Length);
-
-        foreach (var character in normalized)
+        if (MatchesContainmentValue(levelCode, levelText, "CONTAINS", "Contains"))
         {
-            var category = CharUnicodeInfo.GetUnicodeCategory(character);
-
-            if (category == UnicodeCategory.NonSpacingMark)
-            {
-                continue;
-            }
-
-            builder.Append(char.IsLetterOrDigit(character) ? char.ToLowerInvariant(character) : ' ');
+            return AllergenMatchStatus.Contains;
         }
 
-        return string.Join(' ', builder.ToString().Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries));
+        if (MatchesContainmentValue(levelCode, levelText, "MAY_CONTAIN", "May contain"))
+        {
+            return AllergenMatchStatus.MayContain;
+        }
+
+        return null;
+    }
+
+    private static bool MatchesContainmentValue(string? levelCode, string? levelText, string expectedCode, string expectedText)
+    {
+        return string.Equals(levelCode, expectedCode, StringComparison.OrdinalIgnoreCase)
+            || string.Equals(levelText, expectedText, StringComparison.OrdinalIgnoreCase);
     }
 
     private static IEnumerable<JsonElement> EnumerateRecords(JsonElement root, params string[] collectionPropertyNames)

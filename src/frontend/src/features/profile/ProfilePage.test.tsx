@@ -44,14 +44,14 @@ describe('ProfilePage', () => {
 
     window.localStorage.setItem(
       PROFILE_STORAGE_KEY,
-      JSON.stringify({ selectedAllergens: ['milk_protein'] }),
+      JSON.stringify({ selectedAllergens: ['milk'] }),
     )
 
     vi.spyOn(window, 'fetch').mockResolvedValue(
       new Response(
         JSON.stringify([
-          { code: 'milk_protein', label: 'Milk Protein' },
-          { code: 'lactose', label: 'Lactose' },
+          { code: 'milk', label: 'Milk' },
+          { code: 'soybeans', label: 'Soybeans' },
         ]),
         {
           status: 200,
@@ -62,14 +62,14 @@ describe('ProfilePage', () => {
 
     renderProfilePage()
 
-    const lactoseButton = await screen.findByRole('button', { name: 'Lactose' })
-    expect(screen.getByRole('button', { name: 'Milk Protein' })).toHaveAttribute('aria-pressed', 'true')
+    const soybeansButton = await screen.findByRole('button', { name: 'Soybeans' })
+    expect(screen.getByRole('button', { name: 'Milk' })).toHaveAttribute('aria-pressed', 'true')
 
-    await user.click(lactoseButton)
+    await user.click(soybeansButton)
 
     await waitFor(() => {
       expect(JSON.parse(window.localStorage.getItem(PROFILE_STORAGE_KEY) ?? '{}')).toEqual({
-        selectedAllergens: ['milk_protein', 'lactose'],
+        selectedAllergens: ['milk', 'soybeans'],
       })
     })
   })

@@ -62,7 +62,7 @@ public sealed class ProductEndpointsTests : IClassFixture<WebApplicationFactory<
         var payload = await response.Content.ReadFromJsonAsync<List<AllergenPayload>>();
 
         payload.Should().NotBeNull();
-        payload!.Should().Contain(item => item.Code == "milk_protein");
+        payload!.Should().Contain(item => item.Code == "milk");
     }
 
     [Fact]

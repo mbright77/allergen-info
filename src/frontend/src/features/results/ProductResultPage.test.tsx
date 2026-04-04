@@ -44,8 +44,8 @@ describe('ProductResultPage', () => {
 
   it('renders a warning state from backend analysis data', async () => {
     window.localStorage.setItem(
-      'safescan.profile.v1',
-      JSON.stringify({ selectedAllergens: ['milk_protein', 'soy', 'nuts'] }),
+      'safescan.profile.v2',
+      JSON.stringify({ selectedAllergens: ['milk', 'soybeans', 'tree_nuts'] }),
     )
 
     vi.spyOn(window, 'fetch').mockResolvedValue(
@@ -59,8 +59,8 @@ describe('ProductResultPage', () => {
             subtitle: 'Classic milk chocolate',
             ingredientsText: 'Sugar, cocoa butter, whey powder (milk), soy lecithin, flavoring.',
             allergenStatements: {
-              contains: ['milk_protein', 'soy'],
-              mayContain: ['nuts'],
+              contains: ['milk', 'soybeans'],
+              mayContain: ['tree_nuts'],
             },
             nutritionSummary: {
               energyKcal: 550,
@@ -71,18 +71,18 @@ describe('ProductResultPage', () => {
           },
           analysis: {
             overallStatus: 'Contains',
-            matchedAllergens: ['milk_protein', 'soy'],
-            traceAllergens: ['nuts'],
+            matchedAllergens: ['milk', 'soybeans'],
+            traceAllergens: ['tree_nuts'],
             checkedAllergens: [
-              { code: 'milk_protein', status: 'Contains' },
-              { code: 'soy', status: 'Contains' },
-              { code: 'nuts', status: 'MayContain' },
+              { code: 'milk', status: 'Contains' },
+              { code: 'soybeans', status: 'Contains' },
+              { code: 'tree_nuts', status: 'MayContain' },
             ],
             ingredientHighlights: [
-              { text: 'whey powder (milk)', severity: 'Contains', allergenCode: 'milk_protein' },
-              { text: 'soy lecithin', severity: 'Contains', allergenCode: 'soy' },
+              { text: 'whey powder (milk)', severity: 'Contains', allergenCode: 'milk' },
+              { text: 'soy lecithin', severity: 'Contains', allergenCode: 'soybeans' },
             ],
-            explanations: ['The product contains selected allergens: milk_protein, soy.'],
+            explanations: ['The product contains selected allergens: Milk, Soybeans.'],
           },
         }),
         {
@@ -102,14 +102,14 @@ describe('ProductResultPage', () => {
 
   it('falls back to a cached analysis when offline', async () => {
     window.localStorage.setItem(
-      'safescan.profile.v1',
-      JSON.stringify({ selectedAllergens: ['milk_protein'] }),
+      'safescan.profile.v2',
+      JSON.stringify({ selectedAllergens: ['milk'] }),
     )
     window.localStorage.setItem(
       ANALYSIS_CACHE_STORAGE_KEY,
       JSON.stringify([
         {
-          cacheKey: '1735000111004::milk_protein',
+          cacheKey: '1735000111004::milk',
           updatedAt: '2026-03-21T10:00:00Z',
           response: {
             product: {
@@ -120,8 +120,8 @@ describe('ProductResultPage', () => {
               subtitle: 'Classic milk chocolate',
               ingredientsText: 'Sugar, cocoa butter, whey powder (milk), soy lecithin, flavoring.',
               allergenStatements: {
-                contains: ['milk_protein', 'soy'],
-                mayContain: ['nuts'],
+                contains: ['milk', 'soybeans'],
+                mayContain: ['tree_nuts'],
               },
               nutritionSummary: {
                 energyKcal: 550,
@@ -132,13 +132,13 @@ describe('ProductResultPage', () => {
             },
             analysis: {
               overallStatus: 'Contains',
-              matchedAllergens: ['milk_protein'],
+              matchedAllergens: ['milk'],
               traceAllergens: [],
-              checkedAllergens: [{ code: 'milk_protein', status: 'Contains' }],
+              checkedAllergens: [{ code: 'milk', status: 'Contains' }],
               ingredientHighlights: [
-                { text: 'whey powder (milk)', severity: 'Contains', allergenCode: 'milk_protein' },
+                { text: 'whey powder (milk)', severity: 'Contains', allergenCode: 'milk' },
               ],
-              explanations: ['The product contains selected allergens: milk_protein.'],
+              explanations: ['The product contains selected allergens: Milk.'],
             },
           },
         },

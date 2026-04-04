@@ -3,6 +3,7 @@ import { useEffect } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 
 import { analyzeScannedProduct } from '../../shared/api/products'
+import { formatAllergenCode } from '../../shared/allergens/metadata'
 import { toSavedProductItem, useCollections } from '../../shared/collections/CollectionsProvider'
 import type { AnalysisOverallStatus, ScanAnalysisResponse } from '../../shared/domain/contracts'
 import { useProfile } from '../../shared/profile/ProfileProvider'
@@ -202,13 +203,6 @@ function getFallbackCopy(mode: ScanAnalysisResponse['resolution']['mode']) {
         nextAction: 'Search manually or try another scan if you need a product with detailed allergen data.',
       }
   }
-}
-
-function formatAllergenCode(code: string) {
-  return code
-    .split('_')
-    .map((segment) => segment.charAt(0).toUpperCase() + segment.slice(1))
-    .join(' ')
 }
 
 function getProductMonogram(brand: string | null | undefined, name: string) {

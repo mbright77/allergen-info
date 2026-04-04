@@ -32,15 +32,15 @@ public sealed class ScanProductAnalysisService : IScanProductAnalysisService
                 null);
         }
 
-            var directProduct = await _provider.GetProductByGtinAsync(normalizedCode, cancellationToken);
+        var directProduct = await _provider.GetProductByGtinAsync(normalizedCode, cancellationToken);
 
-            if (directProduct is not null)
-            {
-                return new ScanAnalysisResponse(
+        if (directProduct is not null)
+        {
+            return new ScanAnalysisResponse(
                 new ScanResolutionDto(ScanResolutionMode.Full, normalizedCode, directProduct.Gtin, null),
                 directProduct.ToDto(),
                 _analysisService.Analyze(directProduct, selectedAllergens));
-            }
+        }
 
         var searchResults = await _provider.SearchProductsAsync(normalizedCode, selectedAllergens, cancellationToken);
         var resolvedResult = searchResults.FirstOrDefault();
@@ -53,22 +53,18 @@ public sealed class ScanProductAnalysisService : IScanProductAnalysisService
                 null);
         }
 
-        if (resolvedResult.Gtin.Equals(normalizedCode, StringComparison.OrdinalIgnoreCase))
-        {
-            var unverifiedProduct = BuildFallbackProduct(resolvedResult);
-            return BuildUnknownResponse(
-                ScanResolutionMode.Unverified,
-                normalizedCode,
-                unverifiedProduct.Gtin,
-                unverifiedProduct,
-                selectedAllergens,
-                UnverifiedMatchMessage);
-        }
-
         var product = await _provider.GetProductByGtinAsync(resolvedResult.Gtin, cancellationToken);
 
         if (product is not null)
         {
+            if (resolvedResult.Gtin.Equals(normalizedCode, StringComparison.OrdinalIgnoreCase))
+            {
+                return new ScanAnalysisResponse(
+                    new ScanResolutionDto(ScanResolutionMode.Full, normalizedCode, product.Gtin, null),
+                    product.ToDto(),
+                    _analysisService.Analyze(product, selectedAllergens));
+            }
+
             return BuildUnknownResponse(
                 ScanResolutionMode.Unverified,
                 normalizedCode,
@@ -111,6 +107,7 @@ public sealed class ScanProductAnalysisService : IScanProductAnalysisService
             result.Category,
             result.Subtitle,
             "Detailed ingredients were unavailable for this product.",
+            [],
             [],
             [],
             [],

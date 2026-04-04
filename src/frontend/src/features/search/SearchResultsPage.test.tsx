@@ -61,7 +61,7 @@ describe('SearchResultsPage', () => {
               articleType: 'BaseArticle',
               previewStatus: 'Safe',
               previewBadge: 'Clean Label',
-              previewNote: 'Auto-detecting peanuts and gluten',
+              previewNote: 'Auto-detecting peanuts and cereals containing gluten',
               updatedAt: '2026-03-21T10:00:00Z',
               source: 'placeholder-search',
             },

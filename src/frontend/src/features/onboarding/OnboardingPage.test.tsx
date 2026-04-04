@@ -48,8 +48,8 @@ describe('OnboardingPage', () => {
     vi.spyOn(window, 'fetch').mockResolvedValue(
       new Response(
         JSON.stringify([
-          { code: 'milk_protein', label: 'Milk Protein' },
-          { code: 'gluten', label: 'Gluten' },
+          { code: 'milk', label: 'Milk' },
+          { code: 'cereals_containing_gluten', label: 'Cereals containing gluten' },
         ]),
         {
           status: 200,
@@ -60,8 +60,8 @@ describe('OnboardingPage', () => {
 
     const { router } = renderOnboardingPage()
 
-    const milkProteinButton = await screen.findByRole('button', { name: 'Milk Protein' })
-    await user.click(milkProteinButton)
+    const milkButton = await screen.findByRole('button', { name: 'Milk' })
+    await user.click(milkButton)
     await user.click(screen.getByRole('button', { name: /save & continue to scan/i }))
 
     await waitFor(() => {
@@ -69,7 +69,7 @@ describe('OnboardingPage', () => {
     })
 
     expect(JSON.parse(window.localStorage.getItem(PROFILE_STORAGE_KEY) ?? '{}')).toEqual({
-      selectedAllergens: ['milk_protein'],
+      selectedAllergens: ['milk'],
     })
   })
 })

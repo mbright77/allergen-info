@@ -17,7 +17,7 @@ public sealed class DabasProductCatalogSourceTests
     {
         var handler = new StubHttpMessageHandler(request =>
         {
-            request.RequestUri!.ToString().Should().Contain("basesearchparameter/oat milk/json");
+            request.RequestUri!.ToString().Should().Contain("searchparameter/oat milk/json");
 
             return new HttpResponseMessage(HttpStatusCode.OK)
             {
@@ -61,16 +61,7 @@ public sealed class DabasProductCatalogSourceTests
     public async Task SearchProductsAsync_FallsBackToBroadSearchAndAppendsApiKeyQueryParameter()
     {
         var handler = new StubHttpMessageHandler(request =>
-        {
-            if (request.RequestUri!.ToString().Contains("basesearchparameter", StringComparison.Ordinal))
-            {
-                return new HttpResponseMessage(HttpStatusCode.OK)
-                {
-                    Content = new StringContent("{\"ArticleDateModel\":[]}", Encoding.UTF8, "application/json")
-                };
-            }
-
-            return new HttpResponseMessage(HttpStatusCode.OK)
+            new HttpResponseMessage(HttpStatusCode.OK)
             {
                 Content = new StringContent(
                     """
@@ -85,8 +76,7 @@ public sealed class DabasProductCatalogSourceTests
                     """,
                     Encoding.UTF8,
                     "application/json")
-            };
-        });
+            });
 
         var source = CreateDabasSource(
             handler,
@@ -105,10 +95,9 @@ public sealed class DabasProductCatalogSourceTests
 
         results.Should().ContainSingle();
         results.Single().Gtin.Should().Be("1735000111004");
-        handler.Requests.Should().HaveCount(2);
+        handler.Requests.Should().ContainSingle();
+        handler.Requests[0].Should().Contain("searchparameter/chocolate/json");
         handler.Requests[0].Should().Contain("apikey=secret-key");
-        handler.Requests[1].Should().Contain("searchparameter/chocolate/json");
-        handler.Requests[1].Should().Contain("apikey=secret-key");
     }
 
     [Fact]
@@ -162,10 +151,29 @@ public sealed class DabasProductCatalogSourceTests
                         "Ingrediensforteckning": "Sugar, whey powder (milk), soy lecithin.",
                         "EnergiKcal": 550,
                         "SockerGram": 58,
-                        "AllergenInformation": {
-                          "Innehaller": ["Milk", "Soy"],
-                          "KanInnehalla": "Nuts"
-                        }
+                        "Allergener": [
+                          {
+                            "Allergen": "Milk",
+                            "Allergenkod": "AM",
+                            "Niva": "Contains",
+                            "Nivakod": "CONTAINS",
+                            "NivakodText": "Contains"
+                          },
+                          {
+                            "Allergen": "Soybeans",
+                            "Allergenkod": "AY",
+                            "Niva": "Contains",
+                            "Nivakod": "CONTAINS",
+                            "NivakodText": "Contains"
+                          },
+                          {
+                            "Allergen": "Tree nuts",
+                            "Allergenkod": "AN",
+                            "Niva": "May contain",
+                            "Nivakod": "MAY_CONTAIN",
+                            "NivakodText": "May contain"
+                          }
+                        ]
                       }
                     }
                     """,
@@ -179,8 +187,8 @@ public sealed class DabasProductCatalogSourceTests
 
         product.Should().NotBeNull();
         product!.Name.Should().Be("Milk Chocolate Bar");
-        product.ContainsAllergens.Should().BeEquivalentTo(["milk_protein", "soy"]);
-        product.MayContainAllergens.Should().BeEquivalentTo(["nuts"]);
+        product.ContainsAllergens.Should().BeEquivalentTo(["milk", "soybeans"]);
+        product.MayContainAllergens.Should().BeEquivalentTo(["tree_nuts"]);
         product.Source.Should().Be("dabas");
         product.NutritionSummary!.EnergyKcal.Should().Be(550);
     }
