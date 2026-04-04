@@ -51,6 +51,7 @@ describe('ProfilePage', () => {
       new Response(
         JSON.stringify([
           { code: 'milk', label: 'Milk' },
+          { code: 'cereals_containing_gluten', label: 'Cereals containing gluten' },
           { code: 'soybeans', label: 'Soybeans' },
         ]),
         {
@@ -62,6 +63,7 @@ describe('ProfilePage', () => {
 
     renderProfilePage()
 
+    expect(await screen.findByRole('button', { name: 'Gluten' })).toBeInTheDocument()
     const soybeansButton = await screen.findByRole('button', { name: 'Soybeans' })
     expect(screen.getByRole('button', { name: 'Milk' })).toHaveAttribute('aria-pressed', 'true')
 

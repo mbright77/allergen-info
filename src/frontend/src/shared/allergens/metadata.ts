@@ -1,5 +1,5 @@
 const ALLERGEN_LABELS: Record<string, string> = {
-  cereals_containing_gluten: 'Cereals containing gluten',
+  cereals_containing_gluten: 'Gluten',
   crustaceans: 'Crustaceans',
   eggs: 'Eggs',
   fish: 'Fish',

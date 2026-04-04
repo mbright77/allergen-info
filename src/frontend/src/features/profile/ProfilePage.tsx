@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 
 import { getAllergens } from '../../shared/api/products'
-import { getAllergenIcon } from '../../shared/allergens/metadata'
+import { formatAllergenCode, getAllergenIcon } from '../../shared/allergens/metadata'
 import { useProfile } from '../../shared/profile/ProfileProvider'
 
 export function ProfilePage() {
@@ -38,7 +38,7 @@ export function ProfilePage() {
                   <span className="allergen-tile__icon material-symbols-outlined" aria-hidden="true">
                     {getAllergenIcon(allergen.code)}
                   </span>
-                  <span className="allergen-tile__label">{allergen.label}</span>
+                  <span className="allergen-tile__label">{formatAllergenCode(allergen.code)}</span>
                 </button>
               )
             })}
