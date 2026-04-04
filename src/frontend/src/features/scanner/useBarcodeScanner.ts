@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 
-import { resolvePreferredRearCameraSelection } from './cameraSelection'
+import { resolvePreferredScanCameraSelection } from './cameraSelection'
 
 type ScannerStatus = 'idle' | 'requesting' | 'active' | 'unsupported' | 'denied' | 'error'
 
@@ -145,7 +145,7 @@ export function useBarcodeScanner({ enabled, onDetected }: UseBarcodeScannerOpti
 
         scannerInstanceRef.current = instance
 
-        const cameraSelection = await resolvePreferredRearCameraSelection()
+        const cameraSelection = await resolvePreferredScanCameraSelection(() => Html5Qrcode.getCameras())
 
         await instance.start(
           cameraSelection,

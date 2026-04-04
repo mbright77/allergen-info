@@ -61,6 +61,7 @@ Implemented or established in the current architecture:
 
 - onboarding with persisted allergy selection
 - search-first scan flow with explicit camera activation
+- automatic rear-camera selection that prefers the main lens for barcode scanning when device labels allow it
 - GTIN lookup
 - free-text search
 - result screens for safe, caution, and warning outcomes
@@ -184,6 +185,9 @@ Important search behavior:
 Important scan behavior:
 
 - scan first attempts direct GTIN lookup
+- live barcode scanning should keep the camera off until explicitly activated by the user
+- live barcode scanning should prefer the main rear camera over ultrawide, macro, telephoto, or front cameras when device labels make that distinction possible
+- camera selection should use `html5-qrcode` camera enumeration when available and fall back safely to environment-facing constraints when labels are missing or inconclusive
 - if direct lookup misses, backend resolves with DABAS `searchparameter` and then looks up the returned GTIN via `article/gtin`
 - GTINs that differ only by leading zeros should be treated as verified matches
 - materially different resolved GTINs remain `Unverified`
@@ -315,4 +319,5 @@ Possible later-phase product features:
 - prefer placeholder-compatible contracts over provider-specific shapes
 - do not commit generated build output
 - keep deployment samples or unrelated infrastructure out of this repo
+- keep `AGENTS.md` up to date whenever code behavior, architecture, workflows, deployment, or product expectations change
 - when in doubt, treat `stitch/` as design direction and the existing code as the current implementation truth
