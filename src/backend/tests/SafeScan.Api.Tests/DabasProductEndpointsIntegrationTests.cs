@@ -227,6 +227,75 @@ public sealed class DabasProductEndpointsIntegrationTests
     }
 
     [Fact]
+    public async Task ScanAnalysisEndpoint_TreatsLeadingZeroResolvedGtinAsVerified()
+    {
+        using var factory = new DabasApiWebApplicationFactory(request =>
+        {
+            if (request.RequestUri!.ToString().Contains("searchparameter/1735000111001/json", StringComparison.Ordinal))
+            {
+                return DabasApiWebApplicationFactory.Json(
+                    """
+                    {
+                      "ArticleDateModel": [
+                        {
+                          "GTIN": "01735000111001",
+                          "Produktnamn": "The Original Oat Milk",
+                          "Varumarke": "Oatly",
+                          "Artikelkategori": "Beverage"
+                        }
+                      ]
+                    }
+                    """);
+            }
+
+            if (request.RequestUri!.ToString().Contains("article/gtin/01735000111001/json", StringComparison.Ordinal))
+            {
+                return DabasApiWebApplicationFactory.Json(
+                    """
+                    {
+                      "Article": {
+                        "GTIN": "01735000111001",
+                        "Produktnamn": "The Original Oat Milk",
+                        "Varumarke": "Oatly",
+                        "Artikelkategori": "Beverage",
+                        "Ingrediensforteckning": "Water, oats 10%, rapeseed oil.",
+                        "Allergener": [
+                          {
+                            "Allergen": "Milk",
+                            "Allergenkod": "AM",
+                            "Niva": "Contains",
+                            "Nivakod": "CONTAINS",
+                            "NivakodText": "Contains"
+                          }
+                        ]
+                      }
+                    }
+                    """);
+            }
+
+            return new HttpResponseMessage(HttpStatusCode.NotFound);
+        });
+
+        using var client = factory.CreateClient();
+
+        var response = await client.PostAsJsonAsync("/api/analysis/scan", new
+        {
+            code = "1735000111001",
+            selectedAllergens = new[] { "milk" }
+        });
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var payload = await response.Content.ReadFromJsonAsync<ScanAnalysisPayload>();
+
+        payload.Should().NotBeNull();
+        payload!.Resolution.Mode.Should().Be("Full");
+        payload.Resolution.ResolvedGtin.Should().Be("01735000111001");
+        payload.Analysis!.OverallStatus.Should().Be("Contains");
+        factory.Requests.Should().Contain(request => request.Contains("article/gtin/01735000111001/json", StringComparison.Ordinal));
+    }
+
+    [Fact]
     public async Task ScanAnalysisEndpoint_ReturnsUnknownWhenBarcodeLookupMissesButSearchFindsProduct()
     {
         using var factory = new DabasApiWebApplicationFactory(request =>

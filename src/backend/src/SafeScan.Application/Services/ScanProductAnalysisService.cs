@@ -57,7 +57,7 @@ public sealed class ScanProductAnalysisService : IScanProductAnalysisService
 
         if (product is not null)
         {
-            if (resolvedResult.Gtin.Equals(normalizedCode, StringComparison.OrdinalIgnoreCase))
+            if (IsVerifiedResolvedGtin(normalizedCode, resolvedResult.Gtin))
             {
                 return new ScanAnalysisResponse(
                     new ScanResolutionDto(ScanResolutionMode.Full, normalizedCode, product.Gtin, null),
@@ -116,6 +116,28 @@ public sealed class ScanProductAnalysisService : IScanProductAnalysisService
             result.Source,
             result.PreviewBadge,
             result.PreviewNote);
+    }
+
+    private static bool IsVerifiedResolvedGtin(string scannedCode, string? resolvedGtin)
+    {
+        if (string.IsNullOrWhiteSpace(scannedCode) || string.IsNullOrWhiteSpace(resolvedGtin))
+        {
+            return false;
+        }
+
+        if (resolvedGtin.Equals(scannedCode, StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        return NormalizeComparableGtin(scannedCode).Equals(NormalizeComparableGtin(resolvedGtin), StringComparison.Ordinal);
+    }
+
+    private static string NormalizeComparableGtin(string gtin)
+    {
+        var normalized = gtin.Trim();
+        var trimmed = normalized.TrimStart('0');
+        return trimmed.Length == 0 ? "0" : trimmed;
     }
 
     private static AnalysisResultDto BuildFallbackAnalysis(IReadOnlyCollection<string> selectedAllergens, string message)
