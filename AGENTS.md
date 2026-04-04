@@ -72,21 +72,27 @@ Implemented or established in the current architecture:
 
 Important domain rules:
 
-- distinguish `milk_protein` from `lactose`
 - do not reduce incomplete analysis to safe by default
 - support an explicit `Unknown` state when data is incomplete or conflicting
+- use the EU 14 allergen model for user selection and API-facing allergen identifiers
+- perform allergen matching from GS1 allergen codes, not free-text comparison
 
-Initial allergen set:
+Current allergen set:
 
-- Milk Protein
-- Lactose Intolerance
-- Egg
-- Gluten
-- Nuts
-- Soy
-- Peanuts
+- Cereals containing gluten
+- Crustaceans
+- Eggs
 - Fish
-- Shellfish
+- Peanuts
+- Soybeans
+- Milk
+- Tree nuts
+- Celery
+- Mustard
+- Sesame seeds
+- Sulphur dioxide / sulphites
+- Lupin
+- Molluscs
 
 ## Core User Flows
 
@@ -170,14 +176,23 @@ Important search behavior:
 - browser never talks to DABAS directly
 - search can use product name, ingredient, brand, GTIN/EAN, or article number
 - exact GTIN/EAN matches should rank highest
+- DABAS search uses `articles/searchparameter` and does not use `basesearchparameter`
 - search results are lightweight and normalized
 - full product detail is fetched after selection
 - preview badges and `imageUrl` are optional enrichment fields
 
+Important scan behavior:
+
+- scan first attempts direct GTIN lookup
+- if direct lookup misses, backend resolves with DABAS `searchparameter` and then looks up the returned GTIN via `article/gtin`
+- GTINs that differ only by leading zeros should be treated as verified matches
+- materially different resolved GTINs remain `Unverified`
+
 Image enrichment strategy:
 
-- DABAS base search responses do not reliably include images
-- backend may hydrate top-N results via article detail
+- DABAS search responses can include `Bilder[]`
+- search result cards should prefer `PRODUCT_IMAGE_MEDIUM`, then `PRODUCT_IMAGE`, then `PRODUCT_IMAGE_LARGE`, then `PRODUCT_IMAGE_THUMB`
+- backend may still hydrate top-N results via article detail for preview analysis
 - enrichment must be best-effort and budget-limited
 - fallback is `imageUrl: null`
 
