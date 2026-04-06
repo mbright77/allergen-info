@@ -25,3 +25,6 @@ src/backend/.idea/
 
 # Reference-only local samples
 sample_deploy/
+
+# Local design references
+stitch/
