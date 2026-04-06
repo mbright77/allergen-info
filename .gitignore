@@ -28,3 +28,7 @@ sample_deploy/
 
 # Local design references
 stitch/
+
+# Local agent metadata
+.serena/
+.playwright-mcp/
