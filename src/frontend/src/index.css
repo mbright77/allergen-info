@@ -196,6 +196,83 @@ button {
   color: var(--primary);
 }
 
+.profile-switcher-shell {
+  position: relative;
+}
+
+.profile-switcher-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  min-height: 2.75rem;
+  padding: 0.35rem 0.5rem 0.35rem 0.35rem;
+  border: none;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--primary);
+}
+
+.profile-switcher-trigger:focus-visible,
+.profile-switcher-item:focus-visible,
+.profile-name-input:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.profile-switcher-trigger__copy {
+  display: grid;
+  gap: 0.05rem;
+  text-align: left;
+}
+
+.profile-switcher-trigger__label,
+.profile-switcher-item__meta,
+.profile-form-error {
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+
+.profile-switcher-trigger__label,
+.profile-switcher-item__meta {
+  color: var(--text-muted);
+}
+
+.profile-switcher-trigger__value,
+.profile-switcher-item__title {
+  font-family: 'Manrope', sans-serif;
+  font-size: 0.96rem;
+  font-weight: 700;
+}
+
+.profile-switcher-menu {
+  position: absolute;
+  top: calc(100% + 0.6rem);
+  right: 0;
+  z-index: 20;
+  width: min(18rem, calc(100vw - 2rem));
+  padding: 0.7rem;
+}
+
+.profile-switcher-item {
+  display: grid;
+  gap: 0.2rem;
+  width: 100%;
+  padding: 0.9rem 1rem;
+  border: none;
+  border-radius: 1rem;
+  background: transparent;
+  color: var(--text);
+  text-align: left;
+}
+
+.profile-switcher-item--active {
+  background: rgba(177, 240, 206, 0.62);
+}
+
+.profile-switcher-item--create {
+  border: 1px dashed rgba(0, 68, 45, 0.18);
+}
+
 .page-frame {
   display: grid;
   gap: 1.5rem;
@@ -430,6 +507,30 @@ button {
 
 .onboarding-note {
   border-radius: 1.75rem;
+}
+
+.profile-name-input {
+  width: 100%;
+  min-height: 3.5rem;
+  padding: 0.95rem 1rem;
+  border: 1px solid rgba(0, 68, 45, 0.12);
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.94);
+  color: var(--text);
+}
+
+.profile-name-input--error {
+  border-color: rgba(182, 23, 30, 0.5);
+}
+
+.profile-form-error {
+  margin: 0;
+  color: var(--danger);
+  font-weight: 700;
+}
+
+.scan-profile-banner {
+  width: 100%;
 }
 
 .home-hero {

@@ -1,106 +1,118 @@
-const PROFILE_STORAGE_KEY = 'safescan.profile.v2'
-const LEGACY_PROFILE_STORAGE_KEY = 'safescan.profile.v1'
+const PROFILES_STORAGE_KEY = 'safescan.profiles.v1'
 
 export type StoredProfile = {
+  id: string
+  name: string
   selectedAllergens: string[]
+  createdAt: string
+  updatedAt: string
 }
 
-export function readStoredProfile(): StoredProfile {
+export type StoredProfilesState = {
+  activeProfileId: string | null
+  profiles: StoredProfile[]
+}
+
+export function readStoredProfilesState(): StoredProfilesState {
   if (typeof window === 'undefined') {
-    return { selectedAllergens: [] }
+    return emptyProfilesState()
   }
 
-  const rawValue = window.localStorage.getItem(PROFILE_STORAGE_KEY)
+  const rawValue = window.localStorage.getItem(PROFILES_STORAGE_KEY)
 
   if (!rawValue) {
-    return readLegacyStoredProfile()
+    return emptyProfilesState()
   }
 
   try {
     const parsed = JSON.parse(rawValue)
 
-    if (
-      parsed &&
-      typeof parsed === 'object' &&
-      'selectedAllergens' in parsed &&
-      Array.isArray(parsed.selectedAllergens)
-    ) {
-      return {
-        selectedAllergens: parsed.selectedAllergens.filter(
-          (value: unknown): value is string => typeof value === 'string' && value.length > 0,
-        ),
-      }
+    if (!parsed || typeof parsed !== 'object' || !Array.isArray(parsed.profiles)) {
+      return emptyProfilesState()
+    }
+
+    const profiles = parsed.profiles.map(normalizeStoredProfile).filter((profile): profile is StoredProfile => profile !== null)
+    const activeProfileId =
+      typeof parsed.activeProfileId === 'string' && profiles.some((profile) => profile.id === parsed.activeProfileId)
+        ? parsed.activeProfileId
+        : profiles[0]?.id ?? null
+
+    return {
+      activeProfileId,
+      profiles,
     }
   } catch {
-    // ignore malformed local storage and reset to defaults
+    return emptyProfilesState()
   }
-
-  return { selectedAllergens: [] }
 }
 
-function readLegacyStoredProfile(): StoredProfile {
-  const rawValue = window.localStorage.getItem(LEGACY_PROFILE_STORAGE_KEY)
-
-  if (!rawValue) {
-    return { selectedAllergens: [] }
-  }
-
-  try {
-    const parsed = JSON.parse(rawValue)
-
-    if (
-      parsed &&
-      typeof parsed === 'object' &&
-      'selectedAllergens' in parsed &&
-      Array.isArray(parsed.selectedAllergens)
-    ) {
-      const migratedSelections = parsed.selectedAllergens
-        .flatMap((value: unknown) => (typeof value === 'string' ? migrateLegacyAllergenCode(value) : []))
-        .filter((value: string, index: number, values: string[]) => values.indexOf(value) === index)
-
-      writeStoredProfile({ selectedAllergens: migratedSelections })
-
-      return {
-        selectedAllergens: migratedSelections,
-      }
-    }
-  } catch {
-    // ignore malformed local storage and reset to defaults
-  }
-
-  return { selectedAllergens: [] }
-}
-
-export function writeStoredProfile(profile: StoredProfile) {
+export function writeStoredProfilesState(state: StoredProfilesState) {
   if (typeof window === 'undefined') {
     return
   }
 
-  window.localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(profile))
+  const profiles = state.profiles.map(normalizeProfileForWrite)
+  const activeProfileId = profiles.some((profile) => profile.id === state.activeProfileId)
+    ? state.activeProfileId
+    : profiles[0]?.id ?? null
+
+  window.localStorage.setItem(
+    PROFILES_STORAGE_KEY,
+    JSON.stringify({
+      activeProfileId,
+      profiles,
+    }),
+  )
 }
 
-function migrateLegacyAllergenCode(code: string): string[] {
-  switch (code) {
-    case 'milk_protein':
-    case 'lactose':
-      return ['milk']
-    case 'egg':
-      return ['eggs']
-    case 'gluten':
-      return ['cereals_containing_gluten']
-    case 'nuts':
-      return ['tree_nuts']
-    case 'soy':
-      return ['soybeans']
-    case 'peanuts':
-      return ['peanuts']
-    case 'fish':
-      return ['fish']
-    case 'shellfish':
-      return ['crustaceans', 'molluscs']
-    default:
-      return []
+function normalizeStoredProfile(value: unknown): StoredProfile | null {
+  if (!value || typeof value !== 'object') {
+    return null
+  }
+
+  const candidate = value as Record<string, unknown>
+  const id = typeof candidate.id === 'string' ? candidate.id.trim() : ''
+  const name = typeof candidate.name === 'string' ? candidate.name.trim() : ''
+
+  if (!id || !name) {
+    return null
+  }
+
+  const selectedAllergens = Array.isArray(candidate.selectedAllergens)
+    ? dedupeStringArray(candidate.selectedAllergens)
+    : []
+
+  return {
+    id,
+    name,
+    selectedAllergens,
+    createdAt: typeof candidate.createdAt === 'string' ? candidate.createdAt : new Date().toISOString(),
+    updatedAt: typeof candidate.updatedAt === 'string' ? candidate.updatedAt : new Date().toISOString(),
   }
 }
 
-export { PROFILE_STORAGE_KEY }
+function normalizeProfileForWrite(profile: StoredProfile): StoredProfile {
+  return {
+    id: profile.id.trim(),
+    name: profile.name.trim(),
+    selectedAllergens: dedupeStringArray(profile.selectedAllergens),
+    createdAt: profile.createdAt,
+    updatedAt: profile.updatedAt,
+  }
+}
+
+function dedupeStringArray(values: unknown[]) {
+  return values
+    .filter((value): value is string => typeof value === 'string' && value.trim().length > 0)
+    .map((value) => value.trim())
+    .filter((value, index, array) => array.indexOf(value) === index)
+}
+
+function emptyProfilesState(): StoredProfilesState {
+  return {
+    activeProfileId: null,
+    profiles: [],
+  }
+}
+
+export { PROFILES_STORAGE_KEY }

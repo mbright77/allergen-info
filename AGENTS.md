@@ -59,14 +59,14 @@ Important runtime model:
 
 Implemented or established in the current architecture:
 
-- onboarding with persisted allergy selection
+- onboarding with named profile creation and optional allergen selection
 - search-first scan flow with explicit camera activation
 - automatic rear-camera selection that prefers the main lens for barcode scanning when device labels allow it
 - GTIN lookup
 - free-text search
 - result screens for safe, caution, and warning outcomes
 - favorites, profile, history, and home routes/screens
-- local persistence for profile, recent searches, cached results, and saved items
+- local persistence for multiple named profiles, the active profile, recent searches, cached results, and saved items
 - placeholder provider plus DABAS-backed provider support in backend contracts
 - GitHub Pages frontend deployment support
 - k3s/VPS backend deployment support
@@ -97,11 +97,12 @@ Current allergen set:
 
 ## Core User Flows
 
-1. First-time user selects allergens and starts scanning.
-2. Returning user reopens the app and resumes with the saved profile.
-3. User searches from the scan experience or scans a barcode.
-4. Backend resolves product data and runs allergen analysis.
-5. UI shows a clear result with highlighted ingredients and next actions.
+1. First-time user creates a named profile, optionally selects allergens, and enters the app.
+2. Returning user reopens the app and resumes with the last active saved profile.
+3. User can switch profiles from the top-bar profile switcher.
+4. User searches from the scan experience or scans a barcode.
+5. Backend resolves product data and runs allergen analysis against the active profile.
+6. UI shows a clear result with highlighted ingredients and next actions.
 
 Primary routes:
 
@@ -113,6 +114,7 @@ Primary routes:
 - `/results/:gtin`
 - `/favorites`
 - `/profile`
+- `/profiles/new`
 - `/history`
 - `/help`
 
@@ -203,11 +205,20 @@ Image enrichment strategy:
 
 Local persistence should cover:
 
-- selected allergens
+- multiple named profiles with an active-profile pointer
 - recent searches
 - recent scans/history
 - cached products and search results
 - favorites
+
+Profile handling rules:
+
+- each profile must have a user-provided name
+- profiles may be saved with zero selected allergens
+- the last active profile should be restored on app start
+- the top-right shell control is the primary profile switcher and add-profile entry point
+- the bottom-nav `Profile` route edits the currently active profile
+- favorites, history, and recent searches remain device-global for now, not profile-scoped
 
 Use versioned local-storage keys and recover safely from malformed persisted data.
 
@@ -281,7 +292,7 @@ Completed or largely established:
 
 - placeholder and DABAS provider switching
 - search-first scanner UX
-- onboarding/profile persistence
+- named multi-profile onboarding and local active-profile persistence
 - search results and enrichment foundation
 - safe/caution/warning result pages
 - home/favorites/profile/history screens

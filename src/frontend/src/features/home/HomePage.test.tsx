@@ -6,7 +6,7 @@ import { afterEach, describe, expect, it } from 'vitest'
 import { CollectionsProvider } from '../../shared/collections/CollectionsProvider'
 import { FAVORITES_STORAGE_KEY, HISTORY_STORAGE_KEY } from '../../shared/collections/storage'
 import { ProfileProvider } from '../../shared/profile/ProfileProvider'
-import { PROFILE_STORAGE_KEY } from '../../shared/profile/profile-storage'
+import { PROFILES_STORAGE_KEY } from '../../shared/profile/profile-storage'
 import { RECENT_SEARCHES_STORAGE_KEY } from '../../shared/search/recent-searches'
 import { HomePage } from './HomePage'
 
@@ -41,8 +41,19 @@ describe('HomePage', () => {
 
   it('renders persisted profile, collections, and recent searches', async () => {
     window.localStorage.setItem(
-      PROFILE_STORAGE_KEY,
-      JSON.stringify({ selectedAllergens: ['milk', 'soybeans', 'cereals_containing_gluten'] }),
+      PROFILES_STORAGE_KEY,
+      JSON.stringify({
+        activeProfileId: 'p1',
+        profiles: [
+          {
+            id: 'p1',
+            name: 'Anna',
+            selectedAllergens: ['milk', 'soybeans', 'cereals_containing_gluten'],
+            createdAt: '2026-03-21T09:00:00Z',
+            updatedAt: '2026-03-21T09:00:00Z',
+          },
+        ],
+      }),
     )
     window.localStorage.setItem(
       FAVORITES_STORAGE_KEY,
@@ -85,6 +96,7 @@ describe('HomePage', () => {
 
     renderHomePage()
 
+    expect(screen.getByText(/Anna is active with 3 monitored allergens/i)).toBeInTheDocument()
     expect(screen.getByText(/3 allergens/i)).toBeInTheDocument()
     expect(screen.getByText(/1 items/i)).toBeInTheDocument()
     expect(screen.getByText(/2 products/i)).toBeInTheDocument()

@@ -6,7 +6,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { CollectionsProvider } from '../../shared/collections/CollectionsProvider'
 import { ProfileProvider } from '../../shared/profile/ProfileProvider'
-import { PROFILE_STORAGE_KEY } from '../../shared/profile/profile-storage'
+import { PROFILES_STORAGE_KEY } from '../../shared/profile/profile-storage'
 import { ProfilePage } from './ProfilePage'
 
 function renderProfilePage() {
@@ -39,12 +39,18 @@ describe('ProfilePage', () => {
     window.localStorage.clear()
   })
 
-  it('loads allergen options and updates the stored profile', async () => {
+  it('loads the active profile and updates its stored name and allergens', async () => {
     const user = userEvent.setup()
 
     window.localStorage.setItem(
-      PROFILE_STORAGE_KEY,
-      JSON.stringify({ selectedAllergens: ['milk'] }),
+      PROFILES_STORAGE_KEY,
+      JSON.stringify({
+        activeProfileId: 'p1',
+        profiles: [
+          { id: 'p1', name: 'Anna', selectedAllergens: ['milk'], createdAt: '2026-04-01T10:00:00Z', updatedAt: '2026-04-01T10:00:00Z' },
+          { id: 'p2', name: 'Leo', selectedAllergens: ['soybeans'], createdAt: '2026-04-01T10:00:00Z', updatedAt: '2026-04-01T10:00:00Z' },
+        ],
+      }),
     )
 
     vi.spyOn(window, 'fetch').mockResolvedValue(
@@ -63,15 +69,31 @@ describe('ProfilePage', () => {
 
     renderProfilePage()
 
-    expect(await screen.findByRole('button', { name: 'Gluten' })).toBeInTheDocument()
+    expect(await screen.findByDisplayValue('Anna')).toBeInTheDocument()
+    expect(await screen.findByRole('button', { name: 'Cereals containing gluten' })).toBeInTheDocument()
     const soybeansButton = await screen.findByRole('button', { name: 'Soybeans' })
     expect(screen.getByRole('button', { name: 'Milk' })).toHaveAttribute('aria-pressed', 'true')
 
+    await user.clear(screen.getByLabelText(/profile name/i))
+    await user.type(screen.getByLabelText(/profile name/i), 'Anna Updated')
     await user.click(soybeansButton)
+    await user.click(screen.getByRole('button', { name: /save profile changes/i }))
 
     await waitFor(() => {
-      expect(JSON.parse(window.localStorage.getItem(PROFILE_STORAGE_KEY) ?? '{}')).toEqual({
-        selectedAllergens: ['milk', 'soybeans'],
+      expect(JSON.parse(window.localStorage.getItem(PROFILES_STORAGE_KEY) ?? '{}')).toMatchObject({
+        activeProfileId: 'p1',
+        profiles: [
+          {
+            id: 'p1',
+            name: 'Anna Updated',
+            selectedAllergens: ['milk', 'soybeans'],
+          },
+          {
+            id: 'p2',
+            name: 'Leo',
+            selectedAllergens: ['soybeans'],
+          },
+        ],
       })
     })
   })

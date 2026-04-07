@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { CollectionsProvider } from '../../shared/collections/CollectionsProvider'
 import { ProfileProvider } from '../../shared/profile/ProfileProvider'
+import { PROFILES_STORAGE_KEY } from '../../shared/profile/profile-storage'
 import { ANALYSIS_CACHE_STORAGE_KEY } from '../../shared/results/analysis-cache'
 import { ProductResultPage } from './ProductResultPage'
 
@@ -44,8 +45,13 @@ describe('ProductResultPage', () => {
 
   it('renders a warning state from backend analysis data', async () => {
     window.localStorage.setItem(
-      'safescan.profile.v2',
-      JSON.stringify({ selectedAllergens: ['milk', 'soybeans', 'tree_nuts'] }),
+      PROFILES_STORAGE_KEY,
+      JSON.stringify({
+        activeProfileId: 'p1',
+        profiles: [
+          { id: 'p1', name: 'Anna', selectedAllergens: ['milk', 'soybeans', 'tree_nuts'], createdAt: '2026-04-01T10:00:00Z', updatedAt: '2026-04-01T10:00:00Z' },
+        ],
+      }),
     )
 
     vi.spyOn(window, 'fetch').mockResolvedValue(
@@ -103,8 +109,13 @@ describe('ProductResultPage', () => {
 
   it('falls back to a cached analysis when offline', async () => {
     window.localStorage.setItem(
-      'safescan.profile.v2',
-      JSON.stringify({ selectedAllergens: ['milk'] }),
+      PROFILES_STORAGE_KEY,
+      JSON.stringify({
+        activeProfileId: 'p1',
+        profiles: [
+          { id: 'p1', name: 'Anna', selectedAllergens: ['milk'], createdAt: '2026-04-01T10:00:00Z', updatedAt: '2026-04-01T10:00:00Z' },
+        ],
+      }),
     )
     window.localStorage.setItem(
       ANALYSIS_CACHE_STORAGE_KEY,

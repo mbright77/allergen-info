@@ -5,7 +5,7 @@ import { RouterProvider, createMemoryRouter } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { ProfileProvider } from '../../shared/profile/ProfileProvider'
-import { PROFILE_STORAGE_KEY } from '../../shared/profile/profile-storage'
+import { PROFILES_STORAGE_KEY } from '../../shared/profile/profile-storage'
 import { OnboardingPage } from './OnboardingPage'
 
 function renderOnboardingPage() {
@@ -20,7 +20,7 @@ function renderOnboardingPage() {
   const router = createMemoryRouter(
     [
       { path: '/onboarding', element: <OnboardingPage /> },
-      { path: '/scan', element: <p>Scanner route</p> },
+      { path: '/home', element: <p>Home route</p> },
     ],
     { initialEntries: ['/onboarding'] },
   )
@@ -42,7 +42,7 @@ describe('OnboardingPage', () => {
     window.localStorage.clear()
   })
 
-  it('loads allergens, saves selection, and navigates to scan', async () => {
+  it('requires a profile name and saves the first profile with optional allergens', async () => {
     const user = userEvent.setup()
 
     vi.spyOn(window, 'fetch').mockResolvedValue(
@@ -60,16 +60,51 @@ describe('OnboardingPage', () => {
 
     const { router } = renderOnboardingPage()
 
+    await user.click(screen.getByRole('button', { name: /save profile and continue/i }))
+    expect(await screen.findByText(/enter a profile name before saving/i)).toBeInTheDocument()
+
+    await user.type(screen.getByLabelText(/profile name/i), 'Anna')
     const milkButton = await screen.findByRole('button', { name: 'Milk' })
     await user.click(milkButton)
-    await user.click(screen.getByRole('button', { name: /save & continue to scan/i }))
+    await user.click(screen.getByRole('button', { name: /save profile and continue/i }))
 
     await waitFor(() => {
-      expect(router.state.location.pathname).toBe('/scan')
+      expect(router.state.location.pathname).toBe('/home')
     })
 
-    expect(JSON.parse(window.localStorage.getItem(PROFILE_STORAGE_KEY) ?? '{}')).toEqual({
-      selectedAllergens: ['milk'],
+    expect(JSON.parse(window.localStorage.getItem(PROFILES_STORAGE_KEY) ?? '{}')).toMatchObject({
+      activeProfileId: expect.any(String),
+      profiles: [
+        {
+          name: 'Anna',
+          selectedAllergens: ['milk'],
+        },
+      ],
+    })
+  })
+
+  it('allows saving an empty profile', async () => {
+    const user = userEvent.setup()
+
+    vi.spyOn(window, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify([{ code: 'milk', label: 'Milk' }]), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    )
+
+    renderOnboardingPage()
+
+    await user.type(screen.getByLabelText(/profile name/i), 'Leo')
+    await user.click(screen.getByRole('button', { name: /save profile and continue/i }))
+
+    expect(JSON.parse(window.localStorage.getItem(PROFILES_STORAGE_KEY) ?? '{}')).toMatchObject({
+      profiles: [
+        {
+          name: 'Leo',
+          selectedAllergens: [],
+        },
+      ],
     })
   })
 })

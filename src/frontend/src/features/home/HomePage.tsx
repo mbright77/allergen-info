@@ -5,9 +5,10 @@ import { useProfile } from '../../shared/profile/ProfileProvider'
 import { readRecentSearches } from '../../shared/search/recent-searches'
 
 export function HomePage() {
-  const { selectedAllergens } = useProfile()
+  const { activeProfile, selectedAllergens } = useProfile()
   const { favorites, history } = useCollections()
   const recentSearches = readRecentSearches()
+  const activeProfileName = activeProfile?.name ?? 'Your profile'
 
   return (
     <section className="stack-xl">
@@ -15,7 +16,7 @@ export function HomePage() {
         <p className="eyebrow eyebrow--light">Welcome</p>
         <h1 className="display-title display-title--light">Safe choices, faster.</h1>
         <p className="supporting-text supporting-text--light">
-          Your profile is active with {selectedAllergens.length} monitored allergens. Start with search, or launch the camera only when you are ready to scan.
+          {activeProfileName} is active with {selectedAllergens.length} monitored allergens. Start with search, or launch the camera only when you are ready to scan.
         </p>
         <div className="action-row">
           <Link to="/scan" className="primary-action primary-action--link">
@@ -30,7 +31,7 @@ export function HomePage() {
       <section className="content-card stack-md">
         <p className="eyebrow">Snapshot</p>
         <div className="result-bento-grid">
-          <HomeMetricCard label="Saved profile" value={`${selectedAllergens.length} allergens`} />
+          <HomeMetricCard label={activeProfileName} value={`${selectedAllergens.length} allergens`} />
           <HomeMetricCard label="Favorites" value={`${favorites.length} items`} />
           <HomeMetricCard label="Recent checks" value={`${history.length} products`} />
         </div>

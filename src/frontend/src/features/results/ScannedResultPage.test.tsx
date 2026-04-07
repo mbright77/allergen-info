@@ -16,13 +16,14 @@ function renderScannedResultPage(code = '1735000111001') {
     },
   })
 
-  const router = createMemoryRouter(
-    [
-      { path: '/results/scan/:code', element: <ScannedResultPage /> },
-      { path: '/results/:gtin', element: <p>Canonical result route</p> },
-      { path: '/scan', element: <p>Scan route</p> },
-      { path: '/search/results', element: <p>Search results route</p> },
-    ],
+    const router = createMemoryRouter(
+      [
+        { path: '/results/scan/:code', element: <ScannedResultPage /> },
+        { path: '/results/:gtin', element: <p>Canonical result route</p> },
+        { path: '/scan', element: <p>Scan route</p> },
+        { path: '/search/results', element: <p>Search results route</p> },
+        { path: '/profile', element: <p>Profile route</p> },
+      ],
     { initialEntries: [`/results/scan/${code}`] },
   )
 

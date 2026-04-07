@@ -1,5 +1,7 @@
-import { useEffect, useState, type PropsWithChildren } from 'react'
-import { NavLink, useLocation } from 'react-router-dom'
+import { useEffect, useMemo, useState, type PropsWithChildren } from 'react'
+import { NavLink, useLocation, useNavigate } from 'react-router-dom'
+
+import { useProfile } from '../../shared/profile/ProfileProvider'
 
 const navigation = [
   { to: '/home', label: 'Home', icon: 'home' },
@@ -10,11 +12,26 @@ const navigation = [
 
 export function AppShell({ children }: PropsWithChildren) {
   const location = useLocation()
+  const navigate = useNavigate()
   const [isOffline, setIsOffline] = useState(() =>
     typeof navigator !== 'undefined' ? navigator.onLine === false : false,
   )
+  const [isProfilesOpen, setIsProfilesOpen] = useState(false)
+  const { profiles, activeProfile, activeProfileId, hasProfiles, setActiveProfile } = useProfile()
 
   const isOnboardingRoute = location.pathname.startsWith('/onboarding')
+  const activeProfileMonogram = useMemo(() => {
+    if (!activeProfile) {
+      return 'SS'
+    }
+
+    return activeProfile.name
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part[0]?.toUpperCase() ?? '')
+      .join('') || 'SS'
+  }, [activeProfile])
 
   useEffect(() => {
     function handleOnline() {
@@ -34,11 +51,15 @@ export function AppShell({ children }: PropsWithChildren) {
     }
   }, [])
 
+  useEffect(() => {
+    setIsProfilesOpen(false)
+  }, [location.pathname])
+
   return (
     <div className={isOnboardingRoute ? 'app-shell app-shell--no-nav' : 'app-shell'}>
       {isOffline ? (
         <div className="offline-banner" role="status" aria-live="polite">
-          Offline mode: saved profile, favorites, and history remain available.
+          Offline mode: saved profiles, favorites, and history remain available.
         </div>
       ) : null}
 
@@ -62,9 +83,66 @@ export function AppShell({ children }: PropsWithChildren) {
                   notifications
                 </span>
               </button>
-              <div className="avatar-shell" aria-hidden="true">
-                <span className="material-symbols-outlined">account_circle</span>
-              </div>
+              {hasProfiles ? (
+                <div className="profile-switcher-shell">
+                  <button
+                    type="button"
+                    className="profile-switcher-trigger"
+                    aria-label="Profiles"
+                    aria-expanded={isProfilesOpen}
+                    aria-haspopup="menu"
+                    onClick={() => setIsProfilesOpen((current) => !current)}
+                  >
+                    <span className="avatar-shell" aria-hidden="true">
+                      {activeProfileMonogram}
+                    </span>
+                    <span className="profile-switcher-trigger__copy">
+                      <span className="profile-switcher-trigger__label">Active profile</span>
+                      <span className="profile-switcher-trigger__value">{activeProfile?.name}</span>
+                    </span>
+                    <span className="material-symbols-outlined" aria-hidden="true">
+                      expand_more
+                    </span>
+                  </button>
+
+                  {isProfilesOpen ? (
+                    <div className="profile-switcher-menu content-card stack-sm" role="menu" aria-label="Saved profiles">
+                      {profiles.map((profile) => (
+                        <button
+                          key={profile.id}
+                          type="button"
+                          className={profile.id === activeProfileId ? 'profile-switcher-item profile-switcher-item--active' : 'profile-switcher-item'}
+                          role="menuitemradio"
+                          aria-checked={profile.id === activeProfileId}
+                          onClick={() => {
+                            setActiveProfile(profile.id)
+                            setIsProfilesOpen(false)
+                          }}
+                        >
+                          <span className="profile-switcher-item__title">{profile.name}</span>
+                          <span className="profile-switcher-item__meta">
+                            {profile.selectedAllergens.length > 0
+                              ? `${profile.selectedAllergens.length} allergens`
+                              : 'No allergens selected'}
+                          </span>
+                        </button>
+                      ))}
+                      <button
+                        type="button"
+                        className="profile-switcher-item profile-switcher-item--create"
+                        role="menuitem"
+                        onClick={() => {
+                          setIsProfilesOpen(false)
+                          navigate('/profiles/new')
+                        }}
+                      >
+                        <span className="profile-switcher-item__title">Add profile</span>
+                        <span className="profile-switcher-item__meta">Create another named profile</span>
+                      </button>
+                    </div>
+                  ) : null}
+                </div>
+              ) : null}
             </>
           )}
         </div>

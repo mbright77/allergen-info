@@ -7,7 +7,7 @@ import { useBarcodeScanner } from './useBarcodeScanner'
 
 export function ScanPage() {
   const navigate = useNavigate()
-  const { selectedAllergens } = useProfile()
+  const { activeProfile, selectedAllergens } = useProfile()
   const [searchValue, setSearchValue] = useState('')
   const [isScannerActive, setIsScannerActive] = useState(false)
   const recentSearches = useMemo(() => readRecentSearches(), [searchValue])
@@ -85,6 +85,14 @@ export function ScanPage() {
             </span>
           </button>
         </form>
+        <section className="content-card content-card--soft-highlight stack-sm scan-profile-banner">
+          <p className="eyebrow">Active profile</p>
+          <p className="supporting-text">
+            {activeProfile
+              ? `${activeProfile.name} is selected${selectedAllergens.length > 0 ? ` with ${selectedAllergens.length} monitored allergens.` : ' with no allergens selected yet.'}`
+              : 'No profile is active yet.'}
+          </p>
+        </section>
         {!isScannerActive ? <h1 className="sr-only">Scan or search for a product</h1> : null}
 
         <section className="scanner-stage">

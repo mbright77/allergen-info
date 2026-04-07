@@ -7,6 +7,7 @@ import { createMemoryRouter, RouterProvider } from 'react-router-dom'
 import { router as appRouter } from './router'
 import { CollectionsProvider } from '../shared/collections/CollectionsProvider'
 import { ProfileProvider } from '../shared/profile/ProfileProvider'
+import { PROFILES_STORAGE_KEY } from '../shared/profile/profile-storage'
 
 const pwaMocks = vi.hoisted(() => {
   return {
@@ -51,10 +52,71 @@ describe('app router', () => {
       </QueryClientProvider>,
     )
 
-    expect(screen.getByText(/Define your/i)).toBeInTheDocument()
-    expect(screen.getByText(/Safe Zone/i)).toBeInTheDocument()
+    expect(screen.getByText(/Create your Safe Zone/i)).toBeInTheDocument()
     expect(screen.queryByRole('navigation', { name: /primary navigation/i })).not.toBeInTheDocument()
     expect(screen.queryByLabelText(/notifications/i)).not.toBeInTheDocument()
+  })
+
+  it('routes the app root to onboarding when no profiles exist', async () => {
+    const queryClient = new QueryClient({
+      defaultOptions: {
+        queries: {
+          retry: false,
+        },
+      },
+    })
+
+    const router = createMemoryRouter(appRouter.routes, {
+      initialEntries: ['/'],
+    })
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <ProfileProvider>
+          <CollectionsProvider>
+            <RouterProvider router={router} />
+          </CollectionsProvider>
+        </ProfileProvider>
+      </QueryClientProvider>,
+    )
+
+    expect(await screen.findByText(/Create your Safe Zone/i)).toBeInTheDocument()
+  })
+
+  it('routes the app root to home when an active profile exists', async () => {
+    window.localStorage.setItem(
+      PROFILES_STORAGE_KEY,
+      JSON.stringify({
+        activeProfileId: 'p1',
+        profiles: [
+          { id: 'p1', name: 'Anna', selectedAllergens: ['milk'], createdAt: '2026-04-01T10:00:00Z', updatedAt: '2026-04-01T10:00:00Z' },
+        ],
+      }),
+    )
+
+    const queryClient = new QueryClient({
+      defaultOptions: {
+        queries: {
+          retry: false,
+        },
+      },
+    })
+
+    const router = createMemoryRouter(appRouter.routes, {
+      initialEntries: ['/'],
+    })
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <ProfileProvider>
+          <CollectionsProvider>
+            <RouterProvider router={router} />
+          </CollectionsProvider>
+        </ProfileProvider>
+      </QueryClientProvider>,
+    )
+
+    expect(await screen.findByText(/Anna is active with 1 monitored allergens/i)).toBeInTheDocument()
   })
 
   it('renders an offline banner when the browser is offline', () => {
@@ -87,7 +149,7 @@ describe('app router', () => {
     )
 
     expect(
-      screen.getByText(/offline mode: saved profile, favorites, and history remain available/i),
+      screen.getByText(/offline mode: saved profiles, favorites, and history remain available/i),
     ).toBeInTheDocument()
 
     Object.defineProperty(window.navigator, 'onLine', {

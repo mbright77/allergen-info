@@ -11,7 +11,7 @@ import { useProfile } from '../../shared/profile/ProfileProvider'
 
 export function ProductResultPage() {
   const { gtin } = useParams()
-  const { selectedAllergens } = useProfile()
+  const { activeProfile, selectedAllergens } = useProfile()
   const { addHistoryEntry, isFavorite, toggleFavorite } = useCollections()
 
   const normalizedGtin = gtin ?? ''
@@ -135,7 +135,7 @@ export function ProductResultPage() {
             <article className="status-summary-card stack-sm">
               <p className="eyebrow">Your profile</p>
               <p className="status-summary-card__value">
-                {resolvedAnalysis.analysis.checkedAllergens.length} allergens checked
+                {activeProfile ? `${activeProfile.name} • ${resolvedAnalysis.analysis.checkedAllergens.length} allergens checked` : `${resolvedAnalysis.analysis.checkedAllergens.length} allergens checked`}
               </p>
             </article>
           </section>
