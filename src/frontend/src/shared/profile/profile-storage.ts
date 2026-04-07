@@ -31,9 +31,11 @@ export function readStoredProfilesState(): StoredProfilesState {
       return emptyProfilesState()
     }
 
-    const profiles = parsed.profiles.map(normalizeStoredProfile).filter((profile): profile is StoredProfile => profile !== null)
+    const profiles = parsed.profiles
+      .map(normalizeStoredProfile)
+      .filter((profile: StoredProfile | null): profile is StoredProfile => profile !== null)
     const activeProfileId =
-      typeof parsed.activeProfileId === 'string' && profiles.some((profile) => profile.id === parsed.activeProfileId)
+      typeof parsed.activeProfileId === 'string' && profiles.some((profile: StoredProfile) => profile.id === parsed.activeProfileId)
         ? parsed.activeProfileId
         : profiles[0]?.id ?? null
 
