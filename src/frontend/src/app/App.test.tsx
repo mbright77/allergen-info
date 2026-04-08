@@ -54,7 +54,45 @@ describe('app router', () => {
 
     expect(screen.getByText(/Create your Safe Zone/i)).toBeInTheDocument()
     expect(screen.queryByRole('navigation', { name: /primary navigation/i })).not.toBeInTheDocument()
-    expect(screen.queryByLabelText(/notifications/i)).not.toBeInTheDocument()
+  })
+
+  it('opens the help page from the top bar help icon', async () => {
+    const user = userEvent.setup()
+    window.localStorage.setItem(
+      PROFILES_STORAGE_KEY,
+      JSON.stringify({
+        activeProfileId: 'p1',
+        profiles: [
+          { id: 'p1', name: 'Anna', selectedAllergens: ['milk'], createdAt: '2026-04-01T10:00:00Z', updatedAt: '2026-04-01T10:00:00Z' },
+        ],
+      }),
+    )
+
+    const queryClient = new QueryClient({
+      defaultOptions: {
+        queries: {
+          retry: false,
+        },
+      },
+    })
+
+    const router = createMemoryRouter(appRouter.routes, {
+      initialEntries: ['/home'],
+    })
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <ProfileProvider>
+          <CollectionsProvider>
+            <RouterProvider router={router} />
+          </CollectionsProvider>
+        </ProfileProvider>
+      </QueryClientProvider>,
+    )
+
+    await user.click(screen.getByRole('button', { name: /help/i }))
+
+    expect(await screen.findByText(/How SafeScan uses your profile/i)).toBeInTheDocument()
   })
 
   it('routes the app root to onboarding when no profiles exist', async () => {

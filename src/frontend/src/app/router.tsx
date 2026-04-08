@@ -2,6 +2,7 @@ import { createBrowserRouter, Navigate } from 'react-router-dom'
 
 import { App } from './App'
 import { FavoritesPage } from '../features/favorites/FavoritesPage'
+import { HelpPage } from '../features/help/HelpPage'
 import { HistoryPage } from '../features/history/HistoryPage'
 import { HomePage } from '../features/home/HomePage'
 import { OnboardingPage } from '../features/onboarding/OnboardingPage'
@@ -37,6 +38,7 @@ export const router = createBrowserRouter([
       { path: 'profile', element: <ProfilePage /> },
       { path: 'profiles/new', element: <NewProfilePage /> },
       { path: 'history', element: <HistoryPage /> },
+      { path: 'help', element: <HelpPage /> },
     ],
   },
 ], {

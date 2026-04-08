@@ -144,7 +144,7 @@ export function ProfileEditor({
         <p className="supporting-text">{summaryText}</p>
       </section>
 
-      <div className="sticky-action-bar">
+      <div className="profile-editor-actions">
         <button
           type="button"
           className="primary-action"

@@ -70,7 +70,7 @@ export function AppShell({ children }: PropsWithChildren) {
           </span>
         </div>
         <div className="top-bar-actions" role="group" aria-label="App actions">
-          <button type="button" className="icon-button" aria-label="Help">
+          <button type="button" className="icon-button" aria-label="Help" onClick={() => navigate('/help')}>
             <span className="material-symbols-outlined" aria-hidden="true">
               help
             </span>
@@ -78,11 +78,6 @@ export function AppShell({ children }: PropsWithChildren) {
 
           {isOnboardingRoute ? null : (
             <>
-              <button type="button" className="icon-button" aria-label="Notifications">
-                <span className="material-symbols-outlined" aria-hidden="true">
-                  notifications
-                </span>
-              </button>
               {hasProfiles ? (
                 <div className="profile-switcher-shell">
                   <button
@@ -95,10 +90,6 @@ export function AppShell({ children }: PropsWithChildren) {
                   >
                     <span className="avatar-shell" aria-hidden="true">
                       {activeProfileMonogram}
-                    </span>
-                    <span className="profile-switcher-trigger__copy">
-                      <span className="profile-switcher-trigger__label">Active profile</span>
-                      <span className="profile-switcher-trigger__value">{activeProfile?.name}</span>
                     </span>
                     <span className="material-symbols-outlined" aria-hidden="true">
                       expand_more

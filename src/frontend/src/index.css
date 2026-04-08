@@ -203,9 +203,9 @@ button {
 .profile-switcher-trigger {
   display: inline-flex;
   align-items: center;
-  gap: 0.65rem;
+  gap: 0.45rem;
   min-height: 2.75rem;
-  padding: 0.35rem 0.5rem 0.35rem 0.35rem;
+  padding: 0.35rem 0.45rem 0.35rem 0.35rem;
   border: none;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.92);
@@ -219,25 +219,16 @@ button {
   outline-offset: 2px;
 }
 
-.profile-switcher-trigger__copy {
-  display: grid;
-  gap: 0.05rem;
-  text-align: left;
-}
-
-.profile-switcher-trigger__label,
 .profile-switcher-item__meta,
 .profile-form-error {
   font-size: 0.78rem;
   line-height: 1.4;
 }
 
-.profile-switcher-trigger__label,
 .profile-switcher-item__meta {
   color: var(--text-muted);
 }
 
-.profile-switcher-trigger__value,
 .profile-switcher-item__title {
   font-family: 'Manrope', sans-serif;
   font-size: 0.96rem;
@@ -1135,10 +1126,8 @@ button {
   }
 }
 
-.sticky-action-bar {
-  position: sticky;
-  bottom: 5.5rem;
-  z-index: 2;
+.profile-editor-actions {
+  padding-bottom: 1rem;
 }
 
 .primary-action {
