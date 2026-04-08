@@ -270,6 +270,11 @@ button {
   padding-top: 1.5rem;
 }
 
+.page-frame > * {
+  min-width: 0;
+  width: 100%;
+}
+
 .bottom-nav {
   position: fixed;
   left: 50%;
@@ -360,12 +365,6 @@ button {
   letter-spacing: -0.07em;
 }
 
-.display-title--light,
-.eyebrow--light,
-.supporting-text--light {
-  color: white;
-}
-
 .content-card--accent .eyebrow,
 .content-card--accent .supporting-text,
 .update-banner .eyebrow,
@@ -402,6 +401,12 @@ button {
   color: var(--text-muted);
   font-size: 1rem;
   line-height: 1.6;
+}
+
+.display-title--light,
+.eyebrow.eyebrow--light,
+.supporting-text.supporting-text--light {
+  color: white;
 }
 
 .stack-sm,
@@ -535,6 +540,7 @@ button {
 .home-hero {
   position: relative;
   overflow: hidden;
+  isolation: isolate;
 }
 
 .home-hero .supporting-text {
@@ -546,7 +552,7 @@ button {
   content: '';
   position: absolute;
   top: -3rem;
-  right: -2rem;
+  right: 0.75rem;
   width: 10rem;
   height: 10rem;
   border-radius: 999px;
@@ -1667,6 +1673,18 @@ button {
 }
 
 @media (max-width: 640px) {
+  .home-hero {
+    padding-inline: 1.35rem;
+  }
+
+  .home-hero::after {
+    top: -2.25rem;
+    right: 0.5rem;
+    width: 7.5rem;
+    height: 7.5rem;
+    filter: blur(14px);
+  }
+
   .scanner-page {
     border-radius: 1.5rem;
   }
