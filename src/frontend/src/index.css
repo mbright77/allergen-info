@@ -329,7 +329,8 @@ button {
 }
 
 .content-card--accent {
-  background: linear-gradient(145deg, rgba(177, 240, 206, 0.52), rgba(255, 255, 255, 0.9));
+  background: linear-gradient(145deg, rgba(29, 92, 66, 0.94), rgba(0, 68, 45, 0.88));
+  border-color: rgba(255, 255, 255, 0.1);
 }
 
 .content-card--soft-highlight {
@@ -363,6 +364,13 @@ button {
 .eyebrow--light,
 .supporting-text--light {
   color: white;
+}
+
+.content-card--accent .eyebrow,
+.content-card--accent .supporting-text,
+.update-banner .eyebrow,
+.update-banner .supporting-text {
+  color: rgba(252, 249, 248, 0.92);
 }
 
 .display-title--italic {
