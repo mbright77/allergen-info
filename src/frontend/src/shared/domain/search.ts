@@ -27,5 +27,5 @@ export function toStatusClassName(status: AnalysisOverallStatus | null | undefin
 }
 
 export function getSearchCardMeta(result: SearchResult) {
-  return result.previewBadge ?? result.category ?? result.packageSize ?? 'Product overview'
+  return result.packageSize ?? result.category ?? 'Product overview'
 }

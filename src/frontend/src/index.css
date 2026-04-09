@@ -1217,10 +1217,6 @@ button {
   border-radius: 1.6rem;
 }
 
-.search-card--featured {
-  padding: 1.15rem;
-}
-
 .search-card__button {
   display: grid;
   gap: 1rem;
@@ -1295,24 +1291,6 @@ button {
   font-size: 1.4rem;
   font-weight: 800;
   letter-spacing: -0.05em;
-}
-
-.search-card--featured .search-card__media {
-  min-height: 16rem;
-}
-
-.search-card--featured .search-card__artwork {
-  background:
-    radial-gradient(circle at top right, rgba(255, 255, 255, 0.35), transparent 30%),
-    radial-gradient(circle at bottom left, rgba(0, 0, 0, 0.16), transparent 28%),
-    linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(0, 0, 0, 0.14));
-}
-
-.search-card--featured .search-card__monogram {
-  width: 5.5rem;
-  height: 7rem;
-  border-radius: 1.45rem;
-  box-shadow: 0 18px 36px rgba(17, 31, 24, 0.18);
 }
 
 .search-card__media--caution {

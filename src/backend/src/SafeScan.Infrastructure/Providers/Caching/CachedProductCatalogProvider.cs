@@ -11,7 +11,8 @@ public sealed class CachedProductCatalogProvider : IProductCatalogProvider
     private static readonly TimeSpan ProductCacheDuration = TimeSpan.FromMinutes(30);
     private static readonly TimeSpan SearchCacheDuration = TimeSpan.FromMinutes(10);
     private static readonly TimeSpan PreviewCacheDuration = TimeSpan.FromMinutes(10);
-    private const int PreviewEnrichmentCount = 3;
+    private const int PreviewEnrichmentCount = 20;
+    private const int PreviewEnrichmentBatchSize = 5;
 
     private readonly IProductCatalogSource _innerProvider;
     private readonly IMemoryCache _cache;
@@ -105,13 +106,33 @@ public sealed class CachedProductCatalogProvider : IProductCatalogProvider
             return results;
         }
 
-        var enrichedResults = new SearchResultDto[results.Count];
+        var enrichedResults = results.ToArray();
+        var enrichableIndexes = new List<int>();
 
         for (var index = 0; index < results.Count; index++)
         {
-            enrichedResults[index] = ShouldEnrichResult(results[index], index, normalizedQuery)
-                ? await EnrichResultAsync(results[index], selectedAllergens, cancellationToken)
-                : results[index];
+            if (ShouldEnrichResult(results[index], index, normalizedQuery))
+            {
+                enrichableIndexes.Add(index);
+            }
+        }
+
+        for (var batchStart = 0; batchStart < enrichableIndexes.Count; batchStart += PreviewEnrichmentBatchSize)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            var batchIndexes = enrichableIndexes
+                .Skip(batchStart)
+                .Take(PreviewEnrichmentBatchSize)
+                .ToArray();
+
+            var enrichedBatch = await Task.WhenAll(
+                batchIndexes.Select(index => EnrichResultAsync(results[index], selectedAllergens, cancellationToken)));
+
+            for (var index = 0; index < batchIndexes.Length; index++)
+            {
+                enrichedResults[batchIndexes[index]] = enrichedBatch[index];
+            }
         }
 
         return enrichedResults;

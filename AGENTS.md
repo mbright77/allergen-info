@@ -179,10 +179,13 @@ Important search behavior:
 - browser never talks to DABAS directly
 - search can use product name, ingredient, brand, GTIN/EAN, or article number
 - exact GTIN/EAN matches should rank highest
+- search result cards should render as a uniform grid; do not visually feature the first result with a larger card treatment
+- search result cards should show pack-size metadata in the supporting text when available; preview badges stay in badge/chip treatments
 - DABAS search uses `articles/searchparameter` and does not use `basesearchparameter`
 - search results are lightweight and normalized
 - full product detail is fetched after selection
 - preview badges and `imageUrl` are optional enrichment fields
+- backend should hydrate the first 20 search results for preview analysis and image enrichment using bounded parallel batches of 5 lookups at a time
 
 Important scan behavior:
 

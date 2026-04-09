@@ -71,19 +71,38 @@ public sealed class CachedProductCatalogProviderTests
     public async Task SearchProductsAsync_EnrichesExactArticleNumberMatchOutsidePreviewWindow()
     {
         using var cache = new MemoryCache(new MemoryCacheOptions());
-        var innerProvider = new FakeProductCatalogProvider(includePreview: true, includeImage: true, searchResultCount: 5);
+        var innerProvider = new FakeProductCatalogProvider(includePreview: true, includeImage: true, searchResultCount: 21);
         var provider = new CachedProductCatalogProvider(
             innerProvider,
             cache,
             new ProductAnalysisService(),
             new SearchQueryNormalizer());
 
-        var results = await provider.SearchProductsAsync("test-5", ["milk"]);
+        var results = await provider.SearchProductsAsync("test-21", ["milk"]);
 
-        results.Should().HaveCount(5);
-        results[4].ArticleNumber.Should().Be("TEST-5");
-        results[4].ImageUrl.Should().Be("https://cdn.example.test/test-5.jpg");
-        innerProvider.ProductLookupCallCount.Should().Be(4);
+        results.Should().HaveCount(21);
+        results[20].ArticleNumber.Should().Be("TEST-21");
+        results[20].ImageUrl.Should().Be("https://cdn.example.test/test-21.jpg");
+        innerProvider.ProductLookupCallCount.Should().Be(21);
+    }
+
+    [Fact]
+    public async Task SearchProductsAsync_EnrichesFirstTwentyResultsOnly()
+    {
+        using var cache = new MemoryCache(new MemoryCacheOptions());
+        var innerProvider = new FakeProductCatalogProvider(includePreview: false, includeImage: true, searchResultCount: 25);
+        var provider = new CachedProductCatalogProvider(
+            innerProvider,
+            cache,
+            new ProductAnalysisService(),
+            new SearchQueryNormalizer());
+
+        var results = await provider.SearchProductsAsync("chocolate", ["milk"]);
+
+        results.Should().HaveCount(25);
+        results.Take(20).Should().OnlyContain(result => result.ImageUrl != null);
+        results.Skip(20).Should().OnlyContain(result => result.ImageUrl == null);
+        innerProvider.ProductLookupCallCount.Should().Be(20);
     }
 
     private sealed class FakeProductCatalogProvider : IProductCatalogSource

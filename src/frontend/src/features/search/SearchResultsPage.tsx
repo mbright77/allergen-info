@@ -95,14 +95,11 @@ export function SearchResultsPage() {
       {!searchQuery.isLoading && results.length > 0 ? (
         <>
           <div className="search-grid">
-            {results.map((result, index) => {
+            {results.map((result) => {
               const statusClassName = toStatusClassName(result.previewStatus)
 
               return (
-                <article
-                  key={result.gtin}
-                  className={index === 0 ? 'search-card search-card--featured' : 'search-card'}
-                >
+                <article key={result.gtin} className="search-card">
                   <button
                     type="button"
                     className="search-card__button"

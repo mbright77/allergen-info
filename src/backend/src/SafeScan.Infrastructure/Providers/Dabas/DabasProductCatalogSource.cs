@@ -171,7 +171,7 @@ public sealed class DabasProductCatalogSource : IProductCatalogSource
 
     private static SearchResultDto MapSearchResult(JsonElement record)
     {
-        var name = GetString(record, "Produktnamn", "Artikelbenamning") ?? GetString(record, "GTIN") ?? "Unknown product";
+        var name = GetString(record, "Produktnamn", "Artikelbenamning") ?? string.Empty;
 
         return new SearchResultDto(
             GetString(record, "GTIN") ?? string.Empty,

@@ -78,7 +78,8 @@ describe('SearchResultsPage', () => {
     const { router } = renderSearchResultsPage()
 
     const cardButton = await screen.findByRole('button', { name: /view details for the original oat milk/i })
-    expect(screen.getAllByText(/Clean Label/i)).toHaveLength(2)
+    expect(screen.getByText('1 l')).toBeInTheDocument()
+    expect(screen.getByText(/Clean Label/i)).toBeInTheDocument()
     expect(document.querySelector('.search-card__image')).toHaveAttribute('src', 'https://cdn.example.test/oat-medium.jpg')
 
     await user.click(cardButton)

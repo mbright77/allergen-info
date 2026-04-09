@@ -10,7 +10,7 @@ export function FavoritesPage() {
       <section className="content-card stack-lg secondary-screen-hero">
         <p className="eyebrow">Favorites</p>
         <h1 className="display-title">Your saved products.</h1>
-        <p className="supporting-text">Keep frequently checked items close at hand while the backend remains placeholder-driven.</p>
+        <p className="supporting-text">Save trusted products here so you can revisit them quickly before your next shop.</p>
       </section>
 
       {favorites.length > 0 ? (
