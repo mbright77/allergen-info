@@ -23,6 +23,7 @@ pnpm-debug.log*
 
 # Local IDE metadata
 src/backend/.idea/
+*.DotSettings.user
 
 # Reference-only local samples
 sample_deploy/
