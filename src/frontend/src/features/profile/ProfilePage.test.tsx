@@ -70,7 +70,7 @@ describe('ProfilePage', () => {
     renderProfilePage()
 
     expect(await screen.findByDisplayValue('Anna')).toBeInTheDocument()
-    expect(await screen.findByRole('button', { name: 'Cereals containing gluten' })).toBeInTheDocument()
+    expect(await screen.findByRole('button', { name: 'Gluten' })).toBeInTheDocument()
     const soybeansButton = await screen.findByRole('button', { name: 'Soybeans' })
     expect(screen.getByRole('button', { name: 'Milk' })).toHaveAttribute('aria-pressed', 'true')
 

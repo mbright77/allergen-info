@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useEffect, useMemo, useState } from 'react'
 
 import { getAllergens } from '../../shared/api/products'
-import { getAllergenIcon } from '../../shared/allergens/metadata'
+import { formatAllergenCode, getAllergenIcon } from '../../shared/allergens/metadata'
 
 type ProfileEditorProps = {
   mode: 'create' | 'edit'
@@ -131,7 +131,7 @@ export function ProfileEditor({
                   <span className="allergen-tile__icon material-symbols-outlined" aria-hidden="true">
                     {getAllergenIcon(allergen.code)}
                   </span>
-                  <span className="allergen-tile__label">{allergen.label}</span>
+                  <span className="allergen-tile__label">{formatAllergenCode(allergen.code)}</span>
                 </button>
               )
             })}
