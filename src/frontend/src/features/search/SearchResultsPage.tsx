@@ -35,7 +35,7 @@ export function SearchResultsPage() {
 
   useEffect(() => {
     if (query.length > 0 && searchQuery.data) {
-      saveRecentSearch(query, selectedAllergens)
+      saveRecentSearch(query, selectedAllergens, searchQuery.data.results[0]?.imageUrl ?? null)
       writeCachedSearchResults(searchCacheKey, searchQuery.data)
     }
   }, [query, searchCacheKey, searchQuery.data, selectedAllergens])

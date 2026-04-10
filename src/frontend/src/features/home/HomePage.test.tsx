@@ -23,7 +23,7 @@ function renderHomePage() {
     initialEntries: ['/home'],
   })
 
-  render(
+  return render(
     <QueryClientProvider client={queryClient}>
       <ProfileProvider>
         <CollectionsProvider>
@@ -101,5 +101,43 @@ describe('HomePage', () => {
     expect(screen.getByText(/1 items/i)).toBeInTheDocument()
     expect(screen.getByText(/2 products/i)).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /recent search oat milk/i })).toBeInTheDocument()
+  })
+
+  it('renders a recent-search image when one is stored', () => {
+    window.localStorage.setItem(
+      RECENT_SEARCHES_STORAGE_KEY,
+      JSON.stringify([
+        {
+          query: 'oat milk',
+          selectedAllergens: ['milk'],
+          imageUrl: 'https://cdn.example.com/oat-milk.png',
+          updatedAt: '2026-03-21T13:00:00Z',
+        },
+      ]),
+    )
+
+    const { container } = renderHomePage()
+
+    expect(screen.getByRole('link', { name: /recent search oat milk/i })).toBeInTheDocument()
+    expect(container.querySelector('img')).toHaveAttribute('src', 'https://cdn.example.com/oat-milk.png')
+  })
+
+  it('renders recent-search fallback media when no image is stored', () => {
+    window.localStorage.setItem(
+      RECENT_SEARCHES_STORAGE_KEY,
+      JSON.stringify([
+        {
+          query: 'almond drink',
+          selectedAllergens: ['tree_nuts'],
+          updatedAt: '2026-03-21T13:00:00Z',
+        },
+      ]),
+    )
+
+    const { container } = renderHomePage()
+
+    expect(screen.getByRole('link', { name: /recent search almond drink/i })).toBeInTheDocument()
+    expect(screen.getByText('#A')).toBeInTheDocument()
+    expect(container.querySelector('img')).not.toBeInTheDocument()
   })
 })

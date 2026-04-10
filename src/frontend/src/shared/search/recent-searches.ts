@@ -4,6 +4,7 @@ const MAX_RECENT_SEARCHES = 6
 export type RecentSearchEntry = {
   query: string
   selectedAllergens: string[]
+  imageUrl?: string | null
   updatedAt: string
 }
 
@@ -31,7 +32,7 @@ export function readRecentSearches(): RecentSearchEntry[] {
   }
 }
 
-export function saveRecentSearch(query: string, selectedAllergens: readonly string[]) {
+export function saveRecentSearch(query: string, selectedAllergens: readonly string[], imageUrl?: string | null) {
   if (typeof window === 'undefined') {
     return
   }
@@ -45,6 +46,7 @@ export function saveRecentSearch(query: string, selectedAllergens: readonly stri
   const nextEntry: RecentSearchEntry = {
     query: trimmedQuery,
     selectedAllergens: [...selectedAllergens],
+    imageUrl,
     updatedAt: new Date().toISOString(),
   }
 
@@ -68,6 +70,7 @@ function isRecentSearchEntry(value: unknown): value is RecentSearchEntry {
     typeof candidate.query === 'string' &&
     Array.isArray(candidate.selectedAllergens) &&
     candidate.selectedAllergens.every((item) => typeof item === 'string') &&
+    (candidate.imageUrl === undefined || candidate.imageUrl === null || typeof candidate.imageUrl === 'string') &&
     typeof candidate.updatedAt === 'string'
   )
 }

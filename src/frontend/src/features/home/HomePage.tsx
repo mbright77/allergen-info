@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 
 import { useCollections } from '../../shared/collections/CollectionsProvider'
@@ -47,9 +48,7 @@ export function HomePage() {
                 to={`/search/results?q=${encodeURIComponent(entry.query)}`}
                 className="saved-item-card saved-item-card--compact"
               >
-                <div className="saved-item-card__media" aria-hidden="true">
-                  <span>#{entry.query.charAt(0).toUpperCase()}</span>
-                </div>
+                <RecentSearchArtwork entry={entry} />
                 <div className="stack-sm saved-item-card__body">
                   <p className="eyebrow">Recent search</p>
                   <h2 className="section-title">{entry.query}</h2>
@@ -62,6 +61,33 @@ export function HomePage() {
         )}
       </section>
     </section>
+  )
+}
+
+function RecentSearchArtwork({
+  entry,
+}: {
+  entry: {
+    query: string
+    imageUrl?: string | null
+  }
+}) {
+  const [imageFailed, setImageFailed] = useState(false)
+  const showImage = !!entry.imageUrl && !imageFailed
+
+  return (
+    <div className="saved-item-card__media" aria-hidden="true">
+      {showImage ? (
+        <img
+          className="result-product-card__image"
+          src={entry.imageUrl ?? undefined}
+          alt=""
+          loading="lazy"
+          onError={() => setImageFailed(true)}
+        />
+      ) : null}
+      {!showImage ? <span>#{entry.query.charAt(0).toUpperCase()}</span> : null}
+    </div>
   )
 }
 

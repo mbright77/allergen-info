@@ -203,6 +203,7 @@ Current search behavior:
 - search results may include preview status, preview badge, preview note, and optional `imageUrl`
 - search responses are cached in the browser for offline fallback per query plus selected allergen set
 - recent searches are saved locally and can be relaunched from the scan and home screens
+- recent-search cards on the home screen may render an optional stored `imageUrl` from the latest saved search response
 
 Current scan behavior:
 
@@ -238,6 +239,7 @@ Local persistence currently covers:
 
 - multiple named profiles with an active-profile pointer
 - recent searches, limited to the latest 6 entries
+- recent searches may store an optional `imageUrl` for home-page card artwork
 - recent scans or analyses in history, limited to the latest 20 entries
 - cached search responses, limited to the latest 8 cache entries
 - cached analysis responses, limited to the latest 12 cache entries
