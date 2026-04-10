@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 
 import { useCollections } from '../../shared/collections/CollectionsProvider'
@@ -17,9 +18,7 @@ export function FavoritesPage() {
         <div className="saved-item-list">
           {favorites.map((favorite) => (
             <article key={favorite.gtin} className="saved-item-card">
-              <div className="saved-item-card__media" aria-hidden="true">
-                <span>{getProductMonogram(favorite.brand, favorite.name)}</span>
-              </div>
+              <FavoriteArtwork favorite={favorite} />
               <div className="stack-sm saved-item-card__body">
                 <p className="eyebrow">{favorite.brand ?? 'Saved product'}</p>
                 <h2 className="section-title">{favorite.name}</h2>
@@ -46,6 +45,34 @@ export function FavoritesPage() {
         </section>
       )}
     </section>
+  )
+}
+
+function FavoriteArtwork({
+  favorite,
+}: {
+  favorite: {
+    brand?: string | null
+    name: string
+    imageUrl?: string | null
+  }
+}) {
+  const [imageFailed, setImageFailed] = useState(false)
+  const showImage = !!favorite.imageUrl && !imageFailed
+
+  return (
+    <div className="saved-item-card__media" aria-hidden="true">
+      {showImage ? (
+        <img
+          className="result-product-card__image"
+          src={favorite.imageUrl ?? undefined}
+          alt=""
+          loading="lazy"
+          onError={() => setImageFailed(true)}
+        />
+      ) : null}
+      {!showImage ? <span>{getProductMonogram(favorite.brand, favorite.name)}</span> : null}
+    </div>
   )
 }
 

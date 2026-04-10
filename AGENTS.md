@@ -214,6 +214,11 @@ Local persistence should cover:
 - cached products and search results
 - favorites
 
+Favorites persistence notes:
+
+- saved favorites may include an optional `imageUrl` so the Favorites list can render product imagery when available
+- favorites without `imageUrl` must continue to render safely with a non-image fallback
+
 Profile handling rules:
 
 - each profile must have a user-provided name

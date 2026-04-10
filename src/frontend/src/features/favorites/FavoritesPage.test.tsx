@@ -21,7 +21,7 @@ function renderFavoritesPage() {
     initialEntries: ['/favorites'],
   })
 
-  render(
+  return render(
     <QueryClientProvider client={queryClient}>
       <ProfileProvider>
         <CollectionsProvider>
@@ -47,16 +47,41 @@ describe('FavoritesPage', () => {
           brand: 'Oatly',
           category: 'Beverage',
           subtitle: 'Clean label oat drink',
+          imageUrl: 'https://cdn.example.com/oat-milk.png',
           overallStatus: 'Safe',
           updatedAt: '2026-03-21T10:00:00Z',
         },
       ]),
     )
 
-    renderFavoritesPage()
+    const { container } = renderFavoritesPage()
 
     expect(screen.getByText(/The Original Oat Milk/i)).toBeInTheDocument()
     expect(screen.getByText(/Safe/i)).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /open result/i })).toBeInTheDocument()
+    expect(container.querySelector('img')).toHaveAttribute('src', 'https://cdn.example.com/oat-milk.png')
+  })
+
+  it('renders persisted favorites without image urls', () => {
+    window.localStorage.setItem(
+      FAVORITES_STORAGE_KEY,
+      JSON.stringify([
+        {
+          gtin: '1735000111002',
+          name: 'Everyday Almond Drink',
+          brand: 'Plenish',
+          category: 'Beverage',
+          subtitle: 'Unsweetened almond drink',
+          overallStatus: 'MayContain',
+          updatedAt: '2026-03-21T10:00:00Z',
+        },
+      ]),
+    )
+
+    const { container } = renderFavoritesPage()
+
+    expect(screen.getByText(/Everyday Almond Drink/i)).toBeInTheDocument()
+    expect(screen.getByText(/Caution/i)).toBeInTheDocument()
+    expect(container.querySelector('img')).not.toBeInTheDocument()
   })
 })

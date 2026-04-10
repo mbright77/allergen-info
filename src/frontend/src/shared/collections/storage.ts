@@ -10,6 +10,7 @@ export type SavedProductItem = {
   brand?: string | null
   category?: string | null
   subtitle?: string | null
+  imageUrl?: string | null
   overallStatus: AnalysisOverallStatus
   updatedAt: string
 }
@@ -67,6 +68,7 @@ function isSavedProductItem(value: unknown): value is SavedProductItem {
   return (
     typeof candidate.gtin === 'string' &&
     typeof candidate.name === 'string' &&
+    (candidate.imageUrl === undefined || candidate.imageUrl === null || typeof candidate.imageUrl === 'string') &&
     typeof candidate.overallStatus === 'string' &&
     typeof candidate.updatedAt === 'string'
   )
