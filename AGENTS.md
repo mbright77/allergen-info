@@ -1,6 +1,6 @@
 # SafeScan Agent Context
 
-This file is the single source of context for future work in this repository.
+This file is the single source of context for work in this repository.
 
 ## Product Overview
 
@@ -40,43 +40,50 @@ Frontend stack:
 - React Router
 - TanStack Query
 - service worker based PWA support
-- ZXing barcode scanning
+- `html5-qrcode` barcode scanning
+- local-storage persistence for profiles and collections
 
 Backend stack:
 
-- ASP.NET Core Web API
-- layered structure: API, Application, Domain, Infrastructure
-- provider abstraction for placeholder data and DABAS integration
-- xUnit tests
+- ASP.NET Core minimal API
+- .NET 9 solution with API, Application, Domain, and Infrastructure projects
+- provider abstraction with placeholder and DABAS-backed catalog sources
+- in-memory caching around allergen, product, search, and preview enrichment lookups
+- xUnit API and provider tests
 
 Important runtime model:
 
 - frontend is fully public and must never contain secrets
 - backend is the only trusted place for provider credentials and runtime secrets
+- the browser talks only to the SafeScan backend API
 - DABAS access is always mediated through the backend
 
 ## Product Scope
 
-Implemented or established in the current architecture:
+Implemented application functionality:
 
 - onboarding with named profile creation and optional allergen selection
-- search-first scan flow with explicit camera activation
-- automatic rear-camera selection that prefers the main lens for barcode scanning when device labels allow it
-- GTIN lookup
-- free-text search
-- result screens for safe, caution, and warning outcomes
-- favorites, profile, history, and home routes/screens
-- local persistence for multiple named profiles, the active profile, recent searches, cached results, and saved items
-- placeholder provider plus DABAS-backed provider support in backend contracts
-- GitHub Pages frontend deployment support
-- k3s/VPS backend deployment support
+- multiple saved profiles with active-profile switching from the top bar
+- search-first scan screen with explicit camera activation
+- live barcode scanning with rear-camera preference when labels are available
+- scanner controls for torch and zoom when the device exposes those capabilities
+- GTIN product lookup
+- free-text product search
+- scan resolution flow for full, unverified, basic, and not-found outcomes
+- product result screens covering safe, caution, warning, and unknown states
+- Help, Home, Favorites, Profile, New Profile, and History screens
+- prompt-based PWA update banner and reload flow
+- offline messaging plus cached fallback for search results and product analysis
+- favorites, history, recent searches, and cached result persistence in local storage
+- optional product imagery on search cards, result cards, and saved favorites when available
 
 Important domain rules:
 
 - do not reduce incomplete analysis to safe by default
-- support an explicit `Unknown` state when data is incomplete or conflicting
+- support an explicit `Unknown` state when data is incomplete, unverified, conflicting, or not analyzable for the current request
 - use the EU 14 allergen model for user selection and API-facing allergen identifiers
 - perform allergen matching from GS1 allergen codes, not free-text comparison
+- when no allergens are selected for a full analysis request, the analysis result remains `Unknown`
 
 Current allergen set:
 
@@ -99,10 +106,11 @@ Current allergen set:
 
 1. First-time user creates a named profile, optionally selects allergens, and enters the app.
 2. Returning user reopens the app and resumes with the last active saved profile.
-3. User can switch profiles from the top-bar profile switcher.
-4. User searches from the scan experience or scans a barcode.
+3. User can switch profiles from the top-bar profile switcher or add another profile from the same menu.
+4. User can search from the scan screen or activate the camera for live barcode scanning.
 5. Backend resolves product data and runs allergen analysis against the active profile.
-6. UI shows a clear result with highlighted ingredients and next actions.
+6. UI shows a result state, checked allergens, ingredient review, and next actions.
+7. User can save full product results to Favorites and revisit analyzed products through History.
 
 Primary routes:
 
@@ -111,6 +119,7 @@ Primary routes:
 - `/home`
 - `/scan`
 - `/search/results`
+- `/results/scan/:code`
 - `/results/:gtin`
 - `/favorites`
 - `/profile`
@@ -125,7 +134,7 @@ The app should feel editorial, calm, premium, and spacious rather than generic.
 - mobile-first layout
 - strong whitespace and tonal layering
 - soft rounded surfaces
-- blurred/sticky shell elements where appropriate
+- blurred or sticky shell elements where appropriate
 - semantic color system for result states
 - `Manrope` for display text
 - `Inter` for body text
@@ -154,15 +163,15 @@ Target WCAG 2.1 AA where practical.
 - support visible focus states
 - use large touch targets
 - support zoom and text scaling
-- provide readable scan/search/result instructions
+- provide readable scan, search, and result instructions
 - announce important status changes appropriately
 - keep fixed UI from obscuring content
 - use prompt-based PWA updates instead of silent takeover
 
-Search-card image rules:
+Image handling rules:
 
-- if image is decorative, use empty alt text
-- missing images must degrade gracefully
+- decorative product images use empty alt text
+- missing images must degrade gracefully to non-image fallbacks
 - image placeholders must not create noisy announcements
 
 ## Data, Search, And Analysis Model
@@ -173,100 +182,114 @@ Backend contracts center on:
 - product detail by GTIN
 - product search results
 - allergen analysis result
+- scan analysis result
 
-Important search behavior:
+Current API surface:
 
-- browser never talks to DABAS directly
-- search can use product name, ingredient, brand, GTIN/EAN, or article number
-- exact GTIN/EAN matches should rank highest
-- search result cards should render as a uniform grid; do not visually feature the first result with a larger card treatment
-- search result cards should show pack-size metadata in the supporting text when available; preview badges stay in badge/chip treatments
-- DABAS search uses `articles/searchparameter` and does not use `basesearchparameter`
-- search results are lightweight and normalized
-- full product detail is fetched after selection
-- preview badges and `imageUrl` are optional enrichment fields
-- backend should hydrate the first 20 search results for preview analysis and image enrichment using bounded parallel batches of 5 lookups at a time
+- `GET /api/reference/allergens`
+- `GET /api/products/gtin/{gtin}`
+- `GET /api/products/search?q=...&selectedAllergens=...`
+- `POST /api/analysis`
+- `POST /api/analysis/scan`
+- `GET /health`
 
-Important scan behavior:
+Current search behavior:
 
-- scan first attempts direct GTIN lookup
-- live barcode scanning should keep the camera off until explicitly activated by the user
-- live barcode scanning should prefer the main rear camera over ultrawide, macro, telephoto, or front cameras when device labels make that distinction possible
-- camera selection should use `html5-qrcode` camera enumeration when available and fall back safely to environment-facing constraints when labels are missing or inconclusive
-- if direct lookup misses, backend resolves with DABAS `searchparameter` and then looks up the returned GTIN via `article/gtin`
-- GTINs that differ only by leading zeros should be treated as verified matches
-- materially different resolved GTINs remain `Unverified`
+- search accepts product name, ingredient, brand, GTIN or article number style queries
+- empty search requests are rejected by the backend and guarded in the frontend UI
+- search result cards render as a uniform grid of clickable cards
+- pack size is preferred in supporting text when available
+- category and preview badges render as chips or supporting metadata
+- search results may include preview status, preview badge, preview note, and optional `imageUrl`
+- search responses are cached in the browser for offline fallback per query plus selected allergen set
+- recent searches are saved locally and can be relaunched from the scan and home screens
 
-Image enrichment strategy:
+Current scan behavior:
 
-- DABAS search responses may omit image data even when GTIN detail includes it
-- search result cards should prefer `PRODUCT_IMAGE_MEDIUM`, then `PRODUCT_IMAGE`, then `PRODUCT_IMAGE_LARGE`, then `PRODUCT_IMAGE_THUMB`
-- backend should hydrate top-N search results via GTIN detail for preview analysis and image enrichment
-- exact GTIN or article-number search matches should also hydrate image data even outside the default top-N enrichment window
-- enrichment must be best-effort and budget-limited
-- fallback is `imageUrl: null`
+- live scanning keeps the camera off until the user explicitly activates it
+- the scanner attempts EAN-13 barcode detection only
+- camera selection prefers a rear main camera over front, ultrawide, macro, or telephoto cameras when labels make that distinction possible
+- scanning requires repeated matching reads before a detection is accepted
+- direct GTIN lookup is attempted first
+- if direct lookup misses, the backend falls back to product search using the scanned code
+- GTINs that differ only by leading zeros are treated as verified matches
+- materially different resolved GTINs return an `Unverified` scan result
+- if no detailed product record can be retrieved after search resolution, the backend returns a `Basic` unknown response using fallback product data
 
-Local persistence should cover:
+Current analysis behavior:
+
+- full analysis compares selected allergens against normalized product allergen facts
+- `Contains` wins over `MayContain`, and `MayContain` wins over `Safe`
+- `Unknown` is used for missing selections, scan fallback cases, and cases where data cannot support a confident answer
+- ingredient highlights are filtered to the allergens selected in the active profile
+- explanations are returned with each analysis result
+
+Image enrichment behavior:
+
+- product detail responses may include `imageUrl`
+- search results may carry `imageUrl` directly or receive it from backend enrichment
+- backend search enrichment checks the first 20 search results in batches of 5
+- exact GTIN and exact article-number matches can also be enriched outside that default window
+- search card imagery prefers backend-provided URLs and falls back to monograms in the UI
+
+## Local Persistence
+
+Local persistence currently covers:
 
 - multiple named profiles with an active-profile pointer
-- recent searches
-- recent scans/history
-- cached products and search results
+- recent searches, limited to the latest 6 entries
+- recent scans or analyses in history, limited to the latest 20 entries
+- cached search responses, limited to the latest 8 cache entries
+- cached analysis responses, limited to the latest 12 cache entries
 - favorites
-
-Favorites persistence notes:
-
-- saved favorites may include an optional `imageUrl` so the Favorites list can render product imagery when available
-- favorites without `imageUrl` must continue to render safely with a non-image fallback
 
 Profile handling rules:
 
 - each profile must have a user-provided name
 - profiles may be saved with zero selected allergens
-- the last active profile should be restored on app start
+- the last active profile is restored on app start
+- malformed stored profile state is ignored safely and replaced with an empty default state
 - the top-right shell control is the primary profile switcher and add-profile entry point
 - the bottom-nav `Profile` route edits the currently active profile
-- favorites, history, and recent searches remain device-global for now, not profile-scoped
+- favorites, history, and recent searches are device-global and not profile-scoped
 
-Use versioned local-storage keys and recover safely from malformed persisted data.
+Favorites and history persistence notes:
 
-## Deployment
+- saved favorites store core product identity, result status, timestamps, and optional `imageUrl`
+- favorites are added or removed from the full product result screen
+- favorites without `imageUrl` still render safely with a non-image fallback
+- history entries are added automatically when a product analysis screen is opened successfully or when a scan fallback response returns product data
 
-Split deployment model:
+Storage reliability rules:
 
-- frontend: GitHub Pages
-- backend: Ubuntu VPS running k3s behind nginx ingress
+- use versioned local-storage keys
+- recover safely from malformed persisted data
+- deduplicate saved profile allergen selections and recent-search queries where applicable
 
-Current target URLs:
+## Help And Guidance Content
 
-- frontend: `https://mbright77.github.io/allergen-info`
-- backend: `https://hub.brightmatter.net/safescan-api`
+The Help screen currently explains:
 
-Deployment files:
+- how the active profile and allergen selection work
+- that profiles can be saved with zero allergens selected
+- what `Safe`, `May contain`, `Contains`, and `Unknown` mean
+- that the package label remains the final source of truth when data is missing or unclear
+
+## Deployment And Configuration
+
+Current repository deployment assets:
 
 - frontend workflow: `.github/workflows/deploy-frontend-pages.yml`
 - backend workflow: `.github/workflows/deploy-backend-k3s.yml`
 - backend deploy script: `deploy/backend/deploy.sh`
 
-Deployment rules:
+Current deployment model in the repository:
 
-- `RUN_DEPLOY` is a repository variable toggle, not a secret
-- frontend must support base-path hosting under `/allergen-info/`
-- backend must support ingress path base `/safescan-api`
-- CORS must be restricted to approved frontend origins
-- only backend secrets go into GitHub secrets / Kubernetes secrets
-
-Key repository variables:
-
-- required: `RUN_DEPLOY`, `FRONTEND_API_BASE_URL`, `FRONTEND_APP_BASE_PATH`, `VPS_HOST`, `VPS_USER`, `BACKEND_HOST`, `BACKEND_TLS_SECRET_NAME`, `ALLOWED_ORIGINS`
-- recommended: `CERT_MANAGER_CLUSTER_ISSUER`
-- optional: `BACKEND_PATH_PREFIX`, `BACKEND_ASPNETCORE_PATH_BASE`, `PRODUCT_CATALOG_PROVIDER`, `DABAS_BASE_URL`, `DABAS_API_KEY_HEADER_NAME`, `DABAS_API_KEY_QUERY_PARAMETER_NAME`, `GHCR_IMAGE_PULL_SECRET_NAME`, `VPS_PORT`, `K8S_INGRESS_CLASS`, `ASPNETCORE_ENVIRONMENT`
-
-Key repository secrets:
-
-- `VPS_SSH_PRIVATE_KEY`
-- `DABAS_API_KEY` when live DABAS is enabled
-- `GHCR_USERNAME`, `GHCR_TOKEN`, and optional `GHCR_EMAIL` only if GHCR packages are private
+- frontend build and deploy automation exists for a static Pages-style host
+- backend build, container publish, and remote deploy automation exists for a k3s-based environment
+- deployment is gated by the `RUN_DEPLOY` repository variable
+- frontend runtime uses configurable environment variables for API base URL and app base path
+- backend runtime uses configuration for provider selection, path base, CORS, and DABAS access
 
 ## Security Expectations
 
@@ -274,18 +297,17 @@ Key repository secrets:
 - never put provider credentials in frontend config
 - treat the backend API as public unless authentication is added later
 - CORS is not authentication
-- use HTTPS in production for frontend and backend
+- use HTTPS in deployment environments
 - avoid logging sensitive values in workflows or deploy scripts
 - avoid caching sensitive user-specific responses in the service worker
 
 ## Testing And Quality
 
-Current quality expectations:
+Current quality coverage includes:
 
-- frontend component tests for key flows
-- backend unit and integration tests for contracts and providers
+- frontend component tests for onboarding, scanner, search, results, favorites, help, history, home, and profile flows
+- backend tests for endpoints, placeholder behavior, DABAS mapping, search enrichment, scan analysis resolution, and caching behavior
 - Playwright E2E coverage for onboarding, scan, search, and result flows
-- accessibility checks for core screens
 
 Useful validation commands:
 
@@ -293,44 +315,6 @@ Useful validation commands:
 - frontend build: `npm run build` in `src/frontend`
 - backend tests: `dotnet test SafeScan.sln` in `src/backend`
 - deploy script syntax: `bash -n deploy/backend/deploy.sh`
-
-## Current And Future Work
-
-Completed or largely established:
-
-- placeholder and DABAS provider switching
-- search-first scanner UX
-- named multi-profile onboarding and local active-profile persistence
-- search results and enrichment foundation
-- safe/caution/warning result pages
-- home/favorites/profile/history screens
-- prompt-based PWA update flow
-- split deployment pipelines for frontend and backend
-
-Important future work:
-
-- implement the Help screen fully
-- implement a first-class `Unknown` result screen and copy
-- improve empty states across secondary screens
-- decide whether search refinement chips are informational or interactive
-- add paging or bounded-count behavior to search results where needed
-- expose richer metadata for cached/partial/enriched search responses
-- finish production-ready image enrichment for search cards
-- add stronger request validation and rate limiting for public API endpoints
-- improve production logging, monitoring, and alerting
-- add branch protection and restricted deployment permissions
-- improve offline cache eviction/versioning behavior
-- continue visual fidelity work against `stitch/`
-- verify PWA update flow and service worker behavior on deployed Pages builds
-
-Possible later-phase product features:
-
-- richer nutrition detail views
-- better offline behavior for cached products/searches
-- analytics and telemetry
-- accounts/authentication if a private profile model is later needed
-- cloud sync of user state
-- advanced product guidance beyond allergen checks
 
 ## Conventions For Future Agents
 
