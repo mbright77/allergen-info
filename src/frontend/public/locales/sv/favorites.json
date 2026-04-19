@@ -1,0 +1,22 @@
+{
+  "Page": {
+    "Title": "Favoriter"
+  },
+  "Hero": {
+    "Eyebrow": "Favoriter",
+    "Title": "Dina sparade produkter.",
+    "Description": "Spara produkter du litar på här så att du snabbt kan återvända till dem inför nästa handling."
+  },
+  "Card": {
+    "SavedProduct": "Sparad produkt",
+    "SavedFromAnalysis": "Sparad från produktanalys"
+  },
+  "Actions": {
+    "OpenResult": "Öppna resultat",
+    "StartScanning": "Börja skanna"
+  },
+  "Empty": {
+    "Title": "Inga favoriter än",
+    "Description": "Spara produkter från resultatskärmen för att bygga din betrodda kortlista."
+  }
+}

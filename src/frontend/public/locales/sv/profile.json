@@ -1,0 +1,35 @@
+{
+  "Page": {
+    "Title": "Profil",
+    "EditTitle": "Redigera {{name}}"
+  },
+  "Edit": {
+    "Eyebrow": "Profil",
+    "Title": "Justera {{name}}.",
+    "Description": "Den här sidan redigerar profilen som just nu är aktiv i toppfältet. Ändringar gäller för framtida sökningar, skanningar och resultatanalyser.",
+    "Save": "Spara profiländringar"
+  },
+  "Create": {
+    "Eyebrow": "Lägg till profil",
+    "Title": "Lägg till en profil till",
+    "Description": "Skapa en till namngiven profil för en familjemedlem eller en annan allergiuppsättning. Du kan spara den tom och justera allergener senare.",
+    "Save": "Spara ny profil"
+  },
+  "Form": {
+    "NameLabel": "Profilnamn",
+    "NamePlaceholder": "Till exempel: Anna eller Leo",
+    "NameNote": "Använd ett tydligt namn så att det går snabbt och säkert att växla mellan familjemedlemmar.",
+    "NameError": "Ange ett profilnamn innan du sparar.",
+    "MonitoredAllergens": "Övervakade allergener",
+    "LoadingOptions": "Laddar allergenalternativ...",
+    "LoadErrorTitle": "Kunde inte ladda allergener",
+    "LoadErrorDescription": "Kontrollera att backend körs och försök igen."
+  },
+  "Summary": {
+    "Title": "Profilsammanfattning",
+    "CreateEmpty": "Den här profilen är tom just nu. Du kan spara den och lägga till allergener senare.",
+    "EditEmpty": "Den här profilen har inga övervakade allergener än. Lägg till dem nu eller spara den tomma profilen till senare.",
+    "Monitoring_one": "Den här profilen övervakar {{formattedCount}} allergen.",
+    "Monitoring_other": "Den här profilen övervakar {{formattedCount}} allergener."
+  }
+}

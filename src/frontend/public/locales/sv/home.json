@@ -1,0 +1,31 @@
+{
+  "Page": {
+    "Title": "Hem"
+  },
+  "Hero": {
+    "Eyebrow": "Välkommen",
+    "Title": "Säkra val, snabbare.",
+    "Description": "{{name}} är aktiv med {{formattedCount}} övervakade allergener. Börja med sök, eller starta kameran först när du är redo att skanna."
+  },
+  "Actions": {
+    "ScanOrSearch": "Skanna eller sök nu",
+    "ReviewFavorites": "Granska favoriter"
+  },
+  "Snapshot": {
+    "Title": "Översikt",
+    "FavoritesLabel": "Favoriter",
+    "RecentChecksLabel": "Senaste kontroller",
+    "AllergensCount_one": "{{formattedCount}} allergen",
+    "AllergensCount_other": "{{formattedCount}} allergener",
+    "ItemsCount_one": "{{formattedCount}} vara",
+    "ItemsCount_other": "{{formattedCount}} varor",
+    "ProductsCount_one": "{{formattedCount}} produkt",
+    "ProductsCount_other": "{{formattedCount}} produkter"
+  },
+  "RecentSearches": {
+    "Title": "Senaste sökningar",
+    "Eyebrow": "Senaste sökning",
+    "CardLabel": "Senaste sökning {{query}}",
+    "Empty": "Senaste sökningar visas här efter att du sökt från skannerskärmen eller startat en manuell skanning."
+  }
+}

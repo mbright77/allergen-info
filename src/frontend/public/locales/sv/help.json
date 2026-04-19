@@ -1,0 +1,26 @@
+{
+  "Page": {
+    "Title": "Hjälp"
+  },
+  "Hero": {
+    "Eyebrow": "Hjälp",
+    "Title": "Hur SafeScan använder din profil.",
+    "Description": "SafeScan jämför produktdata med allergenerna som valts i den profil som är aktiv just nu."
+  },
+  "Selection": {
+    "Title": "Så fungerar allergenval",
+    "ParagraphOne": "Varje profil lagrar sitt eget allergenval. Du kan växla profiler från menyn uppe till höger när olika familjemedlemmar behöver olika kontroller.",
+    "ParagraphTwo": "Profiler kan sparas utan att några allergener har valts. I så fall går appen fortfarande att använda, men resultatvarningar blir inte personliga förrän allergener har lagts till."
+  },
+  "Responses": {
+    "Title": "Vad svaren betyder",
+    "Safe": "Säker: inga valda allergener hittades i tillgängliga produktdata.",
+    "MayContain": "Kan innehålla: en spårvarning eller försiktighetsmarkering hittades för en av de valda allergenerna.",
+    "Contains": "Innehåller: ett valt allergen hittades i tillgängliga produktdata.",
+    "Unknown": "Okänt: produktdatan var ofullständig, motstridig eller inte tillräckligt detaljerad för ett säkert svar."
+  },
+  "BeforeBuy": {
+    "Title": "Innan du köper",
+    "Description": "SafeScan är utformad för att snabba upp kontrollen, men förpackningens märkning är fortfarande den slutliga sanningskällan om produktdata saknas eller är otydliga."
+  }
+}

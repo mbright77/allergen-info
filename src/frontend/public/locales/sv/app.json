@@ -1,0 +1,14 @@
+{
+  "Nav": {
+    "PrimaryNavigation": "Primär navigering"
+  },
+  "OfflineBanner": {
+    "Message": "Offlineläge: sparade profiler, favoriter och historik är fortfarande tillgängliga."
+  },
+  "UpdateBanner": {
+    "Eyebrow": "Appuppdatering redo",
+    "Message": "En nyare version av SafeScan finns tillgänglig. Uppdatering laddar om appen, men din sparade profil och lokala historik stannar på enheten.",
+    "Later": "Senare",
+    "UpdateNow": "Uppdatera nu"
+  }
+}

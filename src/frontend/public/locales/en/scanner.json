@@ -1,0 +1,47 @@
+{
+  "Page": {
+    "Title": "Scan"
+  },
+  "Search": {
+    "Placeholder": "Search for a product...",
+    "AriaLabel": "Search for a product",
+    "SubmitAriaLabel": "Submit search"
+  },
+  "ProfileBanner": {
+    "Eyebrow": "Active profile",
+    "Selected": "{{name}} is selected with {{formattedCount}} monitored allergens.",
+    "SelectedEmpty": "{{name}} is selected with no allergens selected yet.",
+    "NoActive": "No profile is active yet."
+  },
+  "Hero": {
+    "HiddenTitle": "Scan or search for a product",
+    "SystemReady": "System Ready",
+    "ScanningTitle": "Scanning Barcode",
+    "ScanningDescription": "Align the barcode within the frame.",
+    "LaunchTitle": "Tap to Scan",
+    "LaunchDescription": "Search first if you want. When you are ready, tap here and the camera will activate for a live barcode scan."
+  },
+  "Actions": {
+    "StopScanning": "Stop scanning",
+    "ToggleFlashlight": "Toggle flashlight",
+    "Zoom": "Zoom",
+    "CameraZoom": "Camera zoom"
+  },
+  "Status": {
+    "Title": "Scanner status",
+    "CameraOff": "Camera stays off until you tap the scan card.",
+    "Requesting": "Requesting camera access...",
+    "Active": "Scanner ready. Position the barcode in the frame.",
+    "Idle": "Scanner initializing..."
+  },
+  "RecentSearches": {
+    "Title": "Recent searches"
+  },
+  "Tips": {
+    "Title": "Tips for Precision Scanning",
+    "LightingTitle": "Good Lighting",
+    "LightingDescription": "Ensure the product is in a well-lit area to help our AI identify fine print ingredients.",
+    "SteadyTitle": "Keep it Steady",
+    "SteadyDescription": "Hold your phone parallel to the barcode for the fastest recognition speed."
+  }
+}

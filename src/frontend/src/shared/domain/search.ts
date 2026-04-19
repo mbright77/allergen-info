@@ -1,17 +1,8 @@
 import type { AnalysisOverallStatus, SearchResult } from './contracts'
+import { i18n } from '../i18n/init'
+import { formatPreviewStatus } from '../i18n/status'
 
-export function formatPreviewStatus(status: AnalysisOverallStatus | null | undefined) {
-  switch (status) {
-    case 'Safe':
-      return 'Safe'
-    case 'MayContain':
-      return 'Caution'
-    case 'Contains':
-      return 'Warning'
-    default:
-      return 'Info'
-  }
-}
+export { formatPreviewStatus }
 
 export function toStatusClassName(status: AnalysisOverallStatus | null | undefined) {
   switch (status) {
@@ -27,5 +18,5 @@ export function toStatusClassName(status: AnalysisOverallStatus | null | undefin
 }
 
 export function getSearchCardMeta(result: SearchResult) {
-  return result.packageSize ?? result.category ?? 'Product overview'
+  return result.packageSize ?? result.category ?? i18n.t('Generic.ProductOverview', { ns: 'common' })
 }

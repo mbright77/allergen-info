@@ -1,8 +1,10 @@
 import { useQuery } from '@tanstack/react-query'
 import { useEffect, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 import { getAllergens } from '../../shared/api/products'
 import { formatAllergenCode, getAllergenIcon } from '../../shared/allergens/metadata'
+import { formatNumber } from '../../shared/i18n/format'
 
 type ProfileEditorProps = {
   mode: 'create' | 'edit'
@@ -25,6 +27,7 @@ export function ProfileEditor({
   introTitle,
   introDescription,
 }: ProfileEditorProps) {
+  const { t, i18n } = useTranslation('profile')
   const [name, setName] = useState(initialName)
   const [selectedAllergens, setSelectedAllergens] = useState(initialSelectedAllergens)
   const [showNameError, setShowNameError] = useState(false)
@@ -45,12 +48,15 @@ export function ProfileEditor({
   const summaryText = useMemo(() => {
     if (selectedAllergens.length === 0) {
       return mode === 'create'
-        ? 'This profile is empty for now. You can save it and add allergens later.'
-        : 'This profile has no monitored allergens yet. Add them now or save the empty profile for later.'
+        ? t('Summary.CreateEmpty')
+        : t('Summary.EditEmpty')
     }
 
-    return `This profile is monitoring ${selectedAllergens.length} allergens.`
-  }, [mode, selectedAllergens.length])
+    return t('Summary.Monitoring', {
+      count: selectedAllergens.length,
+      formattedCount: formatNumber(selectedAllergens.length, undefined, i18n.resolvedLanguage),
+    })
+  }, [i18n.resolvedLanguage, mode, selectedAllergens.length, t])
 
   function toggleAllergen(code: string) {
     setSelectedAllergens((current) =>
@@ -81,13 +87,13 @@ export function ProfileEditor({
 
       <section className="content-card stack-md">
         <label className="stack-sm" htmlFor="profile-name-input">
-          <span className="eyebrow">Profile name</span>
+          <span className="eyebrow">{t('Form.NameLabel')}</span>
           <input
             id="profile-name-input"
             className={showNameError ? 'profile-name-input profile-name-input--error' : 'profile-name-input'}
             type="text"
             name="profileName"
-            placeholder="For example: Anna or Leo"
+            placeholder={t('Form.NamePlaceholder')}
             value={name}
             onChange={(event) => setName(event.target.value)}
             aria-invalid={showNameError}
@@ -95,23 +101,23 @@ export function ProfileEditor({
           />
         </label>
         <p id="profile-name-note" className="supporting-text">
-          Use a clear name so switching between family members stays quick and reliable.
+          {t('Form.NameNote')}
         </p>
         {showNameError ? (
           <p id="profile-name-error" className="profile-form-error" role="alert">
-            Enter a profile name before saving.
+            {t('Form.NameError')}
           </p>
         ) : null}
       </section>
 
       <section className="content-card stack-md">
-        <p className="eyebrow">Monitored allergens</p>
-        {allergensQuery.isLoading ? <p className="supporting-text">Loading allergen options...</p> : null}
+        <p className="eyebrow">{t('Form.MonitoredAllergens')}</p>
+        {allergensQuery.isLoading ? <p className="supporting-text">{t('Form.LoadingOptions')}</p> : null}
 
         {allergensQuery.isError ? (
           <div className="status-panel status-panel--error" role="alert">
-            <p className="eyebrow">Unable to load allergens</p>
-            <p className="supporting-text">Please check that the backend is running and try again.</p>
+            <p className="eyebrow">{t('Form.LoadErrorTitle')}</p>
+            <p className="supporting-text">{t('Form.LoadErrorDescription')}</p>
           </div>
         ) : null}
 
@@ -140,7 +146,7 @@ export function ProfileEditor({
       </section>
 
       <section className="content-card content-card--soft-highlight stack-sm">
-        <p className="eyebrow">Profile summary</p>
+        <p className="eyebrow">{t('Summary.Title')}</p>
         <p className="supporting-text">{summaryText}</p>
       </section>
 

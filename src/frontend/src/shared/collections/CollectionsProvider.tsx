@@ -1,14 +1,5 @@
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-  type PropsWithChildren,
-} from 'react'
+import { useCallback, useEffect, useMemo, useState, type PropsWithChildren } from 'react'
 
-import type { AnalysisOverallStatus, AnalysisResponse } from '../domain/contracts'
 import {
   readFavorites,
   readHistory,
@@ -16,16 +7,7 @@ import {
   writeHistory,
   type SavedProductItem,
 } from './storage'
-
-type CollectionsContextValue = {
-  favorites: SavedProductItem[]
-  history: SavedProductItem[]
-  isFavorite: (gtin: string) => boolean
-  toggleFavorite: (item: SavedProductItem) => void
-  addHistoryEntry: (item: SavedProductItem) => void
-}
-
-const CollectionsContext = createContext<CollectionsContextValue | null>(null)
+import { CollectionsContext, type CollectionsContextValue } from './CollectionsContext'
 
 export function CollectionsProvider({ children }: PropsWithChildren) {
   const [favorites, setFavorites] = useState<SavedProductItem[]>(() => readFavorites())
@@ -62,27 +44,4 @@ export function CollectionsProvider({ children }: PropsWithChildren) {
   )
 
   return <CollectionsContext.Provider value={value}>{children}</CollectionsContext.Provider>
-}
-
-export function useCollections() {
-  const context = useContext(CollectionsContext)
-
-  if (!context) {
-    throw new Error('useCollections must be used within a CollectionsProvider')
-  }
-
-  return context
-}
-
-export function toSavedProductItem(response: AnalysisResponse): SavedProductItem {
-  return {
-    gtin: response.product.gtin,
-    name: response.product.name,
-    brand: response.product.brand,
-    category: response.product.category,
-    subtitle: response.product.subtitle,
-    imageUrl: response.product.imageUrl,
-    overallStatus: response.analysis.overallStatus as AnalysisOverallStatus,
-    updatedAt: new Date().toISOString(),
-  }
 }

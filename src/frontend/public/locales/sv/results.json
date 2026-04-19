@@ -1,0 +1,112 @@
+{
+  "Page": {
+    "Title": "Produktresultat",
+    "TitleWithName": "{{name}}"
+  },
+  "Loading": {
+    "Title": "Laddar analys",
+    "Description": "Kontrollerar den valda produkten mot din sparade allergenprofil..."
+  },
+  "Error": {
+    "Title": "Analys otillgänglig",
+    "Description": "Vi kunde inte analysera den här produkten just nu. Prova en annan vara eller försök igen."
+  },
+  "Offline": {
+    "Title": "Offline-alternativ",
+    "Description": "Visar din senast sparade analys för den här produkten medan nätverket är otillgängligt."
+  },
+  "Hero": {
+    "Contains": {
+      "Eyebrow": "Innehåller allergener",
+      "Title": "Den här produkten är inte säker för din profil.",
+      "Description": "Bekräftade allergenmatchningar hittades i tillgängliga produktdata."
+    },
+    "MayContain": {
+      "Eyebrow": "Spårvarning",
+      "Title": "Var försiktig innan du köper.",
+      "Description": "Produkten har minst en spårvarning för dina valda allergener."
+    },
+    "Safe": {
+      "Eyebrow": "Säkert val",
+      "Title": "Säker att använda.",
+      "Description": "Inga valda allergener upptäcktes i tillgängliga produktdata."
+    },
+    "Unknown": {
+      "Eyebrow": "Analys väntar",
+      "Title": "Vi behöver mer produktdata.",
+      "Description": "Appen kunde inte slutföra en säker analys för den här produkten ännu."
+    }
+  },
+  "Product": {
+    "SummaryFallback": "Produktsammanfattning",
+    "DetailsFallback": "Produktdetaljer"
+  },
+  "Summary": {
+    "Analysis": "Analys",
+    "YourProfile": "Din profil",
+    "AllergensChecked_one": "{{formattedCount}} allergen kontrollerad",
+    "AllergensChecked_other": "{{formattedCount}} allergener kontrollerade",
+    "Title": "Analyssammanfattning",
+    "OverallStatus": "Övergripande status",
+    "MatchedAllergens": "Matchade allergener",
+    "TraceWarnings": "Spårvarningar",
+    "NoneDetected": "Inga upptäckta",
+    "NoneReported": "Inga rapporterade"
+  },
+  "Sections": {
+    "CheckedAllergens": "Kontrollerade allergener",
+    "IngredientReview": "Ingrediensgranskning",
+    "NextActions": "Nästa steg"
+  },
+  "IngredientReview": {
+    "NoMatches": "Inga markerade ingrediensmatchningar returnerades för dina valda allergener."
+  },
+  "Actions": {
+    "ScanAnother": "Skanna en annan produkt",
+    "RemoveFavorite": "Ta bort från favoriter",
+    "SaveFavorite": "Spara i favoriter"
+  },
+  "Scanned": {
+    "PageTitle": "Skannat resultat",
+    "Loading": {
+      "Title": "Löser skanning",
+      "Description": "Söker efter den skannade streckkoden och kontrollerar om detaljerad allergeninformation finns tillgänglig..."
+    },
+    "Error": {
+      "Title": "Skanning otillgänglig",
+      "Description": "Vi kunde inte lösa den här skanningen just nu. Försök igen eller sök manuellt."
+    },
+    "NotFound": {
+      "Eyebrow": "Ingen produkt hittades",
+      "Title": "Vi kunde inte matcha den här streckkoden ännu.",
+      "Description": "Försök skanna igen i bättre ljus, eller använd sök för att hitta produkten manuellt.",
+      "ScannedCode": "Skannad kod"
+    },
+    "Fallback": {
+      "ProductSummary": "Produktsammanfattning",
+      "BasicDetails": "Endast grundläggande produktdetaljer",
+      "WhatWeKnow": "Detta vet vi",
+      "ResolvedGtin": "Löst GTIN",
+      "NoDetailAvailable": "Ingen detalj tillgänglig"
+    },
+    "Actions": {
+      "ScanAgain": "Skanna igen",
+      "SearchManually": "Sök manuellt",
+      "ScanAnother": "Skanna en annan produkt"
+    },
+    "Modes": {
+      "Unverified": {
+        "Eyebrow": "Streckkod ej verifierad",
+        "Title": "Vi hittade en trolig produktmatchning, men streckkoden kunde inte verifieras.",
+        "Message": "Den här skanningen hittade bara en sökbaserad matchning, så allergenstatusen förblir okänd.",
+        "NextAction": "Sök manuellt eller kontrollera förpackningen innan du litar på det här resultatet."
+      },
+      "Basic": {
+        "Eyebrow": "Ingen allergeninfo hittades",
+        "Title": "Vi hittade produkten, men inte den detaljerade allergeninformationen.",
+        "Message": "Visar endast grundläggande produktinformation.",
+        "NextAction": "Sök manuellt eller prova en annan skanning om du behöver en produkt med detaljerad allergeninformation."
+      }
+    }
+  }
+}

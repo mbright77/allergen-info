@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 import { applyAppUpdate, dismissAppUpdate, isAppUpdateDismissed, subscribeToAppUpdate } from './pwa'
 
 export function UpdateBanner() {
+  const { t } = useTranslation('app')
   const [isVisible, setIsVisible] = useState(false)
 
   useEffect(() => {
@@ -24,9 +26,9 @@ export function UpdateBanner() {
   return (
     <div className="update-banner" role="status" aria-live="polite">
       <div className="stack-sm">
-        <p className="eyebrow">App update ready</p>
+        <p className="eyebrow">{t('UpdateBanner.Eyebrow')}</p>
         <p className="supporting-text">
-          A newer SafeScan version is available. Updating reloads the app, but your saved profile and local history stay on this device.
+          {t('UpdateBanner.Message')}
         </p>
       </div>
       <div className="update-banner__actions">
@@ -38,7 +40,7 @@ export function UpdateBanner() {
             setIsVisible(false)
           }}
         >
-          Later
+          {t('UpdateBanner.Later')}
         </button>
         <button
           type="button"
@@ -47,7 +49,7 @@ export function UpdateBanner() {
             applyAppUpdate()
           }}
         >
-          Update now
+          {t('UpdateBanner.UpdateNow')}
         </button>
       </div>
     </div>

@@ -1,0 +1,47 @@
+{
+  "Page": {
+    "Title": "Skanna"
+  },
+  "Search": {
+    "Placeholder": "Sök efter en produkt...",
+    "AriaLabel": "Sök efter en produkt",
+    "SubmitAriaLabel": "Skicka sökning"
+  },
+  "ProfileBanner": {
+    "Eyebrow": "Aktiv profil",
+    "Selected": "{{name}} är vald med {{formattedCount}} övervakade allergener.",
+    "SelectedEmpty": "{{name}} är vald utan några allergener ännu.",
+    "NoActive": "Ingen profil är aktiv ännu."
+  },
+  "Hero": {
+    "HiddenTitle": "Skanna eller sök efter en produkt",
+    "SystemReady": "Systemet är redo",
+    "ScanningTitle": "Skannar streckkod",
+    "ScanningDescription": "Rikta in streckkoden i ramen.",
+    "LaunchTitle": "Tryck för att skanna",
+    "LaunchDescription": "Sök först om du vill. När du är redo trycker du här så aktiveras kameran för en live-skanning av streckkoden."
+  },
+  "Actions": {
+    "StopScanning": "Stoppa skanning",
+    "ToggleFlashlight": "Växla ficklampa",
+    "Zoom": "Zoom",
+    "CameraZoom": "Kamerazoom"
+  },
+  "Status": {
+    "Title": "Skannerstatus",
+    "CameraOff": "Kameran förblir av tills du trycker på skanningskortet.",
+    "Requesting": "Begär kameraåtkomst...",
+    "Active": "Skannern är redo. Placera streckkoden i ramen.",
+    "Idle": "Skannern startar..."
+  },
+  "RecentSearches": {
+    "Title": "Senaste sökningar"
+  },
+  "Tips": {
+    "Title": "Tips för exakt skanning",
+    "LightingTitle": "Bra belysning",
+    "LightingDescription": "Se till att produkten är i ett väl upplyst område för att hjälpa vår AI att identifiera ingredienser i finstilt text.",
+    "SteadyTitle": "Håll stilla",
+    "SteadyDescription": "Håll telefonen parallell med streckkoden för snabbast möjlig igenkänning."
+  }
+}

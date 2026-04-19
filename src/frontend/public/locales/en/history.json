@@ -1,0 +1,21 @@
+{
+  "Page": {
+    "Title": "History"
+  },
+  "Hero": {
+    "Eyebrow": "History",
+    "Title": "Recent scans and checks.",
+    "Description": "Your latest analyzed products appear here automatically after you open a result."
+  },
+  "Card": {
+    "ProductCheck": "Product check",
+    "CheckedAgainstProfile": "Checked against your allergy profile"
+  },
+  "Actions": {
+    "ViewAnalysis": "View analysis"
+  },
+  "Empty": {
+    "Title": "No history yet",
+    "Description": "Open a product analysis and it will appear here for quick revisit."
+  }
+}

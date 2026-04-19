@@ -1,19 +1,21 @@
-const ALLERGEN_LABELS: Record<string, string> = {
-  cereals_containing_gluten: 'Gluten',
-  crustaceans: 'Crustaceans',
-  eggs: 'Eggs',
-  fish: 'Fish',
-  peanuts: 'Peanuts',
-  soybeans: 'Soybeans',
-  milk: 'Milk',
-  tree_nuts: 'Tree nuts',
-  celery: 'Celery',
-  mustard: 'Mustard',
-  sesame_seeds: 'Sesame seeds',
-  sulphur_dioxide_sulphites: 'Sulphur dioxide / sulphites',
-  lupin: 'Lupin',
-  molluscs: 'Molluscs',
-}
+import { i18n } from '../i18n/init'
+
+const KNOWN_ALLERGEN_CODES = new Set([
+  'cereals_containing_gluten',
+  'crustaceans',
+  'eggs',
+  'fish',
+  'peanuts',
+  'soybeans',
+  'milk',
+  'tree_nuts',
+  'celery',
+  'mustard',
+  'sesame_seeds',
+  'sulphur_dioxide_sulphites',
+  'lupin',
+  'molluscs',
+])
 
 const ALLERGEN_ICONS: Record<string, string> = {
   cereals_containing_gluten: 'bakery_dining',
@@ -33,7 +35,11 @@ const ALLERGEN_ICONS: Record<string, string> = {
 }
 
 export function formatAllergenCode(code: string) {
-  return ALLERGEN_LABELS[code] ?? code
+  if (KNOWN_ALLERGEN_CODES.has(code)) {
+    return i18n.t(`Allergens.${code}`, { ns: 'common' })
+  }
+
+  return code
     .split('_')
     .map((segment) => segment.charAt(0).toUpperCase() + segment.slice(1))
     .join(' ')

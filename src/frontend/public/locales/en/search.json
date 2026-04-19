@@ -1,0 +1,54 @@
+{
+  "Page": {
+    "Title": "Search results",
+    "TitleWithQuery": "Search results for {{query}}"
+  },
+  "Header": {
+    "Label": "Search results for",
+    "FallbackQuery": "Search"
+  },
+  "Filters": {
+    "AllResults": "All Results",
+    "Organic": "Organic",
+    "Unsweetened": "Unsweetened",
+    "GlutenFree": "Gluten-Free",
+    "AllResultsAria": "Filter: All Results (active)",
+    "OrganicAria": "Filter: Organic (coming soon)",
+    "UnsweetenedAria": "Filter: Unsweetened (coming soon)",
+    "GlutenFreeAria": "Filter: Gluten-Free (coming soon)"
+  },
+  "EmptyQuery": {
+    "Title": "Start with a search",
+    "Description": "Enter a product name, ingredient, GTIN, or brand from the scanner search field."
+  },
+  "Loading": {
+    "Title": "Searching",
+    "Description": "Finding matching products and preparing preview insights..."
+  },
+  "Error": {
+    "Title": "Search unavailable",
+    "Description": "We could not load results right now. Please try again in a moment."
+  },
+  "Offline": {
+    "Title": "Offline fallback",
+    "Description": "Showing your last saved search results while the network is unavailable."
+  },
+  "NoResults": {
+    "Title": "No results yet",
+    "Description": "Try another product name, ingredient, GTIN, or brand."
+  },
+  "Card": {
+    "ViewDetails": "View details for {{name}}"
+  },
+  "Editorial": {
+    "Badge": "Editor's Choice",
+    "Title": "Milked Oats, simplified.",
+    "Description": "The cleanest oat-milk options usually keep the ingredient list short and the emulsifiers out.",
+    "Score": "{{formattedScore}}/100 Purity Score"
+  },
+  "Notice": {
+    "Title": "Notice anything?",
+    "Description": "Some oat milks contain seed oils and phosphates. Check the caution flags before buying.",
+    "Action": "Learn about additives"
+  }
+}

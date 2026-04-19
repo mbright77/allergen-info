@@ -39,6 +39,7 @@ Frontend stack:
 - Vite
 - React Router
 - TanStack Query
+- `i18next`, `react-i18next`, `i18next-http-backend`, and `i18next-browser-languagedetector`
 - service worker based PWA support
 - `html5-qrcode` barcode scanning
 - local-storage persistence for profiles and collections
@@ -57,6 +58,17 @@ Important runtime model:
 - backend is the only trusted place for provider credentials and runtime secrets
 - the browser talks only to the SafeScan backend API
 - DABAS access is always mediated through the backend
+
+Frontend i18n model:
+
+- shared i18n setup lives in `src/frontend/src/shared/i18n`
+- translation files live in `src/frontend/public/locales/{lng}/{ns}.json`
+- the shipped locales are currently `en` and `sv`
+- use feature-aligned namespaces such as `common`, `app`, `onboarding`, `home`, `scanner`, `search`, `results`, `profile`, `favorites`, `history`, and `help`
+- use nested keys like `t('Hero.Title')`, not flat global keys
+- localize only display labels; keep canonical backend values, enum values, allergen codes, GTINs, and persisted values unchanged
+- locale-aware date, time, and number formatting must go through shared helpers rather than hardcoded English formatting
+- the language switcher belongs inside the existing profile menu in `src/frontend/src/app/layout/AppShell.tsx`, not as a separate standalone control
 
 ## Product Scope
 
@@ -313,6 +325,7 @@ Current quality coverage includes:
 
 Useful validation commands:
 
+- frontend lint: `npm run lint` in `src/frontend`
 - frontend tests: `npm test` in `src/frontend`
 - frontend build: `npm run build` in `src/frontend`
 - backend tests: `dotnet test SafeScan.sln` in `src/backend`
@@ -327,3 +340,4 @@ Useful validation commands:
 - keep deployment samples or unrelated infrastructure out of this repo
 - keep `AGENTS.md` up to date whenever code behavior, architecture, workflows, deployment, or product expectations change; this is a required part of the same change set, not a separate optional follow-up
 - when in doubt, treat `stitch/` as design direction and the existing code as the current implementation truth
+- when adding or changing frontend copy, update the correct locale namespace JSON instead of reintroducing hardcoded JSX strings

@@ -1,0 +1,54 @@
+{
+  "Page": {
+    "Title": "Sökresultat",
+    "TitleWithQuery": "Sökresultat för {{query}}"
+  },
+  "Header": {
+    "Label": "Sökresultat för",
+    "FallbackQuery": "Sök"
+  },
+  "Filters": {
+    "AllResults": "Alla resultat",
+    "Organic": "Ekologiskt",
+    "Unsweetened": "Osötat",
+    "GlutenFree": "Glutenfritt",
+    "AllResultsAria": "Filter: Alla resultat (aktivt)",
+    "OrganicAria": "Filter: Ekologiskt (kommer snart)",
+    "UnsweetenedAria": "Filter: Osötat (kommer snart)",
+    "GlutenFreeAria": "Filter: Glutenfritt (kommer snart)"
+  },
+  "EmptyQuery": {
+    "Title": "Börja med en sökning",
+    "Description": "Ange ett produktnamn, en ingrediens, GTIN eller ett varumärke i skannersökfältet."
+  },
+  "Loading": {
+    "Title": "Söker",
+    "Description": "Hittar matchande produkter och förbereder förhandsvisningar..."
+  },
+  "Error": {
+    "Title": "Sökning otillgänglig",
+    "Description": "Vi kunde inte ladda resultat just nu. Försök igen om en stund."
+  },
+  "Offline": {
+    "Title": "Offline-alternativ",
+    "Description": "Visar dina senast sparade sökresultat medan nätverket är otillgängligt."
+  },
+  "NoResults": {
+    "Title": "Inga resultat än",
+    "Description": "Prova ett annat produktnamn, en ingrediens, GTIN eller ett varumärke."
+  },
+  "Card": {
+    "ViewDetails": "Visa detaljer för {{name}}"
+  },
+  "Editorial": {
+    "Badge": "Redaktörens val",
+    "Title": "Havredryck, förenklad.",
+    "Description": "De renaste havredrycksalternativen brukar hålla ingredienslistan kort och emulgeringsmedlen borta.",
+    "Score": "{{formattedScore}}/100 renhetspoäng"
+  },
+  "Notice": {
+    "Title": "Ser du något?",
+    "Description": "Vissa havredrycker innehåller fröoljor och fosfater. Kontrollera varningsmarkeringarna innan du köper.",
+    "Action": "Lär dig om tillsatser"
+  }
+}

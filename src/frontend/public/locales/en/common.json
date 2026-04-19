@@ -1,0 +1,73 @@
+{
+  "AppName": "SafeScan",
+  "Nav": {
+    "Home": "Home",
+    "Scan": "Scan",
+    "Favorites": "Favorites",
+    "Profile": "Profile"
+  },
+  "TopBar": {
+    "ActionsLabel": "App actions",
+    "Help": "Help",
+    "Profiles": "Profiles",
+    "SavedProfiles": "Saved profiles",
+    "ProfileSummary_one": "{{formattedCount}} allergen",
+    "ProfileSummary_other": "{{formattedCount}} allergens",
+    "ProfileSummaryEmpty": "No allergens selected",
+    "AddProfileTitle": "Add profile",
+    "AddProfileDescription": "Create another named profile",
+    "LanguageTitle": "Language",
+    "LanguageLabel": "Language options",
+    "ActiveLanguage": "Current language"
+  },
+  "Languages": {
+    "English": "English",
+    "Swedish": "Svenska"
+  },
+  "Allergens": {
+    "cereals_containing_gluten": "Gluten",
+    "crustaceans": "Crustaceans",
+    "eggs": "Eggs",
+    "fish": "Fish",
+    "peanuts": "Peanuts",
+    "soybeans": "Soybeans",
+    "milk": "Milk",
+    "tree_nuts": "Tree nuts",
+    "celery": "Celery",
+    "mustard": "Mustard",
+    "sesame_seeds": "Sesame seeds",
+    "sulphur_dioxide_sulphites": "Sulphur dioxide / sulphites",
+    "lupin": "Lupin",
+    "molluscs": "Molluscs"
+  },
+  "Analysis": {
+    "Safe": "Safe",
+    "MayContainTraces": "May contain traces",
+    "ContainsAllergen": "Contains allergen",
+    "Unknown": "Unknown"
+  },
+  "Checked": {
+    "Contains": "Contains",
+    "MayContain": "May contain",
+    "NotFound": "Not found",
+    "Unknown": "Unknown"
+  },
+  "Preview": {
+    "Safe": "Safe",
+    "Caution": "Caution",
+    "Warning": "Warning",
+    "Info": "Info"
+  },
+  "Collection": {
+    "Safe": "Safe",
+    "Caution": "Caution",
+    "Warning": "Warning",
+    "Unknown": "Unknown"
+  },
+  "Generic": {
+    "Product": "Product",
+    "ProductOverview": "Product overview",
+    "ProductSummary": "Product summary",
+    "ProductDetails": "Product details"
+  }
+}

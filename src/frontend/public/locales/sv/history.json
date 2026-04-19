@@ -1,0 +1,21 @@
+{
+  "Page": {
+    "Title": "Historik"
+  },
+  "Hero": {
+    "Eyebrow": "Historik",
+    "Title": "Senaste skanningar och kontroller.",
+    "Description": "Dina senast analyserade produkter visas här automatiskt efter att du öppnat ett resultat."
+  },
+  "Card": {
+    "ProductCheck": "Produktkontroll",
+    "CheckedAgainstProfile": "Kontrollerad mot din allergiprofil"
+  },
+  "Actions": {
+    "ViewAnalysis": "Visa analys"
+  },
+  "Empty": {
+    "Title": "Ingen historik än",
+    "Description": "Öppna en produktanalys så visas den här för snabb återblick."
+  }
+}

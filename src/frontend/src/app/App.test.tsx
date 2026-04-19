@@ -297,4 +297,53 @@ describe('app router', () => {
 
     expect(pwaMocks.applyAppUpdate).toHaveBeenCalledTimes(1)
   })
+
+  it('shows language options in the profile menu and switches the active language', async () => {
+    const user = userEvent.setup()
+    window.localStorage.setItem(
+      PROFILES_STORAGE_KEY,
+      JSON.stringify({
+        activeProfileId: 'p1',
+        profiles: [
+          { id: 'p1', name: 'Anna', selectedAllergens: ['milk'], createdAt: '2026-04-01T10:00:00Z', updatedAt: '2026-04-01T10:00:00Z' },
+        ],
+      }),
+    )
+
+    const queryClient = new QueryClient({
+      defaultOptions: {
+        queries: {
+          retry: false,
+        },
+      },
+    })
+
+    const router = createMemoryRouter(appRouter.routes, {
+      initialEntries: ['/home'],
+    })
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <ProfileProvider>
+          <CollectionsProvider>
+            <RouterProvider router={router} />
+          </CollectionsProvider>
+        </ProfileProvider>
+      </QueryClientProvider>,
+    )
+
+    await user.click(screen.getByRole('button', { name: /profiles/i }))
+
+    expect(screen.getByRole('group', { name: /language options/i })).toBeInTheDocument()
+    expect(screen.getByRole('menuitemradio', { name: /english/i })).toHaveAttribute('aria-checked', 'true')
+
+    await user.click(screen.getByRole('menuitemradio', { name: /svenska/i }))
+
+    expect(document.documentElement.lang).toBe('sv')
+
+    await user.click(screen.getByRole('button', { name: /profiler/i }))
+
+    expect(screen.getByRole('menuitemradio', { name: /svenska/i })).toHaveAttribute('aria-checked', 'true')
+    expect(screen.getByRole('menuitemradio', { name: /english/i })).toHaveAttribute('aria-checked', 'false')
+  })
 })

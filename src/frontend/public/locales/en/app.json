@@ -1,0 +1,14 @@
+{
+  "Nav": {
+    "PrimaryNavigation": "Primary navigation"
+  },
+  "OfflineBanner": {
+    "Message": "Offline mode: saved profiles, favorites, and history remain available."
+  },
+  "UpdateBanner": {
+    "Eyebrow": "App update ready",
+    "Message": "A newer SafeScan version is available. Updating reloads the app, but your saved profile and local history stay on this device.",
+    "Later": "Later",
+    "UpdateNow": "Update now"
+  }
+}

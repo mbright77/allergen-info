@@ -1,0 +1,35 @@
+{
+  "Page": {
+    "Title": "Profile",
+    "EditTitle": "Edit {{name}}"
+  },
+  "Edit": {
+    "Eyebrow": "Profile",
+    "Title": "Adjust {{name}}.",
+    "Description": "This screen edits the profile that is currently active in the top bar. Changes apply to future search, scan, and result analysis.",
+    "Save": "Save profile changes"
+  },
+  "Create": {
+    "Eyebrow": "Add profile",
+    "Title": "Add another profile",
+    "Description": "Create another named profile for a family member or a different allergy setup. You can save it empty and tailor allergens later.",
+    "Save": "Save new profile"
+  },
+  "Form": {
+    "NameLabel": "Profile name",
+    "NamePlaceholder": "For example: Anna or Leo",
+    "NameNote": "Use a clear name so switching between family members stays quick and reliable.",
+    "NameError": "Enter a profile name before saving.",
+    "MonitoredAllergens": "Monitored allergens",
+    "LoadingOptions": "Loading allergen options...",
+    "LoadErrorTitle": "Unable to load allergens",
+    "LoadErrorDescription": "Please check that the backend is running and try again."
+  },
+  "Summary": {
+    "Title": "Profile summary",
+    "CreateEmpty": "This profile is empty for now. You can save it and add allergens later.",
+    "EditEmpty": "This profile has no monitored allergens yet. Add them now or save the empty profile for later.",
+    "Monitoring_one": "This profile is monitoring {{formattedCount}} allergen.",
+    "Monitoring_other": "This profile is monitoring {{formattedCount}} allergens."
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "Page": {
+    "Title": "Create your Safe Zone"
+  },
+  "Intro": {
+    "Eyebrow": "First profile",
+    "Title": "Create your Safe Zone",
+    "Description": "Name the first profile for yourself or a family member. You can leave allergens empty for now and update them later from the profile screen."
+  },
+  "Actions": {
+    "Save": "Save profile and continue"
+  }
+}

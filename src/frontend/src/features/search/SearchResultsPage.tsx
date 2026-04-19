@@ -1,10 +1,13 @@
 import { useQuery } from '@tanstack/react-query'
 import { useEffect, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 
 import { searchProducts } from '../../shared/api/products'
 import { getSearchCardMeta, formatPreviewStatus, toStatusClassName } from '../../shared/domain/search'
 import type { SearchResult } from '../../shared/domain/contracts'
+import { formatNumber } from '../../shared/i18n/format'
+import { usePageTitle } from '../../shared/i18n/usePageTitle'
 import { saveRecentSearch } from '../../shared/search/recent-searches'
 import {
   buildSearchResultsCacheKey,
@@ -13,6 +16,7 @@ import {
 } from '../../shared/search/search-results-cache'
 
 export function SearchResultsPage() {
+  const { t, i18n } = useTranslation('search')
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
   const query = searchParams.get('q')?.trim() ?? ''
@@ -33,6 +37,8 @@ export function SearchResultsPage() {
   const results = resolvedSearchResponse?.results ?? []
   const isShowingCachedResults = searchQuery.isError && !!cachedSearchResults
 
+  usePageTitle(query ? t('Page.TitleWithQuery', { query }) : t('Page.Title'))
+
   useEffect(() => {
     if (query.length > 0 && searchQuery.data) {
       saveRecentSearch(query, selectedAllergens, searchQuery.data.results[0]?.imageUrl ?? null)
@@ -47,48 +53,48 @@ export function SearchResultsPage() {
   return (
     <section className="stack-xl search-results-page">
       <div className="content-card stack-md">
-        <p className="supporting-text">Search results for</p>
-        <h1 className="display-title display-title--italic">'{query || 'Search'}'</h1>
+        <p className="supporting-text">{t('Header.Label')}</p>
+        <h1 className="display-title display-title--italic">'{query || t('Header.FallbackQuery')}'</h1>
         <div className="chip-row">
-          <button type="button" className="filter-chip filter-chip--active" disabled aria-label="Filter: All Results (active)">All Results</button>
-          <button type="button" className="filter-chip" disabled aria-label="Filter: Organic (coming soon)">Organic</button>
-          <button type="button" className="filter-chip" disabled aria-label="Filter: Unsweetened (coming soon)">Unsweetened</button>
-          <button type="button" className="filter-chip" disabled aria-label="Filter: Gluten-Free (coming soon)">Gluten-Free</button>
+          <button type="button" className="filter-chip filter-chip--active" disabled aria-label={t('Filters.AllResultsAria')}>{t('Filters.AllResults')}</button>
+          <button type="button" className="filter-chip" disabled aria-label={t('Filters.OrganicAria')}>{t('Filters.Organic')}</button>
+          <button type="button" className="filter-chip" disabled aria-label={t('Filters.UnsweetenedAria')}>{t('Filters.Unsweetened')}</button>
+          <button type="button" className="filter-chip" disabled aria-label={t('Filters.GlutenFreeAria')}>{t('Filters.GlutenFree')}</button>
         </div>
       </div>
 
       {query.length === 0 ? (
         <section className="content-card stack-md">
-          <p className="eyebrow">Start with a search</p>
-          <p className="supporting-text">Enter a product name, ingredient, GTIN, or brand from the scanner search field.</p>
+          <p className="eyebrow">{t('EmptyQuery.Title')}</p>
+          <p className="supporting-text">{t('EmptyQuery.Description')}</p>
         </section>
       ) : null}
 
       {searchQuery.isLoading ? (
         <section className="content-card stack-md">
-          <p className="eyebrow">Searching</p>
-          <p className="supporting-text">Finding matching products and preparing preview insights...</p>
+          <p className="eyebrow">{t('Loading.Title')}</p>
+          <p className="supporting-text">{t('Loading.Description')}</p>
         </section>
       ) : null}
 
       {searchQuery.isError && !cachedSearchResults ? (
         <section className="status-panel status-panel--error stack-sm" role="alert">
-          <p className="eyebrow">Search unavailable</p>
-          <p className="supporting-text">We could not load results right now. Please try again in a moment.</p>
+          <p className="eyebrow">{t('Error.Title')}</p>
+          <p className="supporting-text">{t('Error.Description')}</p>
         </section>
       ) : null}
 
       {isShowingCachedResults ? (
         <section className="content-card content-card--accent stack-sm" role="status">
-          <p className="eyebrow">Offline fallback</p>
-          <p className="supporting-text">Showing your last saved search results while the network is unavailable.</p>
+          <p className="eyebrow">{t('Offline.Title')}</p>
+          <p className="supporting-text">{t('Offline.Description')}</p>
         </section>
       ) : null}
 
       {!searchQuery.isLoading && !searchQuery.isError && query.length > 0 && results.length === 0 ? (
         <section className="content-card stack-md">
-          <p className="eyebrow">No results yet</p>
-          <p className="supporting-text">Try another product name, ingredient, GTIN, or brand.</p>
+          <p className="eyebrow">{t('NoResults.Title')}</p>
+          <p className="supporting-text">{t('NoResults.Description')}</p>
         </section>
       ) : null}
 
@@ -104,7 +110,7 @@ export function SearchResultsPage() {
                     type="button"
                     className="search-card__button"
                     onClick={() => handleSelectResult(result)}
-                    aria-label={`View details for ${result.name}`}
+                    aria-label={t('Card.ViewDetails', { name: result.name })}
                   >
                     <div className={`search-card__media search-card__media--${statusClassName}`}>
                       <SearchCardArtwork result={result} />
@@ -115,7 +121,7 @@ export function SearchResultsPage() {
                       ) : null}
                     </div>
                     <div className="stack-sm search-card__body">
-                      <p className="eyebrow">{result.brand ?? 'Product'}</p>
+                      <p className="eyebrow">{result.brand ?? t('Generic.Product', { ns: 'common' })}</p>
                       <h2 className="section-title">{result.name}</h2>
                       <p className="supporting-text">{getSearchCardMeta(result)}</p>
                       <div className="search-card__meta-row">
@@ -136,12 +142,12 @@ export function SearchResultsPage() {
                 <span className="search-card__art-panel-bottle">O</span>
               </div>
               <div className="stack-sm search-card__body">
-                <p className="search-insight search-insight--editorial">Editor&apos;s Choice</p>
-                <h2 className="display-title search-editorial-title">Milked Oats, simplified.</h2>
+                <p className="search-insight search-insight--editorial">{t('Editorial.Badge')}</p>
+                <h2 className="display-title search-editorial-title">{t('Editorial.Title')}</h2>
                 <p className="supporting-text">
-                  The cleanest oat-milk options usually keep the ingredient list short and the emulsifiers out.
+                  {t('Editorial.Description')}
                 </p>
-                <p className="search-editorial-score">98/100 Purity Score</p>
+                <p className="search-editorial-score">{t('Editorial.Score', { formattedScore: formatNumber(98, undefined, i18n.resolvedLanguage) })}</p>
               </div>
             </article>
 
@@ -151,14 +157,14 @@ export function SearchResultsPage() {
                   warning
                 </span>
                 <div className="stack-sm">
-                  <h2 className="section-title search-notice-title">Notice anything?</h2>
+                  <h2 className="section-title search-notice-title">{t('Notice.Title')}</h2>
                   <p className="supporting-text supporting-text--light">
-                    Some oat milks contain seed oils and phosphates. Check the caution flags before buying.
+                    {t('Notice.Description')}
                   </p>
                 </div>
               </div>
               <button type="button" className="search-notice-action">
-                Learn about additives
+                {t('Notice.Action')}
               </button>
             </article>
           </section>

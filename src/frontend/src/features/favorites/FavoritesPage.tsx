@@ -1,17 +1,23 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 
-import { useCollections } from '../../shared/collections/CollectionsProvider'
+import { useCollections } from '../../shared/collections/useCollections'
+import { formatCollectionStatus } from '../../shared/i18n/status'
+import { usePageTitle } from '../../shared/i18n/usePageTitle'
 
 export function FavoritesPage() {
+  const { t } = useTranslation('favorites')
   const { favorites } = useCollections()
+
+  usePageTitle(t('Page.Title'))
 
   return (
     <section className="stack-xl">
       <section className="content-card stack-lg secondary-screen-hero">
-        <p className="eyebrow">Favorites</p>
-        <h1 className="display-title">Your saved products.</h1>
-        <p className="supporting-text">Save trusted products here so you can revisit them quickly before your next shop.</p>
+        <p className="eyebrow">{t('Hero.Eyebrow')}</p>
+        <h1 className="display-title">{t('Hero.Title')}</h1>
+        <p className="supporting-text">{t('Hero.Description')}</p>
       </section>
 
       {favorites.length > 0 ? (
@@ -20,16 +26,16 @@ export function FavoritesPage() {
             <article key={favorite.gtin} className="saved-item-card">
               <FavoriteArtwork favorite={favorite} />
               <div className="stack-sm saved-item-card__body">
-                <p className="eyebrow">{favorite.brand ?? 'Saved product'}</p>
+                <p className="eyebrow">{favorite.brand ?? t('Card.SavedProduct')}</p>
                 <h2 className="section-title">{favorite.name}</h2>
-                <p className="supporting-text">{favorite.subtitle ?? favorite.category ?? 'Saved from product analysis'}</p>
+                <p className="supporting-text">{favorite.subtitle ?? favorite.category ?? t('Card.SavedFromAnalysis')}</p>
               </div>
               <div className="saved-item-card__footer">
                 <Link to={`/results/${encodeURIComponent(favorite.gtin)}`} className="secondary-action secondary-action--link">
-                  Open result
+                  {t('Actions.OpenResult')}
                 </Link>
                 <span className={`inline-status inline-status--${toStatusTone(favorite.overallStatus)}`}>
-                  {formatStatus(favorite.overallStatus)}
+                  {formatCollectionStatus(favorite.overallStatus)}
                 </span>
               </div>
             </article>
@@ -37,10 +43,10 @@ export function FavoritesPage() {
         </div>
       ) : (
         <section className="content-card stack-md">
-          <p className="eyebrow">No favorites yet</p>
-          <p className="supporting-text">Save products from the result screen to build your trusted shortlist.</p>
+          <p className="eyebrow">{t('Empty.Title')}</p>
+          <p className="supporting-text">{t('Empty.Description')}</p>
           <Link to="/scan" className="primary-action primary-action--link">
-            Start scanning
+            {t('Actions.StartScanning')}
           </Link>
         </section>
       )}
@@ -80,19 +86,6 @@ function getProductMonogram(brand: string | null | undefined, name: string) {
   const source = (brand ?? name).trim()
   const parts = source.split(/\s+/).filter(Boolean)
   return parts.slice(0, 2).map((part) => part[0]?.toUpperCase() ?? '').join('') || 'SS'
-}
-
-function formatStatus(status: 'Safe' | 'MayContain' | 'Contains' | 'Unknown') {
-  switch (status) {
-    case 'Safe':
-      return 'Safe'
-    case 'MayContain':
-      return 'Caution'
-    case 'Contains':
-      return 'Warning'
-    default:
-      return 'Unknown'
-  }
 }
 
 function toStatusTone(status: 'Safe' | 'MayContain' | 'Contains' | 'Unknown') {

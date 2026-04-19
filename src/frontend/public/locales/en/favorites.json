@@ -1,0 +1,22 @@
+{
+  "Page": {
+    "Title": "Favorites"
+  },
+  "Hero": {
+    "Eyebrow": "Favorites",
+    "Title": "Your saved products.",
+    "Description": "Save trusted products here so you can revisit them quickly before your next shop."
+  },
+  "Card": {
+    "SavedProduct": "Saved product",
+    "SavedFromAnalysis": "Saved from product analysis"
+  },
+  "Actions": {
+    "OpenResult": "Open result",
+    "StartScanning": "Start scanning"
+  },
+  "Empty": {
+    "Title": "No favorites yet",
+    "Description": "Save products from the result screen to build your trusted shortlist."
+  }
+}

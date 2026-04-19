@@ -13,7 +13,18 @@ type ScannerControls = {
   stop: () => void
   toggleTorch?: (on?: boolean) => Promise<boolean>
   setZoom?: (value: number) => Promise<boolean>
-  getCapabilities?: () => MediaTrackCapabilities | null
+}
+
+type ScannerZoomCapabilities = {
+  min?: number
+  max?: number
+}
+
+type ScannerViewState = {
+  status: ScannerStatus
+  errorMessage: string | null
+  controls: ScannerControls | null
+  zoomCapabilities: ScannerZoomCapabilities | null
 }
 
 type Html5QrcodeModule = typeof import('html5-qrcode')
@@ -87,13 +98,21 @@ export function useBarcodeScanner({ enabled, onDetected }: UseBarcodeScannerOpti
   const controlsRef = useRef<ScannerControls | null>(null)
   const candidateDetectionRef = useRef<{ value: string; count: number; timestamp: number } | null>(null)
   const lastDetectedRef = useRef<{ value: string; timestamp: number } | null>(null)
-  const [status, setStatus] = useState<ScannerStatus>('idle')
-  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [viewState, setViewState] = useState<ScannerViewState>({
+    status: 'idle',
+    errorMessage: null,
+    controls: null,
+    zoomCapabilities: null,
+  })
 
   useEffect(() => {
     if (!enabled || typeof window === 'undefined') {
-      setStatus('idle')
-      setErrorMessage(null)
+      setViewState({
+        status: 'idle',
+        errorMessage: null,
+        controls: null,
+        zoomCapabilities: null,
+      })
       void stopAndClearScanner(scannerInstanceRef.current)
       scannerInstanceRef.current = null
       controlsRef.current = null
@@ -104,8 +123,12 @@ export function useBarcodeScanner({ enabled, onDetected }: UseBarcodeScannerOpti
     const testBarcode = (window as Window & { __SAFE_SCAN_TEST_BARCODE__?: string }).__SAFE_SCAN_TEST_BARCODE__
 
     if (testBarcode) {
-      setStatus('active')
-      setErrorMessage(null)
+      setViewState({
+        status: 'active',
+        errorMessage: null,
+        controls: null,
+        zoomCapabilities: null,
+      })
 
       const timeoutId = window.setTimeout(() => {
         onDetected(testBarcode)
@@ -117,16 +140,24 @@ export function useBarcodeScanner({ enabled, onDetected }: UseBarcodeScannerOpti
     }
 
     if (typeof navigator === 'undefined' || !navigator.mediaDevices?.getUserMedia || !containerRef.current) {
-      setStatus('unsupported')
-      setErrorMessage('Live barcode scanning is not available in this browser right now.')
+      setViewState({
+        status: 'unsupported',
+        errorMessage: 'Live barcode scanning is not available in this browser right now.',
+        controls: null,
+        zoomCapabilities: null,
+      })
       return
     }
 
     let isCancelled = false
 
     async function startScanner() {
-      setStatus('requesting')
-      setErrorMessage(null)
+      setViewState({
+        status: 'requesting',
+        errorMessage: null,
+        controls: null,
+        zoomCapabilities: null,
+      })
 
       try {
         const html5QrcodeModule = await import('html5-qrcode')
@@ -208,16 +239,19 @@ export function useBarcodeScanner({ enabled, onDetected }: UseBarcodeScannerOpti
 
         await tryApplyAutofocusEnhancements(instance)
 
-        controlsRef.current = {
+        const capabilities = (() => {
+          try {
+            return instance.getRunningTrackCapabilities() as MediaTrackCapabilities & {
+              zoom?: ScannerZoomCapabilities
+            }
+          } catch {
+            return null
+          }
+        })()
+
+        const controls = {
           stop: () => {
             void stopAndClearScanner(instance)
-          },
-          getCapabilities: () => {
-            try {
-              return instance.getRunningTrackCapabilities()
-            } catch {
-              return null
-            }
           },
           toggleTorch: async (on?: boolean) => {
             try {
@@ -257,21 +291,35 @@ export function useBarcodeScanner({ enabled, onDetected }: UseBarcodeScannerOpti
             }
           },
         }
+        controlsRef.current = controls
 
-        setStatus('active')
+        setViewState({
+          status: 'active',
+          errorMessage: null,
+          controls,
+          zoomCapabilities: capabilities?.zoom ?? null,
+        })
       } catch (error) {
         if (isCancelled) {
           return
         }
 
         if (error instanceof DOMException && error.name === 'NotAllowedError') {
-          setStatus('denied')
-          setErrorMessage('Camera access was denied. You can still use text search above.')
+          setViewState({
+            status: 'denied',
+            errorMessage: 'Camera access was denied. You can still use text search above.',
+            controls: null,
+            zoomCapabilities: null,
+          })
           return
         }
 
-        setStatus('unsupported')
-        setErrorMessage('Live barcode scanning is not available in this browser right now.')
+        setViewState({
+          status: 'unsupported',
+          errorMessage: 'Live barcode scanning is not available in this browser right now.',
+          controls: null,
+          zoomCapabilities: null,
+        })
       }
     }
 
@@ -282,13 +330,20 @@ export function useBarcodeScanner({ enabled, onDetected }: UseBarcodeScannerOpti
       void stopAndClearScanner(scannerInstanceRef.current)
       scannerInstanceRef.current = null
       controlsRef.current = null
+      setViewState({
+        status: 'idle',
+        errorMessage: null,
+        controls: null,
+        zoomCapabilities: null,
+      })
     }
   }, [enabled, onDetected])
 
   return {
     containerRef,
-    status,
-    errorMessage,
-    controls: controlsRef.current,
+    status: viewState.status,
+    errorMessage: viewState.errorMessage,
+    controls: viewState.controls,
+    zoomCapabilities: viewState.zoomCapabilities,
   }
 }

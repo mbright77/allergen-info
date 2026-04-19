@@ -1,0 +1,26 @@
+{
+  "Page": {
+    "Title": "Help"
+  },
+  "Hero": {
+    "Eyebrow": "Help",
+    "Title": "How SafeScan uses your profile.",
+    "Description": "SafeScan compares product data against the allergens selected in the currently active profile."
+  },
+  "Selection": {
+    "Title": "How allergen selection works",
+    "ParagraphOne": "Each profile stores its own allergen selection. You can switch profiles from the top-right menu when different family members need different checks.",
+    "ParagraphTwo": "Profiles can be saved without any allergens selected. In that case, the app stays usable, but result warnings are not personalized until allergens are added."
+  },
+  "Responses": {
+    "Title": "What the responses mean",
+    "Safe": "Safe: no selected allergens were found in the available product data.",
+    "MayContain": "May contain: a trace warning or precautionary statement was found for one of the selected allergens.",
+    "Contains": "Contains: a selected allergen was found in the available product data.",
+    "Unknown": "Unknown: the product data was incomplete, conflicting, or not detailed enough for a confident answer."
+  },
+  "BeforeBuy": {
+    "Title": "Before you buy",
+    "Description": "SafeScan is designed to speed up checking, but the package label remains the final source of truth if product data is missing or unclear."
+  }
+}

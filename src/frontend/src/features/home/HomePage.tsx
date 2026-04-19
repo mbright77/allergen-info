@@ -1,45 +1,54 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 
-import { useCollections } from '../../shared/collections/CollectionsProvider'
-import { useProfile } from '../../shared/profile/ProfileProvider'
+import { useCollections } from '../../shared/collections/useCollections'
+import { formatNumber } from '../../shared/i18n/format'
+import { usePageTitle } from '../../shared/i18n/usePageTitle'
+import { useProfile } from '../../shared/profile/useProfile'
 import { readRecentSearches } from '../../shared/search/recent-searches'
 
 export function HomePage() {
+  const { t, i18n } = useTranslation('home')
   const { activeProfile, selectedAllergens } = useProfile()
   const { favorites, history } = useCollections()
   const recentSearches = readRecentSearches()
-  const activeProfileName = activeProfile?.name ?? 'Your profile'
+  const activeProfileName = activeProfile?.name ?? t('Page.Title')
+
+  usePageTitle(t('Page.Title'))
 
   return (
     <section className="stack-xl">
       <section className="hero-card hero-card--safe home-hero stack-lg">
-        <p className="eyebrow eyebrow--light">Welcome</p>
-        <h1 className="display-title display-title--light">Safe choices, faster.</h1>
+        <p className="eyebrow eyebrow--light">{t('Hero.Eyebrow')}</p>
+        <h1 className="display-title display-title--light">{t('Hero.Title')}</h1>
         <p className="supporting-text supporting-text--light">
-          {activeProfileName} is active with {selectedAllergens.length} monitored allergens. Start with search, or launch the camera only when you are ready to scan.
+          {t('Hero.Description', {
+            name: activeProfileName,
+            formattedCount: formatNumber(selectedAllergens.length, undefined, i18n.resolvedLanguage),
+          })}
         </p>
         <div className="action-row">
           <Link to="/scan" className="primary-action primary-action--link">
-            Scan or search now
+            {t('Actions.ScanOrSearch')}
           </Link>
           <Link to="/favorites" className="secondary-action secondary-action--link">
-            Review favorites
+            {t('Actions.ReviewFavorites')}
           </Link>
         </div>
       </section>
 
       <section className="content-card stack-md">
-        <p className="eyebrow">Snapshot</p>
+        <p className="eyebrow">{t('Snapshot.Title')}</p>
         <div className="result-bento-grid">
-          <HomeMetricCard label={activeProfileName} value={`${selectedAllergens.length} allergens`} />
-          <HomeMetricCard label="Favorites" value={`${favorites.length} items`} />
-          <HomeMetricCard label="Recent checks" value={`${history.length} products`} />
+          <HomeMetricCard label={activeProfileName} value={t('Snapshot.AllergensCount', { count: selectedAllergens.length, formattedCount: formatNumber(selectedAllergens.length, undefined, i18n.resolvedLanguage) })} />
+          <HomeMetricCard label={t('Snapshot.FavoritesLabel')} value={t('Snapshot.ItemsCount', { count: favorites.length, formattedCount: formatNumber(favorites.length, undefined, i18n.resolvedLanguage) })} />
+          <HomeMetricCard label={t('Snapshot.RecentChecksLabel')} value={t('Snapshot.ProductsCount', { count: history.length, formattedCount: formatNumber(history.length, undefined, i18n.resolvedLanguage) })} />
         </div>
       </section>
 
       <section className="content-card stack-md">
-        <p className="eyebrow">Recent searches</p>
+        <p className="eyebrow">{t('RecentSearches.Title')}</p>
         {recentSearches.length > 0 ? (
           <div className="saved-item-list">
             {recentSearches.slice(0, 4).map((entry) => (
@@ -47,17 +56,18 @@ export function HomePage() {
                 key={`${entry.query}-${entry.updatedAt}`}
                 to={`/search/results?q=${encodeURIComponent(entry.query)}`}
                 className="saved-item-card saved-item-card--compact"
+                aria-label={t('RecentSearches.CardLabel', { query: entry.query })}
               >
                 <RecentSearchArtwork entry={entry} />
                 <div className="stack-sm saved-item-card__body">
-                  <p className="eyebrow">Recent search</p>
+                  <p className="eyebrow">{t('RecentSearches.Eyebrow')}</p>
                   <h2 className="section-title">{entry.query}</h2>
                 </div>
               </Link>
             ))}
           </div>
         ) : (
-          <p className="supporting-text">Recent searches will appear here after you search from the scanner screen or launch a manual scan.</p>
+          <p className="supporting-text">{t('RecentSearches.Empty')}</p>
         )}
       </section>
     </section>

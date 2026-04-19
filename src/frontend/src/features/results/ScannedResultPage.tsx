@@ -1,14 +1,19 @@
 import { useQuery } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 
 import { analyzeScannedProduct } from '../../shared/api/products'
 import { formatAllergenCode } from '../../shared/allergens/metadata'
-import { toSavedProductItem, useCollections } from '../../shared/collections/CollectionsProvider'
-import type { AnalysisOverallStatus, ScanAnalysisResponse } from '../../shared/domain/contracts'
-import { useProfile } from '../../shared/profile/ProfileProvider'
+import { toSavedProductItem } from '../../shared/collections/saved-products'
+import { useCollections } from '../../shared/collections/useCollections'
+import type { ScanAnalysisResponse } from '../../shared/domain/contracts'
+import { formatAnalysisStatus } from '../../shared/i18n/status'
+import { usePageTitle } from '../../shared/i18n/usePageTitle'
+import { useProfile } from '../../shared/profile/useProfile'
 
 export function ScannedResultPage() {
+  const { t } = useTranslation('results')
   const { code } = useParams()
   const navigate = useNavigate()
   const { selectedAllergens } = useProfile()
@@ -26,6 +31,8 @@ export function ScannedResultPage() {
     retry: false,
   })
 
+  usePageTitle(t('Scanned.PageTitle'))
+
   useEffect(() => {
     if (scanQuery.data?.resolution.mode === 'Full' && scanQuery.data.resolution.resolvedGtin) {
       navigate(`/results/${encodeURIComponent(scanQuery.data.resolution.resolvedGtin)}`, { replace: true })
@@ -41,8 +48,8 @@ export function ScannedResultPage() {
   if (scanQuery.isLoading) {
     return (
       <section className="content-card stack-md">
-        <p className="eyebrow">Resolving scan</p>
-        <p className="supporting-text">Searching for the scanned barcode and checking whether detailed allergen data is available...</p>
+        <p className="eyebrow">{t('Scanned.Loading.Title')}</p>
+        <p className="supporting-text">{t('Scanned.Loading.Description')}</p>
       </section>
     )
   }
@@ -50,8 +57,8 @@ export function ScannedResultPage() {
   if (scanQuery.isError) {
     return (
       <section className="status-panel status-panel--error stack-sm" role="alert">
-        <p className="eyebrow">Scan unavailable</p>
-        <p className="supporting-text">We could not resolve this scan right now. Please try again or search manually.</p>
+        <p className="eyebrow">{t('Scanned.Error.Title')}</p>
+        <p className="supporting-text">{t('Scanned.Error.Description')}</p>
       </section>
     )
   }
@@ -67,20 +74,20 @@ export function ScannedResultPage() {
           <div className="hero-card__icon-shell" aria-hidden="true">
             <span className="material-symbols-outlined hero-card__icon">help</span>
           </div>
-          <p className="eyebrow eyebrow--light">No product found</p>
-          <h1 className="display-title display-title--light">We could not match this barcode yet.</h1>
-          <p className="supporting-text supporting-text--light">Try scanning again in better light, or use search to find the product manually.</p>
+          <p className="eyebrow eyebrow--light">{t('Scanned.NotFound.Eyebrow')}</p>
+          <h1 className="display-title display-title--light">{t('Scanned.NotFound.Title')}</h1>
+          <p className="supporting-text supporting-text--light">{t('Scanned.NotFound.Description')}</p>
         </section>
 
         <section className="content-card stack-md">
-          <p className="eyebrow">Scanned code</p>
+          <p className="eyebrow">{t('Scanned.NotFound.ScannedCode')}</p>
           <p className="section-title">{scanQuery.data.resolution.scannedCode}</p>
           <div className="action-row">
             <Link to="/scan" className="primary-action primary-action--link">
-              Scan again
+              {t('Scanned.Actions.ScanAgain')}
             </Link>
             <Link to={`/search/results?q=${encodeURIComponent(scanQuery.data.resolution.scannedCode)}`} className="secondary-action secondary-action--link">
-              Search manually
+              {t('Scanned.Actions.SearchManually')}
             </Link>
           </div>
         </section>
@@ -92,13 +99,14 @@ export function ScannedResultPage() {
 }
 
 function ScannedFallbackResult({ response }: { response: ScanAnalysisResponse }) {
+  const { t } = useTranslation('results')
   const { product, analysis, resolution } = response
 
   if (!product || !analysis) {
     return null
   }
 
-  const copy = getFallbackCopy(resolution.mode)
+  const copy = getFallbackCopy(t, resolution.mode)
 
   return (
     <section className="stack-xl">
@@ -114,55 +122,55 @@ function ScannedFallbackResult({ response }: { response: ScanAnalysisResponse })
       <section className="result-product-card">
         <ResultProductArtwork product={product} />
         <div className="stack-sm">
-          <p className="eyebrow">{product.category ?? 'Product summary'}</p>
+          <p className="eyebrow">{product.category ?? t('Scanned.Fallback.ProductSummary')}</p>
           <h2 className="section-title">{product.name}</h2>
           <p className="supporting-text">
-            {[product.brand, product.subtitle].filter(Boolean).join(' • ') || 'Basic product details only'}
+            {[product.brand, product.subtitle].filter(Boolean).join(' • ') || t('Scanned.Fallback.BasicDetails')}
           </p>
         </div>
       </section>
 
       <section className="result-bento-grid">
         <article className="status-summary-card stack-sm">
-          <p className="eyebrow">Analysis</p>
-          <p className="status-summary-card__value">Unknown</p>
+          <p className="eyebrow">{t('Summary.Analysis')}</p>
+          <p className="status-summary-card__value">{formatAnalysisStatus(analysis.overallStatus)}</p>
         </article>
         <article className="status-summary-card stack-sm">
-          <p className="eyebrow">Resolved GTIN</p>
+          <p className="eyebrow">{t('Scanned.Fallback.ResolvedGtin')}</p>
           <p className="status-summary-card__value">{resolution.resolvedGtin ?? product.gtin}</p>
         </article>
       </section>
 
       <section className="content-card stack-md">
-        <p className="eyebrow">What we know</p>
+        <p className="eyebrow">{t('Scanned.Fallback.WhatWeKnow')}</p>
         <div className="status-summary-grid">
-          <StatusSummaryCard label="Overall status" value={formatOverallStatus(analysis.overallStatus)} />
-          <StatusSummaryCard label="Matched allergens" value="No detail available" />
-          <StatusSummaryCard label="Trace warnings" value="No detail available" />
+          <StatusSummaryCard label={t('Summary.OverallStatus')} value={formatAnalysisStatus(analysis.overallStatus)} />
+          <StatusSummaryCard label={t('Summary.MatchedAllergens')} value={t('Scanned.Fallback.NoDetailAvailable')} />
+          <StatusSummaryCard label={t('Summary.TraceWarnings')} value={t('Scanned.Fallback.NoDetailAvailable')} />
         </div>
       </section>
 
       <section className="content-card stack-md">
-        <p className="eyebrow">Checked allergens</p>
+        <p className="eyebrow">{t('Sections.CheckedAllergens')}</p>
         <div className="checked-allergen-list">
           {analysis.checkedAllergens.map((checkedAllergen) => (
             <div key={checkedAllergen.code} className="checked-allergen-item">
               <span>{formatAllergenCode(checkedAllergen.code)}</span>
-              <span className="inline-status inline-status--neutral">Unknown</span>
+              <span className="inline-status inline-status--neutral">{formatAnalysisStatus('Unknown')}</span>
             </div>
           ))}
         </div>
       </section>
 
       <section className="content-card stack-md">
-        <p className="eyebrow">Next actions</p>
+        <p className="eyebrow">{t('Sections.NextActions')}</p>
         <p className="supporting-text">{copy.nextAction}</p>
         <div className="action-row">
           <Link to="/scan" className="primary-action primary-action--link">
-            Scan another product
+            {t('Scanned.Actions.ScanAnother')}
           </Link>
           <Link to={`/search/results?q=${encodeURIComponent(resolution.scannedCode)}`} className="secondary-action secondary-action--link">
-            Search manually
+            {t('Scanned.Actions.SearchManually')}
           </Link>
         </div>
       </section>
@@ -179,26 +187,25 @@ function StatusSummaryCard({ label, value }: { label: string; value: string }) {
   )
 }
 
-function formatOverallStatus(status: AnalysisOverallStatus) {
-  return status === 'Unknown' ? 'Unknown' : status
-}
-
-function getFallbackCopy(mode: ScanAnalysisResponse['resolution']['mode']) {
+function getFallbackCopy(
+  t: ReturnType<typeof useTranslation<'results'>>['t'],
+  mode: ScanAnalysisResponse['resolution']['mode'],
+) {
   switch (mode) {
     case 'Unverified':
       return {
-        eyebrow: 'Barcode not verified',
-        title: 'We found a likely product match, but the barcode could not be verified.',
-        message: 'This scan only found a search-based match, so the allergen status stays unknown.',
-        nextAction: 'Search manually or check the package label before relying on this result.',
+        eyebrow: t('Scanned.Modes.Unverified.Eyebrow'),
+        title: t('Scanned.Modes.Unverified.Title'),
+        message: t('Scanned.Modes.Unverified.Message'),
+        nextAction: t('Scanned.Modes.Unverified.NextAction'),
       }
     case 'Basic':
     default:
       return {
-        eyebrow: 'No allergen info found',
-        title: 'We found the product, but not the detailed allergen data.',
-        message: 'Showing basic product information only.',
-        nextAction: 'Search manually or try another scan if you need a product with detailed allergen data.',
+        eyebrow: t('Scanned.Modes.Basic.Eyebrow'),
+        title: t('Scanned.Modes.Basic.Title'),
+        message: t('Scanned.Modes.Basic.Message'),
+        nextAction: t('Scanned.Modes.Basic.NextAction'),
       }
   }
 }

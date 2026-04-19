@@ -1,0 +1,73 @@
+{
+  "AppName": "SafeScan",
+  "Nav": {
+    "Home": "Hem",
+    "Scan": "Skanna",
+    "Favorites": "Favoriter",
+    "Profile": "Profil"
+  },
+  "TopBar": {
+    "ActionsLabel": "Appåtgärder",
+    "Help": "Hjälp",
+    "Profiles": "Profiler",
+    "SavedProfiles": "Sparade profiler",
+    "ProfileSummary_one": "{{formattedCount}} allergen",
+    "ProfileSummary_other": "{{formattedCount}} allergener",
+    "ProfileSummaryEmpty": "Inga allergener valda",
+    "AddProfileTitle": "Lägg till profil",
+    "AddProfileDescription": "Skapa en till namngiven profil",
+    "LanguageTitle": "Språk",
+    "LanguageLabel": "Språkalternativ",
+    "ActiveLanguage": "Aktuellt språk"
+  },
+  "Languages": {
+    "English": "English",
+    "Swedish": "Svenska"
+  },
+  "Allergens": {
+    "cereals_containing_gluten": "Gluten",
+    "crustaceans": "Kräftdjur",
+    "eggs": "Ägg",
+    "fish": "Fisk",
+    "peanuts": "Jordnötter",
+    "soybeans": "Sojabönor",
+    "milk": "Mjölk",
+    "tree_nuts": "Trädnötter",
+    "celery": "Selleri",
+    "mustard": "Senap",
+    "sesame_seeds": "Sesamfrön",
+    "sulphur_dioxide_sulphites": "Svaveldioxid / sulfiter",
+    "lupin": "Lupin",
+    "molluscs": "Blötdjur"
+  },
+  "Analysis": {
+    "Safe": "Säker",
+    "MayContainTraces": "Kan innehålla spår",
+    "ContainsAllergen": "Innehåller allergen",
+    "Unknown": "Okänt"
+  },
+  "Checked": {
+    "Contains": "Innehåller",
+    "MayContain": "Kan innehålla",
+    "NotFound": "Inte funnen",
+    "Unknown": "Okänt"
+  },
+  "Preview": {
+    "Safe": "Säker",
+    "Caution": "Varning",
+    "Warning": "Risk",
+    "Info": "Info"
+  },
+  "Collection": {
+    "Safe": "Säker",
+    "Caution": "Varning",
+    "Warning": "Risk",
+    "Unknown": "Okänt"
+  },
+  "Generic": {
+    "Product": "Produkt",
+    "ProductOverview": "Produktöversikt",
+    "ProductSummary": "Produktsammanfattning",
+    "ProductDetails": "Produktdetaljer"
+  }
+}

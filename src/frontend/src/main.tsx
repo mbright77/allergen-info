@@ -15,6 +15,7 @@ import { router } from './app/router'
 import { registerAppServiceWorker } from './app/pwa'
 import './index.css'
 import { CollectionsProvider } from './shared/collections/CollectionsProvider'
+import { initI18n } from './shared/i18n/init'
 import { ProfileProvider } from './shared/profile/ProfileProvider'
 
 const queryClient = new QueryClient({
@@ -27,16 +28,18 @@ const queryClient = new QueryClient({
   },
 })
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <ProfileProvider>
-        <CollectionsProvider>
-          <RouterProvider router={router} />
-        </CollectionsProvider>
-      </ProfileProvider>
-    </QueryClientProvider>
-  </StrictMode>,
-)
+void initI18n().then(() => {
+  createRoot(document.getElementById('root')!).render(
+    <StrictMode>
+      <QueryClientProvider client={queryClient}>
+        <ProfileProvider>
+          <CollectionsProvider>
+            <RouterProvider router={router} />
+          </CollectionsProvider>
+        </ProfileProvider>
+      </QueryClientProvider>
+    </StrictMode>,
+  )
+})
 
 void registerAppServiceWorker()

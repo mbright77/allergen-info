@@ -1,10 +1,15 @@
+import { useTranslation } from 'react-i18next'
 import { Navigate } from 'react-router-dom'
 
-import { useProfile } from '../../shared/profile/ProfileProvider'
+import { usePageTitle } from '../../shared/i18n/usePageTitle'
+import { useProfile } from '../../shared/profile/useProfile'
 import { ProfileEditor } from './ProfileEditor'
 
 export function ProfilePage() {
+  const { t } = useTranslation('profile')
   const { activeProfile, updateActiveProfile } = useProfile()
+
+  usePageTitle(activeProfile ? t('Page.EditTitle', { name: activeProfile.name }) : t('Page.Title'))
 
   if (!activeProfile) {
     return <Navigate to="/onboarding" replace />
@@ -15,10 +20,10 @@ export function ProfilePage() {
       mode="edit"
       initialName={activeProfile.name}
       initialSelectedAllergens={activeProfile.selectedAllergens}
-      saveLabel="Save profile changes"
-      introEyebrow="Profile"
-      introTitle={`Adjust ${activeProfile.name}.`}
-      introDescription="This screen edits the profile that is currently active in the top bar. Changes apply to future search, scan, and result analysis."
+      saveLabel={t('Edit.Save')}
+      introEyebrow={t('Edit.Eyebrow')}
+      introTitle={t('Edit.Title', { name: activeProfile.name })}
+      introDescription={t('Edit.Description')}
       onSave={updateActiveProfile}
     />
   )

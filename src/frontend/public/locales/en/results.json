@@ -1,0 +1,112 @@
+{
+  "Page": {
+    "Title": "Product result",
+    "TitleWithName": "{{name}}"
+  },
+  "Loading": {
+    "Title": "Loading analysis",
+    "Description": "Checking the selected product against your saved allergen profile..."
+  },
+  "Error": {
+    "Title": "Analysis unavailable",
+    "Description": "We could not analyze this product right now. Please try another item or try again."
+  },
+  "Offline": {
+    "Title": "Offline fallback",
+    "Description": "Showing your last saved analysis for this product while the network is unavailable."
+  },
+  "Hero": {
+    "Contains": {
+      "Eyebrow": "Contains allergens",
+      "Title": "This product is not safe for your profile.",
+      "Description": "Confirmed allergen matches were found in the available product data."
+    },
+    "MayContain": {
+      "Eyebrow": "Trace warning",
+      "Title": "Use caution before buying.",
+      "Description": "The product carries at least one trace warning for your selected allergens."
+    },
+    "Safe": {
+      "Eyebrow": "Safe choice",
+      "Title": "Safe to enjoy.",
+      "Description": "No selected allergens were detected in the available product data."
+    },
+    "Unknown": {
+      "Eyebrow": "Analysis pending",
+      "Title": "We need more product data.",
+      "Description": "The app could not complete a confident analysis for this product yet."
+    }
+  },
+  "Product": {
+    "SummaryFallback": "Product summary",
+    "DetailsFallback": "Product details"
+  },
+  "Summary": {
+    "Analysis": "Analysis",
+    "YourProfile": "Your profile",
+    "AllergensChecked_one": "{{formattedCount}} allergen checked",
+    "AllergensChecked_other": "{{formattedCount}} allergens checked",
+    "Title": "Analysis summary",
+    "OverallStatus": "Overall status",
+    "MatchedAllergens": "Matched allergens",
+    "TraceWarnings": "Trace warnings",
+    "NoneDetected": "None detected",
+    "NoneReported": "None reported"
+  },
+  "Sections": {
+    "CheckedAllergens": "Checked allergens",
+    "IngredientReview": "Ingredient review",
+    "NextActions": "Next actions"
+  },
+  "IngredientReview": {
+    "NoMatches": "No highlighted ingredient matches were returned for your selected allergens."
+  },
+  "Actions": {
+    "ScanAnother": "Scan another product",
+    "RemoveFavorite": "Remove from Favorites",
+    "SaveFavorite": "Save to Favorites"
+  },
+  "Scanned": {
+    "PageTitle": "Scanned result",
+    "Loading": {
+      "Title": "Resolving scan",
+      "Description": "Searching for the scanned barcode and checking whether detailed allergen data is available..."
+    },
+    "Error": {
+      "Title": "Scan unavailable",
+      "Description": "We could not resolve this scan right now. Please try again or search manually."
+    },
+    "NotFound": {
+      "Eyebrow": "No product found",
+      "Title": "We could not match this barcode yet.",
+      "Description": "Try scanning again in better light, or use search to find the product manually.",
+      "ScannedCode": "Scanned code"
+    },
+    "Fallback": {
+      "ProductSummary": "Product summary",
+      "BasicDetails": "Basic product details only",
+      "WhatWeKnow": "What we know",
+      "ResolvedGtin": "Resolved GTIN",
+      "NoDetailAvailable": "No detail available"
+    },
+    "Actions": {
+      "ScanAgain": "Scan again",
+      "SearchManually": "Search manually",
+      "ScanAnother": "Scan another product"
+    },
+    "Modes": {
+      "Unverified": {
+        "Eyebrow": "Barcode not verified",
+        "Title": "We found a likely product match, but the barcode could not be verified.",
+        "Message": "This scan only found a search-based match, so the allergen status stays unknown.",
+        "NextAction": "Search manually or check the package label before relying on this result."
+      },
+      "Basic": {
+        "Eyebrow": "No allergen info found",
+        "Title": "We found the product, but not the detailed allergen data.",
+        "Message": "Showing basic product information only.",
+        "NextAction": "Search manually or try another scan if you need a product with detailed allergen data."
+      }
+    }
+  }
+}

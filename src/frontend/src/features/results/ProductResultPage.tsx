@@ -1,15 +1,21 @@
 import { useQuery } from '@tanstack/react-query'
 import { useEffect, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link, useParams } from 'react-router-dom'
 
 import { analyzeProduct } from '../../shared/api/products'
 import { formatAllergenCode } from '../../shared/allergens/metadata'
 import { buildAnalysisCacheKey, readCachedAnalysis, writeCachedAnalysis } from '../../shared/results/analysis-cache'
 import type { AnalysisOverallStatus } from '../../shared/domain/contracts'
-import { toSavedProductItem, useCollections } from '../../shared/collections/CollectionsProvider'
-import { useProfile } from '../../shared/profile/ProfileProvider'
+import { toSavedProductItem } from '../../shared/collections/saved-products'
+import { useCollections } from '../../shared/collections/useCollections'
+import { formatNumber } from '../../shared/i18n/format'
+import { formatAnalysisStatus, formatCheckedStatus } from '../../shared/i18n/status'
+import { usePageTitle } from '../../shared/i18n/usePageTitle'
+import { useProfile } from '../../shared/profile/useProfile'
 
 export function ProductResultPage() {
+  const { t, i18n } = useTranslation('results')
   const { gtin } = useParams()
   const { activeProfile, selectedAllergens } = useProfile()
   const { addHistoryEntry, isFavorite, toggleFavorite } = useCollections()
@@ -35,37 +41,39 @@ export function ProductResultPage() {
   const heroCopy = useMemo(() => {
     const overallStatus = resolvedAnalysis?.analysis.overallStatus
 
-    switch (overallStatus) {
-      case 'Contains':
-        return {
-          className: 'warning',
-          eyebrow: 'Contains allergens',
-          title: 'This product is not safe for your profile.',
-          description: 'Confirmed allergen matches were found in the available product data.',
-        }
-      case 'MayContain':
-        return {
-          className: 'caution',
-          eyebrow: 'Trace warning',
-          title: 'Use caution before buying.',
-          description: 'The product carries at least one trace warning for your selected allergens.',
-        }
-      case 'Safe':
-        return {
-          className: 'safe',
-          eyebrow: 'Safe choice',
-          title: 'Safe to enjoy.',
-          description: 'No selected allergens were detected in the available product data.',
-        }
-      default:
-        return {
-          className: 'unknown',
-          eyebrow: 'Analysis pending',
-          title: 'We need more product data.',
-          description: 'The app could not complete a confident analysis for this product yet.',
-        }
-    }
-  }, [resolvedAnalysis?.analysis.overallStatus])
+      switch (overallStatus) {
+        case 'Contains':
+          return {
+            className: 'warning',
+            eyebrow: t('Hero.Contains.Eyebrow'),
+            title: t('Hero.Contains.Title'),
+            description: t('Hero.Contains.Description'),
+          }
+        case 'MayContain':
+          return {
+            className: 'caution',
+            eyebrow: t('Hero.MayContain.Eyebrow'),
+            title: t('Hero.MayContain.Title'),
+            description: t('Hero.MayContain.Description'),
+          }
+        case 'Safe':
+          return {
+            className: 'safe',
+            eyebrow: t('Hero.Safe.Eyebrow'),
+            title: t('Hero.Safe.Title'),
+            description: t('Hero.Safe.Description'),
+          }
+        default:
+          return {
+            className: 'unknown',
+            eyebrow: t('Hero.Unknown.Eyebrow'),
+            title: t('Hero.Unknown.Title'),
+            description: t('Hero.Unknown.Description'),
+          }
+      }
+  }, [resolvedAnalysis?.analysis.overallStatus, t])
+
+  usePageTitle(resolvedAnalysis?.product.name ? t('Page.TitleWithName', { name: resolvedAnalysis.product.name }) : t('Page.Title'))
 
   useEffect(() => {
     if (analysisQuery.data) {
@@ -84,15 +92,15 @@ export function ProductResultPage() {
     <section className="stack-xl">
       {analysisQuery.isLoading ? (
         <section className="content-card stack-md">
-          <p className="eyebrow">Loading analysis</p>
-          <p className="supporting-text">Checking the selected product against your saved allergen profile...</p>
+          <p className="eyebrow">{t('Loading.Title')}</p>
+          <p className="supporting-text">{t('Loading.Description')}</p>
         </section>
       ) : null}
 
       {analysisQuery.isError && !cachedAnalysis ? (
         <section className="status-panel status-panel--error stack-sm" role="alert">
-          <p className="eyebrow">Analysis unavailable</p>
-          <p className="supporting-text">We could not analyze this product right now. Please try another item or try again.</p>
+          <p className="eyebrow">{t('Error.Title')}</p>
+          <p className="supporting-text">{t('Error.Description')}</p>
         </section>
       ) : null}
 
@@ -100,8 +108,8 @@ export function ProductResultPage() {
         <>
           {isShowingCachedAnalysis ? (
             <section className="content-card content-card--accent stack-sm" role="status">
-              <p className="eyebrow">Offline fallback</p>
-              <p className="supporting-text">Showing your last saved analysis for this product while the network is unavailable.</p>
+              <p className="eyebrow">{t('Offline.Title')}</p>
+              <p className="supporting-text">{t('Offline.Description')}</p>
             </section>
           ) : null}
 
@@ -117,49 +125,51 @@ export function ProductResultPage() {
           <section className="result-product-card">
             <ResultProductArtwork product={resolvedAnalysis.product} />
             <div className="stack-sm">
-              <p className="eyebrow">{resolvedAnalysis.product.category ?? 'Product summary'}</p>
+              <p className="eyebrow">{resolvedAnalysis.product.category ?? t('Product.SummaryFallback')}</p>
               <h2 className="section-title">{resolvedAnalysis.product.name}</h2>
               <p className="supporting-text">
                 {[resolvedAnalysis.product.brand, resolvedAnalysis.product.subtitle]
                   .filter(Boolean)
-                  .join(' • ') || 'Product details'}
+                  .join(' • ') || t('Product.DetailsFallback')}
               </p>
             </div>
           </section>
 
           <section className="result-bento-grid">
             <article className="status-summary-card stack-sm">
-              <p className="eyebrow">Analysis</p>
-              <p className="status-summary-card__value">{formatOverallStatus(resolvedAnalysis.analysis.overallStatus)}</p>
+              <p className="eyebrow">{t('Summary.Analysis')}</p>
+              <p className="status-summary-card__value">{formatAnalysisStatus(resolvedAnalysis.analysis.overallStatus)}</p>
             </article>
             <article className="status-summary-card stack-sm">
-              <p className="eyebrow">Your profile</p>
+              <p className="eyebrow">{t('Summary.YourProfile')}</p>
               <p className="status-summary-card__value">
-                {activeProfile ? `${activeProfile.name} • ${resolvedAnalysis.analysis.checkedAllergens.length} allergens checked` : `${resolvedAnalysis.analysis.checkedAllergens.length} allergens checked`}
+                {activeProfile
+                  ? `${activeProfile.name} • ${t('Summary.AllergensChecked', { count: resolvedAnalysis.analysis.checkedAllergens.length, formattedCount: formatNumber(resolvedAnalysis.analysis.checkedAllergens.length, undefined, i18n.resolvedLanguage) })}`
+                  : t('Summary.AllergensChecked', { count: resolvedAnalysis.analysis.checkedAllergens.length, formattedCount: formatNumber(resolvedAnalysis.analysis.checkedAllergens.length, undefined, i18n.resolvedLanguage) })}
               </p>
             </article>
           </section>
 
           <section className="content-card stack-md">
-            <p className="eyebrow">Analysis summary</p>
+            <p className="eyebrow">{t('Summary.Title')}</p>
             <div className="status-summary-grid">
               <StatusSummaryCard
-                label="Overall status"
-                value={formatOverallStatus(resolvedAnalysis.analysis.overallStatus)}
+                label={t('Summary.OverallStatus')}
+                value={formatAnalysisStatus(resolvedAnalysis.analysis.overallStatus)}
               />
               <StatusSummaryCard
-                label="Matched allergens"
-                value={joinOrFallback(resolvedAnalysis.analysis.matchedAllergens, 'None detected')}
+                label={t('Summary.MatchedAllergens')}
+                value={joinOrFallback(resolvedAnalysis.analysis.matchedAllergens, t('Summary.NoneDetected'))}
               />
               <StatusSummaryCard
-                label="Trace warnings"
-                value={joinOrFallback(resolvedAnalysis.analysis.traceAllergens, 'None reported')}
+                label={t('Summary.TraceWarnings')}
+                value={joinOrFallback(resolvedAnalysis.analysis.traceAllergens, t('Summary.NoneReported'))}
               />
             </div>
           </section>
 
           <section className="content-card stack-md">
-            <p className="eyebrow">Checked allergens</p>
+            <p className="eyebrow">{t('Sections.CheckedAllergens')}</p>
             <div className="checked-allergen-list">
               {resolvedAnalysis.analysis.checkedAllergens.map((checkedAllergen) => (
                 <div key={checkedAllergen.code} className="checked-allergen-item">
@@ -173,7 +183,7 @@ export function ProductResultPage() {
           </section>
 
           <section className="content-card stack-md">
-            <p className="eyebrow">Ingredient review</p>
+            <p className="eyebrow">{t('Sections.IngredientReview')}</p>
             <p className="supporting-text">{resolvedAnalysis.product.ingredientsText}</p>
 
             {resolvedAnalysis.analysis.ingredientHighlights.length > 0 ? (
@@ -188,15 +198,15 @@ export function ProductResultPage() {
                 ))}
               </div>
             ) : (
-              <p className="supporting-text">No highlighted ingredient matches were returned for your selected allergens.</p>
+              <p className="supporting-text">{t('IngredientReview.NoMatches')}</p>
             )}
           </section>
 
           <section className="content-card stack-md">
-            <p className="eyebrow">Next actions</p>
+            <p className="eyebrow">{t('Sections.NextActions')}</p>
             <div className="action-row">
               <Link to="/scan" className="primary-action primary-action--link">
-                Scan another product
+                {t('Actions.ScanAnother')}
               </Link>
               <button
                 type="button"
@@ -205,7 +215,7 @@ export function ProductResultPage() {
                   toggleFavorite(toSavedProductItem(resolvedAnalysis))
                 }}
               >
-                {isFavorite(resolvedAnalysis.product.gtin) ? 'Remove from Favorites' : 'Save to Favorites'}
+                {isFavorite(resolvedAnalysis.product.gtin) ? t('Actions.RemoveFavorite') : t('Actions.SaveFavorite')}
               </button>
             </div>
           </section>
@@ -226,32 +236,6 @@ function StatusSummaryCard({ label, value }: { label: string; value: string }) {
 
 function joinOrFallback(values: string[], fallback: string) {
   return values.length > 0 ? values.map(formatAllergenCode).join(', ') : fallback
-}
-
-function formatOverallStatus(status: AnalysisOverallStatus) {
-  switch (status) {
-    case 'Safe':
-      return 'Safe'
-    case 'MayContain':
-      return 'May contain traces'
-    case 'Contains':
-      return 'Contains allergen'
-    default:
-      return 'Unknown'
-  }
-}
-
-function formatCheckedStatus(status: 'Contains' | 'MayContain' | 'NotFound' | 'Unknown') {
-  switch (status) {
-    case 'Contains':
-      return 'Contains'
-    case 'MayContain':
-      return 'May contain'
-    case 'NotFound':
-      return 'Not found'
-    default:
-      return 'Unknown'
-  }
 }
 
 function toStatusTone(status: 'Contains' | 'MayContain' | 'NotFound' | 'Unknown') {

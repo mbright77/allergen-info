@@ -1,0 +1,31 @@
+{
+  "Page": {
+    "Title": "Home"
+  },
+  "Hero": {
+    "Eyebrow": "Welcome",
+    "Title": "Safe choices, faster.",
+    "Description": "{{name}} is active with {{formattedCount}} monitored allergens. Start with search, or launch the camera only when you are ready to scan."
+  },
+  "Actions": {
+    "ScanOrSearch": "Scan or search now",
+    "ReviewFavorites": "Review favorites"
+  },
+  "Snapshot": {
+    "Title": "Snapshot",
+    "FavoritesLabel": "Favorites",
+    "RecentChecksLabel": "Recent checks",
+    "AllergensCount_one": "{{formattedCount}} allergen",
+    "AllergensCount_other": "{{formattedCount}} allergens",
+    "ItemsCount_one": "{{formattedCount}} item",
+    "ItemsCount_other": "{{formattedCount}} items",
+    "ProductsCount_one": "{{formattedCount}} product",
+    "ProductsCount_other": "{{formattedCount}} products"
+  },
+  "RecentSearches": {
+    "Title": "Recent searches",
+    "Eyebrow": "Recent search",
+    "CardLabel": "Recent search {{query}}",
+    "Empty": "Recent searches will appear here after you search from the scanner screen or launch a manual scan."
+  }
+}

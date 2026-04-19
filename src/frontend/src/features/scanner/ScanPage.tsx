@@ -1,16 +1,20 @@
-import { useCallback, useMemo, useState, useEffect, type FormEvent } from 'react'
+import { useCallback, useMemo, useState, type FormEvent } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 
-import { useProfile } from '../../shared/profile/ProfileProvider'
+import { formatNumber } from '../../shared/i18n/format'
+import { usePageTitle } from '../../shared/i18n/usePageTitle'
+import { useProfile } from '../../shared/profile/useProfile'
 import { readRecentSearches, saveRecentSearch } from '../../shared/search/recent-searches'
 import { useBarcodeScanner } from './useBarcodeScanner'
 
 export function ScanPage() {
+  const { t, i18n } = useTranslation('scanner')
   const navigate = useNavigate()
   const { activeProfile, selectedAllergens } = useProfile()
   const [searchValue, setSearchValue] = useState('')
   const [isScannerActive, setIsScannerActive] = useState(false)
-  const recentSearches = useMemo(() => readRecentSearches(), [searchValue])
+  const recentSearches = useMemo(() => readRecentSearches(), [])
 
   const handleDetectedBarcode = useCallback(
     (detectedValue: string) => {
@@ -23,25 +27,12 @@ export function ScanPage() {
     enabled: isScannerActive,
     onDetected: handleDetectedBarcode,
   })
+  const { containerRef, controls: scannerControls, errorMessage: scannerErrorMessage, status: scannerStatus, zoomCapabilities: zoomCapability } = scanner
+
+  usePageTitle(t('Page.Title'))
 
   const [torchOn, setTorchOn] = useState(false)
   const [zoomValue, setZoomValue] = useState<number | null>(null)
-  // initialize capability-driven UI when scanner becomes active
-  useEffect(() => {
-    if (isScannerActive && scanner.controls) {
-      const caps = scanner.controls.getCapabilities?.()
-      if (caps && (caps as any).zoom) {
-        const z = (caps as any).zoom
-        const initial = (z.min ?? 1)
-        setZoomValue(initial)
-      }
-    }
-
-    if (!isScannerActive) {
-      setZoomValue(null)
-      setTorchOn(false)
-    }
-  }, [isScannerActive, scanner.controls])
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -74,46 +65,51 @@ export function ScanPage() {
           <input
             type="search"
             name="query"
-            placeholder="Search for a product..."
-            aria-label="Search for a product"
+            placeholder={t('Search.Placeholder')}
+            aria-label={t('Search.AriaLabel')}
             value={searchValue}
             onChange={(event) => setSearchValue(event.target.value)}
           />
-          <button type="submit" className="search-bar__submit" aria-label="Submit search">
+          <button type="submit" className="search-bar__submit" aria-label={t('Search.SubmitAriaLabel')}>
             <span className="material-symbols-outlined" aria-hidden="true">
               arrow_forward
             </span>
           </button>
         </form>
         <section className="content-card content-card--soft-highlight stack-sm scan-profile-banner">
-          <p className="eyebrow">Active profile</p>
+          <p className="eyebrow">{t('ProfileBanner.Eyebrow')}</p>
           <p className="supporting-text">
             {activeProfile
-              ? `${activeProfile.name} is selected${selectedAllergens.length > 0 ? ` with ${selectedAllergens.length} monitored allergens.` : ' with no allergens selected yet.'}`
-              : 'No profile is active yet.'}
+              ? selectedAllergens.length > 0
+                ? t('ProfileBanner.Selected', {
+                    name: activeProfile.name,
+                    formattedCount: formatNumber(selectedAllergens.length, undefined, i18n.resolvedLanguage),
+                  })
+                : t('ProfileBanner.SelectedEmpty', { name: activeProfile.name })
+              : t('ProfileBanner.NoActive')}
           </p>
         </section>
-        {!isScannerActive ? <h1 className="sr-only">Scan or search for a product</h1> : null}
+        {!isScannerActive ? <h1 className="sr-only">{t('Hero.HiddenTitle')}</h1> : null}
 
         <section className="scanner-stage">
           <div className="scanner-stage__status">
             <span className="scanner-stage__status-dot" aria-hidden="true" />
-            <span>System Ready</span>
+            <span>{t('Hero.SystemReady')}</span>
           </div>
 
           {isScannerActive ? (
             <div className="scanner-active stack-lg">
               <div className="stack-sm scanner-copy scanner-copy--active">
-                <h1 className="display-title display-title--light">Scanning Barcode</h1>
+                <h1 className="display-title display-title--light">{t('Hero.ScanningTitle')}</h1>
                 <p className="supporting-text supporting-text--light">
-                  Align the barcode within the frame.
+                  {t('Hero.ScanningDescription')}
                 </p>
               </div>
 
               <div className="scanner-frame">
                 <div
                   id="barcode-scanner-region"
-                  ref={scanner.containerRef}
+                  ref={containerRef}
                   className="scanner-video scanner-video--mount"
                   aria-hidden="true"
                 />
@@ -124,50 +120,49 @@ export function ScanPage() {
               </div>
 
               <div className="scanner-stage__actions">
-                <button type="button" className="secondary-action" onClick={() => setIsScannerActive(false)}>
-                  Stop scanning
-                </button>
                 <button
                   type="button"
-                  className="torch-button"
-                  aria-label="Toggle flashlight"
-                  onClick={async () => {
-                    const ok = await scanner.controls?.toggleTorch?.(!torchOn)
-                    if (ok) setTorchOn((v) => !v)
+                  className="secondary-action"
+                  onClick={() => {
+                    setIsScannerActive(false)
+                    setZoomValue(null)
+                    setTorchOn(false)
                   }}
+                >
+                  {t('Actions.StopScanning')}
+                </button>
+                <button
+                    type="button"
+                    className="torch-button"
+                    aria-label={t('Actions.ToggleFlashlight')}
+                    onClick={async () => {
+                    const ok = await scannerControls?.toggleTorch?.(!torchOn)
+                      if (ok) setTorchOn((v) => !v)
+                    }}
                 >
                   <span className="material-symbols-outlined" aria-hidden="true">
                     {torchOn ? 'flashlight_off' : 'flashlight_on'}
                   </span>
                 </button>
 
-                {scanner.controls?.getCapabilities && (() => {
-                  const caps = scanner.controls.getCapabilities()
-                  const zoomCap = caps && (caps as any).zoom
-                  if (!zoomCap) return null
-                  const min = zoomCap.min ?? 1
-                  const max = zoomCap.max ?? 1
-                  const step = Math.max((max - min) / 10, 0.1)
-
-                  return (
-                    <div className="zoom-control">
-                      <label className="eyebrow eyebrow--light">Zoom</label>
-                      <input
-                        type="range"
-                        min={min}
-                        max={max}
-                        step={step}
-                        value={zoomValue ?? min}
-                        onChange={async (e) => {
-                          const v = Number(e.currentTarget.value)
-                          const ok = await scanner.controls?.setZoom?.(v)
-                          if (ok) setZoomValue(v)
-                        }}
-                        aria-label="Camera zoom"
-                      />
-                    </div>
-                  )
-                })()}
+                {zoomCapability ? (
+                  <div className="zoom-control">
+                    <label className="eyebrow eyebrow--light">{t('Actions.Zoom')}</label>
+                    <input
+                      type="range"
+                      min={zoomCapability.min ?? 1}
+                      max={zoomCapability.max ?? 1}
+                      step={Math.max(((zoomCapability.max ?? 1) - (zoomCapability.min ?? 1)) / 10, 0.1)}
+                      value={zoomValue ?? (zoomCapability.min ?? 1)}
+                      onChange={async (e) => {
+                        const v = Number(e.currentTarget.value)
+                        const ok = await scannerControls?.setZoom?.(v)
+                        if (ok) setZoomValue(v)
+                      }}
+                      aria-label={t('Actions.CameraZoom')}
+                    />
+                  </div>
+                ) : null}
               </div>
             </div>
           ) : (
@@ -181,9 +176,9 @@ export function ScanPage() {
                 <span className="scanner-launch__icon" aria-hidden="true">
                   <span className="material-symbols-outlined">barcode_scanner</span>
                 </span>
-                <span className="scanner-launch__title">Tap to Scan</span>
+                <span className="scanner-launch__title">{t('Hero.LaunchTitle')}</span>
                 <span id="scanner-launch-description" className="scanner-launch__description">
-                  Search first if you want. When you are ready, tap here and the camera will activate for a live barcode scan.
+                  {t('Hero.LaunchDescription')}
                 </span>
                 <span className="scanner-corner scanner-corner--tl" />
                 <span className="scanner-corner scanner-corner--tr" />
@@ -194,26 +189,26 @@ export function ScanPage() {
           )}
         </section>
 
-        {scanner.errorMessage ? (
+        {scannerErrorMessage ? (
           <div className="scanner-status scanner-status--warning" role="alert">
-            <p className="eyebrow eyebrow--light">Scanner status</p>
-            <p className="supporting-text supporting-text--light">{scanner.errorMessage}</p>
+            <p className="eyebrow eyebrow--light">{t('Status.Title')}</p>
+            <p className="supporting-text supporting-text--light">{scannerErrorMessage}</p>
           </div>
         ) : (
           <div className="scanner-status" role="status" aria-live="polite">
-            <p className="eyebrow eyebrow--light">Scanner status</p>
+            <p className="eyebrow eyebrow--light">{t('Status.Title')}</p>
             <p className="supporting-text supporting-text--light">
-              {!isScannerActive && 'Camera stays off until you tap the scan card.'}
-              {isScannerActive && scanner.status === 'requesting' && 'Requesting camera access...'}
-              {isScannerActive && scanner.status === 'active' && 'Scanner ready. Position the barcode in the frame.'}
-              {isScannerActive && scanner.status === 'idle' && 'Scanner initializing...'}
+              {!isScannerActive && t('Status.CameraOff')}
+              {isScannerActive && scannerStatus === 'requesting' && t('Status.Requesting')}
+              {isScannerActive && scannerStatus === 'active' && t('Status.Active')}
+              {isScannerActive && scannerStatus === 'idle' && t('Status.Idle')}
             </p>
           </div>
         )}
 
         {recentSearches.length > 0 ? (
           <section className="recent-searches stack-sm">
-            <p className="eyebrow eyebrow--light">Recent searches</p>
+            <p className="eyebrow eyebrow--light">{t('RecentSearches.Title')}</p>
             <div className="chip-row">
               {recentSearches.map((entry) => (
                 <button
@@ -237,24 +232,24 @@ export function ScanPage() {
         ) : null}
 
         <section className="scanner-tips stack-md">
-          <h2 className="section-title">Tips for Precision Scanning</h2>
+          <h2 className="section-title">{t('Tips.Title')}</h2>
           <div className="scanner-tips__grid">
             <article className="scanner-tip-card stack-sm">
               <span className="material-symbols-outlined scanner-tip-card__icon" aria-hidden="true">
                 lightbulb
               </span>
-              <h3 className="section-title scanner-tip-card__title">Good Lighting</h3>
+              <h3 className="section-title scanner-tip-card__title">{t('Tips.LightingTitle')}</h3>
               <p className="supporting-text">
-                Ensure the product is in a well-lit area to help our AI identify fine print ingredients.
+                {t('Tips.LightingDescription')}
               </p>
             </article>
             <article className="scanner-tip-card stack-sm">
               <span className="material-symbols-outlined scanner-tip-card__icon" aria-hidden="true">
                 straighten
               </span>
-              <h3 className="section-title scanner-tip-card__title">Keep it Steady</h3>
+              <h3 className="section-title scanner-tip-card__title">{t('Tips.SteadyTitle')}</h3>
               <p className="supporting-text">
-                Hold your phone parallel to the barcode for the fastest recognition speed.
+                {t('Tips.SteadyDescription')}
               </p>
             </article>
           </div>

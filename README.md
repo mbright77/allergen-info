@@ -38,11 +38,25 @@ The frontend is a mobile-first React application with:
 
 - React Router for navigation
 - TanStack Query for API data fetching
+- `i18next` with `react-i18next` for frontend localization
+- `i18next-http-backend` for lazy namespace loading
+- `i18next-browser-languagedetector` for preferred language detection
 - `html5-qrcode` for live barcode scanning
 - service worker based PWA support
 - local-storage persistence for profiles and saved collections
 
 Key frontend areas include onboarding, scan/search, results, favorites, history, help, and profile management.
+
+Frontend i18n conventions:
+
+- translation files live in `src/frontend/public/locales/{lng}/{ns}.json`
+- namespace files should follow the existing slice structure, such as `common`, `app`, `home`, `scanner`, `search`, `results`, `profile`, `favorites`, `history`, `help`, and `onboarding`
+- use nested translation keys such as `t('Hero.Title')`
+- keep backend and storage values canonical; only localize display labels
+- shared i18n setup lives under `src/frontend/src/shared/i18n`
+- locale-aware date, time, and number formatting should go through the shared helpers in `src/frontend/src/shared/i18n/format.ts`
+- the app currently ships `en` and `sv` locales
+- language switching is exposed from the existing profile menu in the app shell
 
 ### Backend
 
@@ -91,6 +105,7 @@ npm run dev
 Useful commands:
 
 ```bash
+npm run lint
 npm test
 npm run build
 npm run test:e2e

@@ -1,34 +1,10 @@
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-  type PropsWithChildren,
-} from 'react'
+import { useCallback, useEffect, useMemo, useState, type PropsWithChildren } from 'react'
 
 import {
   readStoredProfilesState,
   writeStoredProfilesState,
-  type StoredProfile,
 } from './profile-storage'
-
-export type Profile = StoredProfile
-
-type ProfileContextValue = {
-  profiles: Profile[]
-  activeProfileId: string | null
-  activeProfile: Profile | null
-  selectedAllergens: string[]
-  hasProfiles: boolean
-  createProfile: (input: { name: string; selectedAllergens: string[] }) => string
-  setActiveProfile: (profileId: string) => void
-  updateActiveProfile: (input: { name: string; selectedAllergens: string[] }) => void
-  toggleAllergen: (code: string) => void
-}
-
-const ProfileContext = createContext<ProfileContextValue | null>(null)
+import { ProfileContext, type Profile, type ProfileContextValue } from './ProfileContext'
 
 export function ProfileProvider({ children }: PropsWithChildren) {
   const [profilesState, setProfilesState] = useState(() => readStoredProfilesState())
@@ -154,14 +130,4 @@ export function ProfileProvider({ children }: PropsWithChildren) {
   )
 
   return <ProfileContext.Provider value={value}>{children}</ProfileContext.Provider>
-}
-
-export function useProfile() {
-  const context = useContext(ProfileContext)
-
-  if (!context) {
-    throw new Error('useProfile must be used within a ProfileProvider')
-  }
-
-  return context
 }
