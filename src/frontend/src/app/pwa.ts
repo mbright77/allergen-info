@@ -1,6 +1,7 @@
 import { APP_BUILD_VERSION } from './build-meta'
 
 const UPDATE_DISMISSED_KEY = 'safescan.update.dismissed'
+const DYNAMIC_IMPORT_RECOVERY_KEY = 'safescan.dynamic-import-recovered'
 const appBasePath = import.meta.env.BASE_URL || '/'
 
 type UpdateListener = (registration: ServiceWorkerRegistration) => void
@@ -32,6 +33,31 @@ function attachUpdateFoundListener(registration: ServiceWorkerRegistration) {
         emitUpdateAvailable(registration)
       }
     })
+  })
+}
+
+function isRecoverableDynamicImportError(reason: unknown) {
+  const message = reason instanceof Error
+    ? reason.message
+    : typeof reason === 'string'
+      ? reason
+      : ''
+
+  return /failed to fetch dynamically imported module|importing a module script failed|failed to import a dynamically imported module/i.test(message)
+}
+
+function attachDynamicImportRecoveryListener() {
+  window.addEventListener('unhandledrejection', (event) => {
+    if (!isRecoverableDynamicImportError(event.reason)) {
+      return
+    }
+
+    if (window.sessionStorage.getItem(DYNAMIC_IMPORT_RECOVERY_KEY) === 'true') {
+      return
+    }
+
+    window.sessionStorage.setItem(DYNAMIC_IMPORT_RECOVERY_KEY, 'true')
+    window.location.reload()
   })
 }
 
@@ -68,6 +94,8 @@ export async function registerAppServiceWorker() {
   if (import.meta.env.DEV || typeof window === 'undefined' || !('serviceWorker' in navigator)) {
     return null
   }
+
+  attachDynamicImportRecoveryListener()
 
   const serviceWorkerUrl = new URL(`service-worker.js?v=${APP_BUILD_VERSION}`, window.location.origin + appBasePath)
   const registration = await navigator.serviceWorker.register(serviceWorkerUrl.pathname + serviceWorkerUrl.search, {

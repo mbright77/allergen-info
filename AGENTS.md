@@ -306,6 +306,7 @@ Current deployment model in the repository:
 - backend build, container publish, and remote deploy automation exists for a k3s-based environment
 - deployment is gated by the `RUN_DEPLOY` repository variable
 - frontend runtime uses configurable environment variables for API base URL and app base path
+- frontend runtime auto-reloads once when a deploy leaves a stale hashed dynamic-import chunk URL in the active session, recovering clients from chunk-load failures after updates
 - backend runtime uses configuration for provider selection, path base, CORS, and DABAS access
 
 ## Security Expectations
