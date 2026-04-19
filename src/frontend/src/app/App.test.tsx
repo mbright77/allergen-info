@@ -6,6 +6,8 @@ import { createMemoryRouter, RouterProvider } from 'react-router-dom'
 
 import { router as appRouter } from './router'
 import { CollectionsProvider } from '../shared/collections/CollectionsProvider'
+import { languageStorageKey } from '../shared/i18n/config'
+import { i18n } from '../shared/i18n/init'
 import { ProfileProvider } from '../shared/profile/ProfileProvider'
 import { PROFILES_STORAGE_KEY } from '../shared/profile/profile-storage'
 
@@ -23,6 +25,7 @@ vi.mock('./pwa', () => pwaMocks)
 describe('app router', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    void i18n.changeLanguage('en')
   })
 
   afterEach(() => {
@@ -345,5 +348,45 @@ describe('app router', () => {
 
     expect(screen.getByRole('menuitemradio', { name: /svenska/i })).toHaveAttribute('aria-checked', 'true')
     expect(screen.getByRole('menuitemradio', { name: /english/i })).toHaveAttribute('aria-checked', 'false')
+  })
+
+  it('restores the persisted language on a new app render', async () => {
+    window.localStorage.setItem(languageStorageKey, 'sv')
+    window.localStorage.setItem(
+      PROFILES_STORAGE_KEY,
+      JSON.stringify({
+        activeProfileId: 'p1',
+        profiles: [
+          { id: 'p1', name: 'Anna', selectedAllergens: ['milk'], createdAt: '2026-04-01T10:00:00Z', updatedAt: '2026-04-01T10:00:00Z' },
+        ],
+      }),
+    )
+
+    await i18n.changeLanguage('sv')
+
+    const queryClient = new QueryClient({
+      defaultOptions: {
+        queries: {
+          retry: false,
+        },
+      },
+    })
+
+    const router = createMemoryRouter(appRouter.routes, {
+      initialEntries: ['/home'],
+    })
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <ProfileProvider>
+          <CollectionsProvider>
+            <RouterProvider router={router} />
+          </CollectionsProvider>
+        </ProfileProvider>
+      </QueryClientProvider>,
+    )
+
+    expect(document.documentElement.lang).toBe('sv')
+    expect(await screen.findByRole('button', { name: /hjälp/i })).toBeInTheDocument()
   })
 })

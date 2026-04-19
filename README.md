@@ -57,6 +57,7 @@ Frontend i18n conventions:
 - locale-aware date, time, and number formatting should go through the shared helpers in `src/frontend/src/shared/i18n/format.ts`
 - the app currently ships `en` and `sv` locales
 - language switching is exposed from the existing profile menu in the app shell
+- the selected language is persisted in browser local storage and restored on reload
 
 ### Backend
 

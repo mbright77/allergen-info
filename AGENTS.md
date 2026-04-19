@@ -69,6 +69,7 @@ Frontend i18n model:
 - localize only display labels; keep canonical backend values, enum values, allergen codes, GTINs, and persisted values unchanged
 - locale-aware date, time, and number formatting must go through shared helpers rather than hardcoded English formatting
 - the language switcher belongs inside the existing profile menu in `src/frontend/src/app/layout/AppShell.tsx`, not as a separate standalone control
+- the selected language is persisted in browser local storage and must survive page reloads
 
 ## Product Scope
 

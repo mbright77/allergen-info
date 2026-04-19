@@ -30,6 +30,14 @@ function ensureLanguageListener() {
   isLanguageListenerAttached = true
 }
 
+function getInitialLanguage() {
+  if (typeof window === 'undefined') {
+    return undefined
+  }
+
+  return window.localStorage.getItem(languageStorageKey) ?? undefined
+}
+
 export async function initI18n() {
   if (!i18n.isInitialized) {
     await i18n
@@ -46,7 +54,7 @@ export async function initI18n() {
           escapeValue: false,
         },
         load: 'languageOnly',
-        lng: defaultLanguage,
+        lng: getInitialLanguage(),
         ns: [defaultNamespace, 'app'],
         react: {
           useSuspense: false,
