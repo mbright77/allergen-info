@@ -65,6 +65,16 @@ describe('pickPreferredRearCameraDeviceId', () => {
     expect(selectedDeviceId).toBe('rear-middle')
   })
 
+  it('prefers the lowest generic rear camera index for samsung chrome labels', () => {
+    const selectedDeviceId = pickPreferredRearCameraDeviceId([
+      createVideoInput('camera-2', 'camera 2, facing back'),
+      createVideoInput('camera-0', 'camera 0, facing back'),
+      createVideoInput('camera-front', 'camera 1, facing front'),
+    ], 'camera-2')
+
+    expect(selectedDeviceId).toBe('camera-0')
+  })
+
   it('switches away from an active ultrawide lens when a better labeled main lens exists', () => {
     const selectedDeviceId = pickPreferredRearCameraDeviceId([
       createVideoInput('ultrawide', 'Back Camera 0.5x'),
@@ -106,5 +116,17 @@ describe('pickPreferredScanCameraId', () => {
     )
 
     expect(selectedCameraId).toBe('rear-middle')
+  })
+
+  it('prefers the lowest generic rear camera index when scan labels follow samsung chrome numbering', () => {
+    const selectedCameraId = pickPreferredScanCameraId(
+      [
+        createScanCamera('camera-2', 'camera 2, facing back'),
+        createScanCamera('camera-0', 'camera 0, facing back'),
+      ],
+      'camera-2',
+    )
+
+    expect(selectedCameraId).toBe('camera-0')
   })
 })

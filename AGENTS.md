@@ -223,7 +223,7 @@ Current scan behavior:
 
 - live scanning keeps the camera off until the user explicitly activates it
 - the scanner attempts EAN-13 barcode detection only
-- camera selection starts from `facingMode: environment`, preserves the browser-selected rear camera when labels are tied or inconclusive, and only switches to a better labeled main rear lens over front, ultrawide, macro, or telephoto cameras when labels make that distinction possible
+- camera selection starts from `facingMode: environment`, preserves the browser-selected rear camera when labels are tied or inconclusive, prefers the lowest-numbered generic `camera N, facing back` device when Chrome exposes Samsung rear cameras without lens-specific labels, and only switches to a better labeled main rear lens over front, ultrawide, macro, or telephoto cameras when labels make that distinction possible
 - scanning requires repeated matching reads before a detection is accepted
 - direct GTIN lookup is attempted first
 - if direct lookup misses, the backend falls back to product search using the scanned code
