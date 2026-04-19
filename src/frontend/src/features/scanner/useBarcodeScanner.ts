@@ -1,6 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 
-import { resolvePreferredScanCameraSelection } from './cameraSelection'
+import {
+  DEFAULT_CAMERA_SELECTION,
+  pickPreferredRearCameraDeviceId,
+  type CameraSelection,
+} from './cameraSelection'
 
 type ScannerStatus = 'idle' | 'requesting' | 'active' | 'unsupported' | 'denied' | 'error'
 
@@ -92,6 +96,45 @@ async function tryApplyAutofocusEnhancements(instance: Html5QrcodeInstance) {
   }
 }
 
+type ScannerStartConfig = {
+  fps: number
+  qrbox: typeof getBarcodeScanBox
+  videoConstraints: ExtendedMediaTrackConstraints
+}
+
+async function maybeSwitchToPreferredRearCamera(
+  instance: Html5QrcodeInstance,
+  startConfig: ScannerStartConfig,
+  onDecode: (decodedText: string) => void,
+  onDecodeError: (errorMessage: string) => void,
+) {
+  if (!navigator.mediaDevices?.enumerateDevices) {
+    return false
+  }
+
+  try {
+    const activeDeviceId = instance.getRunningTrackSettings().deviceId ?? null
+    const devices = await navigator.mediaDevices.enumerateDevices()
+    const preferredDeviceId = pickPreferredRearCameraDeviceId(devices, activeDeviceId)
+
+    if (!preferredDeviceId || preferredDeviceId === activeDeviceId) {
+      return false
+    }
+
+    await instance.stop()
+    await instance.start(
+      preferredDeviceId,
+      startConfig,
+      onDecode,
+      onDecodeError,
+    )
+
+    return true
+  } catch {
+    return false
+  }
+}
+
 export function useBarcodeScanner({ enabled, onDetected }: UseBarcodeScannerOptions) {
   const containerRef = useRef<HTMLDivElement | null>(null)
   const scannerInstanceRef = useRef<Html5QrcodeInstance | null>(null)
@@ -174,65 +217,83 @@ export function useBarcodeScanner({ enabled, onDetected }: UseBarcodeScannerOpti
           verbose: false,
         })
 
+        const handleDetectedText = (decodedText: string) => {
+          const nextValue = String(decodedText).trim()
+          const now = Date.now()
+          const candidateDetection = candidateDetectionRef.current
+          const lastDetected = lastDetectedRef.current
+
+          if (!nextValue || (lastDetected && lastDetected.value === nextValue && now - lastDetected.timestamp < DETECTION_COOLDOWN_MS)) {
+            return
+          }
+
+          if (
+            candidateDetection &&
+            candidateDetection.value === nextValue &&
+            now - candidateDetection.timestamp < DETECTION_CONFIRMATION_WINDOW_MS
+          ) {
+            candidateDetectionRef.current = {
+              value: nextValue,
+              count: candidateDetection.count + 1,
+              timestamp: now,
+            }
+          } else {
+            candidateDetectionRef.current = {
+              value: nextValue,
+              count: 1,
+              timestamp: now,
+            }
+          }
+
+          if ((candidateDetectionRef.current?.count ?? 0) < REQUIRED_MATCHING_READS) {
+            return
+          }
+
+          lastDetectedRef.current = { value: nextValue, timestamp: now }
+          candidateDetectionRef.current = null
+          onDetected(nextValue)
+        }
+
+        const startConfig: ScannerStartConfig = {
+          fps: 8,
+          qrbox: getBarcodeScanBox,
+          videoConstraints: {
+            facingMode: { ideal: 'environment' },
+            width: { ideal: 1280, max: 1280 },
+            height: { ideal: 720, max: 720 },
+            frameRate: { ideal: 24, max: 30 },
+            resizeMode: 'crop-and-scale',
+          } as ExtendedMediaTrackConstraints,
+        }
+
         scannerInstanceRef.current = instance
 
-        const cameraSelection = await resolvePreferredScanCameraSelection(() => Html5Qrcode.getCameras())
+        const cameraSelection: CameraSelection = DEFAULT_CAMERA_SELECTION
 
         await instance.start(
           cameraSelection,
-          {
-            fps: 8,
-            qrbox: getBarcodeScanBox,
-            videoConstraints: {
-              facingMode: { ideal: 'environment' },
-              width: { ideal: 1280, max: 1280 },
-              height: { ideal: 720, max: 720 },
-              frameRate: { ideal: 24, max: 30 },
-              resizeMode: 'crop-and-scale',
-            } as ExtendedMediaTrackConstraints,
-          },
-          (decodedText) => {
-            const nextValue = String(decodedText).trim()
-            const now = Date.now()
-            const candidateDetection = candidateDetectionRef.current
-            const lastDetected = lastDetectedRef.current
-
-            if (!nextValue || (lastDetected && lastDetected.value === nextValue && now - lastDetected.timestamp < DETECTION_COOLDOWN_MS)) {
-              return
-            }
-
-            if (
-              candidateDetection &&
-              candidateDetection.value === nextValue &&
-              now - candidateDetection.timestamp < DETECTION_CONFIRMATION_WINDOW_MS
-            ) {
-              candidateDetectionRef.current = {
-                value: nextValue,
-                count: candidateDetection.count + 1,
-                timestamp: now,
-              }
-            } else {
-              candidateDetectionRef.current = {
-                value: nextValue,
-                count: 1,
-                timestamp: now,
-              }
-            }
-
-            if ((candidateDetectionRef.current?.count ?? 0) < REQUIRED_MATCHING_READS) {
-              return
-            }
-
-            lastDetectedRef.current = { value: nextValue, timestamp: now }
-            candidateDetectionRef.current = null
-            onDetected(nextValue)
-          },
+          startConfig,
+          handleDetectedText,
           () => {
             // not found callback is expected during normal scanning
           },
         )
 
         if (isCancelled) {
+          await stopAndClearScanner(instance)
+          return
+        }
+
+        const switchedCamera = await maybeSwitchToPreferredRearCamera(
+          instance,
+          startConfig,
+          handleDetectedText,
+          () => {
+            // not found callback is expected during normal scanning
+          },
+        )
+
+        if (switchedCamera && isCancelled) {
           await stopAndClearScanner(instance)
           return
         }

@@ -54,6 +54,26 @@ describe('pickPreferredRearCameraDeviceId', () => {
 
     expect(selectedDeviceId).toBe('device-2')
   })
+
+  it('keeps the active rear device when multiple rear cameras tie on a generic label', () => {
+    const selectedDeviceId = pickPreferredRearCameraDeviceId([
+      createVideoInput('rear-top', 'Back Camera'),
+      createVideoInput('rear-middle', 'Back Camera'),
+      createVideoInput('front', 'Front Camera'),
+    ], 'rear-middle')
+
+    expect(selectedDeviceId).toBe('rear-middle')
+  })
+
+  it('switches away from an active ultrawide lens when a better labeled main lens exists', () => {
+    const selectedDeviceId = pickPreferredRearCameraDeviceId([
+      createVideoInput('ultrawide', 'Back Camera 0.5x'),
+      createVideoInput('main', 'Back Camera 1.0x'),
+      createVideoInput('telephoto', 'Back Camera 3.0x'),
+    ], 'ultrawide')
+
+    expect(selectedDeviceId).toBe('main')
+  })
 })
 
 describe('pickPreferredScanCameraId', () => {
@@ -74,5 +94,17 @@ describe('pickPreferredScanCameraId', () => {
     )
 
     expect(selectedCameraId).toBe('device-2')
+  })
+
+  it('keeps the active scan camera when generic rear labels tie', () => {
+    const selectedCameraId = pickPreferredScanCameraId(
+      [
+        createScanCamera('rear-top', 'Back Camera'),
+        createScanCamera('rear-middle', 'Back Camera'),
+      ],
+      'rear-middle',
+    )
+
+    expect(selectedCameraId).toBe('rear-middle')
   })
 })

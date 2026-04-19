@@ -78,7 +78,7 @@ Implemented application functionality:
 - onboarding with named profile creation and optional allergen selection
 - multiple saved profiles with active-profile switching from the top bar
 - search-first scan screen with explicit camera activation
-- live barcode scanning with rear-camera preference when labels are available
+- live barcode scanning starts with the browser-selected rear camera and only switches to a labeled main rear lens when the active camera appears worse or ambiguous
 - scanner controls for torch and zoom when the device exposes those capabilities
 - GTIN product lookup
 - free-text product search
@@ -222,7 +222,7 @@ Current scan behavior:
 
 - live scanning keeps the camera off until the user explicitly activates it
 - the scanner attempts EAN-13 barcode detection only
-- camera selection prefers a rear main camera over front, ultrawide, macro, or telephoto cameras when labels make that distinction possible
+- camera selection starts from `facingMode: environment`, preserves the browser-selected rear camera when labels are tied or inconclusive, and only switches to a better labeled main rear lens over front, ultrawide, macro, or telephoto cameras when labels make that distinction possible
 - scanning requires repeated matching reads before a detection is accepted
 - direct GTIN lookup is attempted first
 - if direct lookup misses, the backend falls back to product search using the scanned code

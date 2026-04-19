@@ -1,9 +1,9 @@
-type CameraSelection = string | { facingMode: { ideal: 'environment' } }
+export type CameraSelection = string | { facingMode: { ideal: 'environment' } }
 
 type VideoInputLike = Pick<MediaDeviceInfo, 'deviceId' | 'kind' | 'label'>
 type ScanCameraLike = { id: string; label: string }
 
-const DEFAULT_CAMERA_SELECTION = { facingMode: { ideal: 'environment' } } as const
+export const DEFAULT_CAMERA_SELECTION = { facingMode: { ideal: 'environment' } } as const
 
 function scoreCameraLabel(label: string) {
   const normalized = label.trim().toLowerCase()
@@ -61,7 +61,15 @@ function rankPreferredCameraId<T extends { label: string }>(
     }))
     .sort((left, right) => right.score - left.score)
 
+  const activeDevice = activeDeviceId
+    ? rankedDevices.find((device) => device.id === activeDeviceId)
+    : null
+
   if (rankedDevices[0] && rankedDevices[0].score > 0) {
+    if (activeDevice && activeDevice.score >= rankedDevices[0].score) {
+      return activeDevice.id
+    }
+
     return rankedDevices[0].id
   }
 
@@ -84,50 +92,4 @@ export function pickPreferredScanCameraId(
   activeCameraId?: string | null,
 ) {
   return rankPreferredCameraId(cameras, (camera) => camera.id, activeCameraId)
-}
-
-export async function resolvePreferredRearCameraSelection(): Promise<CameraSelection> {
-  if (
-    typeof navigator === 'undefined' ||
-    !navigator.mediaDevices?.getUserMedia ||
-    !navigator.mediaDevices?.enumerateDevices
-  ) {
-    return DEFAULT_CAMERA_SELECTION
-  }
-
-  let tempStream: MediaStream | null = null
-
-  try {
-    tempStream = await navigator.mediaDevices.getUserMedia({
-      video: DEFAULT_CAMERA_SELECTION,
-    })
-
-    const activeTrack = tempStream.getVideoTracks()[0]
-    const activeDeviceId = activeTrack?.getSettings().deviceId ?? null
-    const devices = await navigator.mediaDevices.enumerateDevices()
-    const preferredDeviceId = pickPreferredRearCameraDeviceId(devices, activeDeviceId)
-
-    return preferredDeviceId ?? DEFAULT_CAMERA_SELECTION
-  } catch {
-    return DEFAULT_CAMERA_SELECTION
-  } finally {
-    tempStream?.getTracks().forEach((track) => track.stop())
-  }
-}
-
-export async function resolvePreferredScanCameraSelection(
-  getCameras: () => Promise<readonly ScanCameraLike[]>,
-): Promise<CameraSelection> {
-  try {
-    const cameras = await getCameras()
-    const preferredCameraId = pickPreferredScanCameraId(cameras)
-
-    if (preferredCameraId) {
-      return preferredCameraId
-    }
-  } catch {
-    // fall through to the broader environment-camera fallback
-  }
-
-  return resolvePreferredRearCameraSelection()
 }
