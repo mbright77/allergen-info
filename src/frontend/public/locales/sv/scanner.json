@@ -34,6 +34,10 @@
     "Active": "Skannern är redo. Placera streckkoden i ramen.",
     "Idle": "Skannern startar..."
   },
+  "Diagnostics": {
+    "Title": "Kameradiagnostik",
+    "Description": "Tillfällig felsökningsutskrift för kameraval på den här enheten."
+  },
   "RecentSearches": {
     "Title": "Senaste sökningar"
   },

@@ -27,7 +27,14 @@ export function ScanPage() {
     enabled: isScannerActive,
     onDetected: handleDetectedBarcode,
   })
-  const { containerRef, controls: scannerControls, errorMessage: scannerErrorMessage, status: scannerStatus, zoomCapabilities: zoomCapability } = scanner
+  const {
+    containerRef,
+    controls: scannerControls,
+    diagnostics: scannerDiagnostics,
+    errorMessage: scannerErrorMessage,
+    status: scannerStatus,
+    zoomCapabilities: zoomCapability,
+  } = scanner
 
   usePageTitle(t('Page.Title'))
 
@@ -205,6 +212,14 @@ export function ScanPage() {
             </p>
           </div>
         )}
+
+        {isScannerActive && scannerDiagnostics.length > 0 ? (
+          <section className="scanner-diagnostics" aria-live="polite">
+            <p className="eyebrow eyebrow--light">{t('Diagnostics.Title')}</p>
+            <p className="supporting-text supporting-text--light">{t('Diagnostics.Description')}</p>
+            <pre className="scanner-diagnostics__log">{scannerDiagnostics.join('\n')}</pre>
+          </section>
+        ) : null}
 
         {recentSearches.length > 0 ? (
           <section className="recent-searches stack-sm">

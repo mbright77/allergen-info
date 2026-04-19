@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type Dispatch, type SetStateAction } from 'react'
 
 import {
   DEFAULT_CAMERA_SELECTION,
@@ -101,6 +101,28 @@ type ScannerStartConfig = {
   videoConstraints: ExtendedMediaTrackConstraints
 }
 
+function formatDiagnosticValue(value: unknown) {
+  if (typeof value === 'string') {
+    return value
+  }
+
+  if (value == null) {
+    return 'null'
+  }
+
+  try {
+    return JSON.stringify(value)
+  } catch {
+    return String(value)
+  }
+}
+
+function appendDiagnosticLog(setDiagnostics: Dispatch<SetStateAction<string[]>>, label: string, value: unknown) {
+  const entry = `${label}: ${formatDiagnosticValue(value)}`
+
+  setDiagnostics((current) => [...current.slice(-11), entry])
+}
+
 function createStartConfig(deviceId?: string): ScannerStartConfig {
   return {
     fps: 8,
@@ -121,8 +143,10 @@ async function maybeSwitchToPreferredRearCamera(
   instance: Html5QrcodeInstance,
   onDecode: (decodedText: string) => void,
   onDecodeError: (errorMessage: string) => void,
+  setDiagnostics: Dispatch<SetStateAction<string[]>>,
 ) {
   if (!navigator.mediaDevices?.enumerateDevices) {
+    appendDiagnosticLog(setDiagnostics, 'switch.skip', 'enumerateDevices unavailable')
     return false
   }
 
@@ -131,21 +155,40 @@ async function maybeSwitchToPreferredRearCamera(
     const devices = await navigator.mediaDevices.enumerateDevices()
     const preferredDeviceId = pickPreferredRearCameraDeviceId(devices, activeDeviceId)
 
+    appendDiagnosticLog(
+      setDiagnostics,
+      'switch.enumerateDevices',
+      devices
+        .filter((device) => device.kind === 'videoinput')
+        .map((device) => ({ id: device.deviceId, label: device.label })),
+    )
+    appendDiagnosticLog(setDiagnostics, 'switch.activeDeviceId', activeDeviceId)
+    appendDiagnosticLog(setDiagnostics, 'switch.preferredDeviceId', preferredDeviceId)
+
     if (!preferredDeviceId || preferredDeviceId === activeDeviceId) {
+      appendDiagnosticLog(setDiagnostics, 'switch.result', 'keep active camera')
       return false
     }
 
     await instance.stop()
     const preferredStartConfig = createStartConfig(preferredDeviceId)
+    appendDiagnosticLog(setDiagnostics, 'switch.startConfig', preferredStartConfig.videoConstraints)
     await instance.start(
       preferredDeviceId,
       preferredStartConfig,
       onDecode,
       onDecodeError,
     )
+    appendDiagnosticLog(setDiagnostics, 'switch.result', 'started preferred camera')
+    appendDiagnosticLog(setDiagnostics, 'switch.activeTrackSettings', instance.getRunningTrackSettings())
 
     return true
-  } catch {
+  } catch (error) {
+    appendDiagnosticLog(
+      setDiagnostics,
+      'switch.error',
+      error instanceof Error ? error.message : String(error),
+    )
     return false
   }
 }
@@ -156,6 +199,7 @@ export function useBarcodeScanner({ enabled, onDetected }: UseBarcodeScannerOpti
   const controlsRef = useRef<ScannerControls | null>(null)
   const candidateDetectionRef = useRef<{ value: string; count: number; timestamp: number } | null>(null)
   const lastDetectedRef = useRef<{ value: string; timestamp: number } | null>(null)
+  const [diagnostics, setDiagnostics] = useState<string[]>([])
   const [viewState, setViewState] = useState<ScannerViewState>({
     status: 'idle',
     errorMessage: null,
@@ -165,6 +209,7 @@ export function useBarcodeScanner({ enabled, onDetected }: UseBarcodeScannerOpti
 
   useEffect(() => {
     if (!enabled || typeof window === 'undefined') {
+      setDiagnostics([])
       setViewState({
         status: 'idle',
         errorMessage: null,
@@ -181,6 +226,7 @@ export function useBarcodeScanner({ enabled, onDetected }: UseBarcodeScannerOpti
     const testBarcode = (window as Window & { __SAFE_SCAN_TEST_BARCODE__?: string }).__SAFE_SCAN_TEST_BARCODE__
 
     if (testBarcode) {
+      setDiagnostics([])
       setViewState({
         status: 'active',
         errorMessage: null,
@@ -210,6 +256,7 @@ export function useBarcodeScanner({ enabled, onDetected }: UseBarcodeScannerOpti
     let isCancelled = false
 
     async function startScanner() {
+      setDiagnostics([])
       setViewState({
         status: 'requesting',
         errorMessage: null,
@@ -270,6 +317,8 @@ export function useBarcodeScanner({ enabled, onDetected }: UseBarcodeScannerOpti
         }
 
         const startConfig = createStartConfig()
+        appendDiagnosticLog(setDiagnostics, 'start.selection', DEFAULT_CAMERA_SELECTION)
+        appendDiagnosticLog(setDiagnostics, 'start.config', startConfig.videoConstraints)
 
         scannerInstanceRef.current = instance
 
@@ -287,12 +336,25 @@ export function useBarcodeScanner({ enabled, onDetected }: UseBarcodeScannerOpti
           return
         }
 
+        appendDiagnosticLog(setDiagnostics, 'start.activeTrackSettings', instance.getRunningTrackSettings())
+
+        try {
+          appendDiagnosticLog(setDiagnostics, 'start.trackCapabilities', instance.getRunningTrackCapabilities())
+        } catch (error) {
+          appendDiagnosticLog(
+            setDiagnostics,
+            'start.trackCapabilitiesError',
+            error instanceof Error ? error.message : String(error),
+          )
+        }
+
         const switchedCamera = await maybeSwitchToPreferredRearCamera(
           instance,
           handleDetectedText,
           () => {
             // not found callback is expected during normal scanning
           },
+          setDiagnostics,
         )
 
         if (switchedCamera && isCancelled) {
@@ -377,6 +439,11 @@ export function useBarcodeScanner({ enabled, onDetected }: UseBarcodeScannerOpti
           return
         }
 
+        appendDiagnosticLog(
+          setDiagnostics,
+          'start.error',
+          error instanceof Error ? error.message : String(error),
+        )
         setViewState({
           status: 'unsupported',
           errorMessage: 'Live barcode scanning is not available in this browser right now.',
@@ -408,5 +475,6 @@ export function useBarcodeScanner({ enabled, onDetected }: UseBarcodeScannerOpti
     errorMessage: viewState.errorMessage,
     controls: viewState.controls,
     zoomCapabilities: viewState.zoomCapabilities,
+    diagnostics,
   }
 }

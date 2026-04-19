@@ -80,6 +80,7 @@ Implemented application functionality:
 - search-first scan screen with explicit camera activation
 - live barcode scanning starts with the browser-selected rear camera and only switches to a labeled main rear lens when the active camera appears worse or ambiguous
 - scanner controls for torch and zoom when the device exposes those capabilities
+- the scan page currently includes a temporary on-screen camera diagnostics panel to capture device labels, active track settings, and switch attempts while debugging Samsung multi-lens behavior
 - GTIN product lookup
 - free-text product search
 - scan resolution flow for full, unverified, basic, and not-found outcomes
