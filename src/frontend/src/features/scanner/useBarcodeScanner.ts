@@ -73,6 +73,17 @@ async function stopAndClearScanner(instance: Html5QrcodeInstance | null) {
   }
 }
 
+function createScannerInstance(html5QrcodeModule: Html5QrcodeModule) {
+  const { Html5Qrcode, Html5QrcodeSupportedFormats } = html5QrcodeModule
+
+  return new Html5Qrcode(SCANNER_ELEMENT_ID, {
+    formatsToSupport: [
+      Html5QrcodeSupportedFormats.EAN_13,
+    ],
+    verbose: false,
+  })
+}
+
 async function tryApplyAutofocusEnhancements(instance: Html5QrcodeInstance) {
   try {
     const caps = instance.getRunningTrackCapabilities()
@@ -141,6 +152,7 @@ function createStartConfig(deviceId?: string): ScannerStartConfig {
 
 async function maybeSwitchToPreferredRearCamera(
   instance: Html5QrcodeInstance,
+  html5QrcodeModule: Html5QrcodeModule,
   onDecode: (decodedText: string) => void,
   onDecodeError: (errorMessage: string) => void,
   setDiagnostics: Dispatch<SetStateAction<string[]>>,
@@ -170,26 +182,27 @@ async function maybeSwitchToPreferredRearCamera(
       return false
     }
 
-    await instance.stop()
+    await stopAndClearScanner(instance)
+    const nextInstance = createScannerInstance(html5QrcodeModule)
     const preferredStartConfig = createStartConfig(preferredDeviceId)
     appendDiagnosticLog(setDiagnostics, 'switch.startConfig', preferredStartConfig.videoConstraints)
-    await instance.start(
+    await nextInstance.start(
       preferredDeviceId,
       preferredStartConfig,
       onDecode,
       onDecodeError,
     )
     appendDiagnosticLog(setDiagnostics, 'switch.result', 'started preferred camera')
-    appendDiagnosticLog(setDiagnostics, 'switch.activeTrackSettings', instance.getRunningTrackSettings())
+    appendDiagnosticLog(setDiagnostics, 'switch.activeTrackSettings', nextInstance.getRunningTrackSettings())
 
-    return true
+    return nextInstance
   } catch (error) {
     appendDiagnosticLog(
       setDiagnostics,
       'switch.error',
       error instanceof Error ? error.message : String(error),
     )
-    return false
+    return null
   }
 }
 
@@ -271,13 +284,7 @@ export function useBarcodeScanner({ enabled, onDetected }: UseBarcodeScannerOpti
           return
         }
 
-        const { Html5Qrcode, Html5QrcodeSupportedFormats } = html5QrcodeModule
-        const instance = new Html5Qrcode(SCANNER_ELEMENT_ID, {
-          formatsToSupport: [
-            Html5QrcodeSupportedFormats.EAN_13,
-          ],
-          verbose: false,
-        })
+        let instance = createScannerInstance(html5QrcodeModule)
 
         const handleDetectedText = (decodedText: string) => {
           const nextValue = String(decodedText).trim()
@@ -348,8 +355,9 @@ export function useBarcodeScanner({ enabled, onDetected }: UseBarcodeScannerOpti
           )
         }
 
-        const switchedCamera = await maybeSwitchToPreferredRearCamera(
+        const switchedInstance = await maybeSwitchToPreferredRearCamera(
           instance,
+          html5QrcodeModule,
           handleDetectedText,
           () => {
             // not found callback is expected during normal scanning
@@ -357,7 +365,12 @@ export function useBarcodeScanner({ enabled, onDetected }: UseBarcodeScannerOpti
           setDiagnostics,
         )
 
-        if (switchedCamera && isCancelled) {
+        if (switchedInstance) {
+          instance = switchedInstance
+          scannerInstanceRef.current = switchedInstance
+        }
+
+        if (switchedInstance && isCancelled) {
           await stopAndClearScanner(instance)
           return
         }
