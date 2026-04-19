@@ -9,6 +9,7 @@ type ScannerStatus = 'idle' | 'requesting' | 'active' | 'unsupported' | 'denied'
 
 type UseBarcodeScannerOptions = {
   enabled: boolean
+  debugEnabled?: boolean
   onDetected: (value: string) => void
 }
 
@@ -128,7 +129,16 @@ function formatDiagnosticValue(value: unknown) {
   }
 }
 
-function appendDiagnosticLog(setDiagnostics: Dispatch<SetStateAction<string[]>>, label: string, value: unknown) {
+function appendDiagnosticLog(
+  debugEnabled: boolean,
+  setDiagnostics: Dispatch<SetStateAction<string[]>>,
+  label: string,
+  value: unknown,
+) {
+  if (!debugEnabled) {
+    return
+  }
+
   const entry = `${label}: ${formatDiagnosticValue(value)}`
 
   setDiagnostics((current) => [...current.slice(-11), entry])
@@ -155,10 +165,11 @@ async function maybeSwitchToPreferredRearCamera(
   html5QrcodeModule: Html5QrcodeModule,
   onDecode: (decodedText: string) => void,
   onDecodeError: (errorMessage: string) => void,
+  debugEnabled: boolean,
   setDiagnostics: Dispatch<SetStateAction<string[]>>,
 ) {
   if (!navigator.mediaDevices?.enumerateDevices) {
-    appendDiagnosticLog(setDiagnostics, 'switch.skip', 'enumerateDevices unavailable')
+    appendDiagnosticLog(debugEnabled, setDiagnostics, 'switch.skip', 'enumerateDevices unavailable')
     return false
   }
 
@@ -168,36 +179,38 @@ async function maybeSwitchToPreferredRearCamera(
     const preferredDeviceId = pickPreferredRearCameraDeviceId(devices, activeDeviceId)
 
     appendDiagnosticLog(
+      debugEnabled,
       setDiagnostics,
       'switch.enumerateDevices',
       devices
         .filter((device) => device.kind === 'videoinput')
         .map((device) => ({ id: device.deviceId, label: device.label })),
     )
-    appendDiagnosticLog(setDiagnostics, 'switch.activeDeviceId', activeDeviceId)
-    appendDiagnosticLog(setDiagnostics, 'switch.preferredDeviceId', preferredDeviceId)
+    appendDiagnosticLog(debugEnabled, setDiagnostics, 'switch.activeDeviceId', activeDeviceId)
+    appendDiagnosticLog(debugEnabled, setDiagnostics, 'switch.preferredDeviceId', preferredDeviceId)
 
     if (!preferredDeviceId || preferredDeviceId === activeDeviceId) {
-      appendDiagnosticLog(setDiagnostics, 'switch.result', 'keep active camera')
+      appendDiagnosticLog(debugEnabled, setDiagnostics, 'switch.result', 'keep active camera')
       return false
     }
 
     await stopAndClearScanner(instance)
     const nextInstance = createScannerInstance(html5QrcodeModule)
     const preferredStartConfig = createStartConfig(preferredDeviceId)
-    appendDiagnosticLog(setDiagnostics, 'switch.startConfig', preferredStartConfig.videoConstraints)
+    appendDiagnosticLog(debugEnabled, setDiagnostics, 'switch.startConfig', preferredStartConfig.videoConstraints)
     await nextInstance.start(
       preferredDeviceId,
       preferredStartConfig,
       onDecode,
       onDecodeError,
     )
-    appendDiagnosticLog(setDiagnostics, 'switch.result', 'started preferred camera')
-    appendDiagnosticLog(setDiagnostics, 'switch.activeTrackSettings', nextInstance.getRunningTrackSettings())
+    appendDiagnosticLog(debugEnabled, setDiagnostics, 'switch.result', 'started preferred camera')
+    appendDiagnosticLog(debugEnabled, setDiagnostics, 'switch.activeTrackSettings', nextInstance.getRunningTrackSettings())
 
     return nextInstance
   } catch (error) {
     appendDiagnosticLog(
+      debugEnabled,
       setDiagnostics,
       'switch.error',
       error instanceof Error ? error.message : String(error),
@@ -206,7 +219,7 @@ async function maybeSwitchToPreferredRearCamera(
   }
 }
 
-export function useBarcodeScanner({ enabled, onDetected }: UseBarcodeScannerOptions) {
+export function useBarcodeScanner({ enabled, debugEnabled = false, onDetected }: UseBarcodeScannerOptions) {
   const containerRef = useRef<HTMLDivElement | null>(null)
   const scannerInstanceRef = useRef<Html5QrcodeInstance | null>(null)
   const controlsRef = useRef<ScannerControls | null>(null)
@@ -324,8 +337,8 @@ export function useBarcodeScanner({ enabled, onDetected }: UseBarcodeScannerOpti
         }
 
         const startConfig = createStartConfig()
-        appendDiagnosticLog(setDiagnostics, 'start.selection', DEFAULT_CAMERA_SELECTION)
-        appendDiagnosticLog(setDiagnostics, 'start.config', startConfig.videoConstraints)
+        appendDiagnosticLog(debugEnabled, setDiagnostics, 'start.selection', DEFAULT_CAMERA_SELECTION)
+        appendDiagnosticLog(debugEnabled, setDiagnostics, 'start.config', startConfig.videoConstraints)
 
         scannerInstanceRef.current = instance
 
@@ -343,12 +356,13 @@ export function useBarcodeScanner({ enabled, onDetected }: UseBarcodeScannerOpti
           return
         }
 
-        appendDiagnosticLog(setDiagnostics, 'start.activeTrackSettings', instance.getRunningTrackSettings())
+        appendDiagnosticLog(debugEnabled, setDiagnostics, 'start.activeTrackSettings', instance.getRunningTrackSettings())
 
         try {
-          appendDiagnosticLog(setDiagnostics, 'start.trackCapabilities', instance.getRunningTrackCapabilities())
+          appendDiagnosticLog(debugEnabled, setDiagnostics, 'start.trackCapabilities', instance.getRunningTrackCapabilities())
         } catch (error) {
           appendDiagnosticLog(
+            debugEnabled,
             setDiagnostics,
             'start.trackCapabilitiesError',
             error instanceof Error ? error.message : String(error),
@@ -362,6 +376,7 @@ export function useBarcodeScanner({ enabled, onDetected }: UseBarcodeScannerOpti
           () => {
             // not found callback is expected during normal scanning
           },
+          debugEnabled,
           setDiagnostics,
         )
 
@@ -453,6 +468,7 @@ export function useBarcodeScanner({ enabled, onDetected }: UseBarcodeScannerOpti
         }
 
         appendDiagnosticLog(
+          debugEnabled,
           setDiagnostics,
           'start.error',
           error instanceof Error ? error.message : String(error),
@@ -480,7 +496,7 @@ export function useBarcodeScanner({ enabled, onDetected }: UseBarcodeScannerOpti
         zoomCapabilities: null,
       })
     }
-  }, [enabled, onDetected])
+  }, [debugEnabled, enabled, onDetected])
 
   return {
     containerRef,

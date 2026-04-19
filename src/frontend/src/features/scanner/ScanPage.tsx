@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 
 import { formatNumber } from '../../shared/i18n/format'
 import { usePageTitle } from '../../shared/i18n/usePageTitle'
@@ -10,11 +10,16 @@ import { useBarcodeScanner } from './useBarcodeScanner'
 
 export function ScanPage() {
   const { t, i18n } = useTranslation('scanner')
+  const location = useLocation()
   const navigate = useNavigate()
   const { activeProfile, selectedAllergens } = useProfile()
   const [searchValue, setSearchValue] = useState('')
   const [isScannerActive, setIsScannerActive] = useState(false)
   const recentSearches = useMemo(() => readRecentSearches(), [])
+  const isCameraDebugVisible = useMemo(
+    () => new URLSearchParams(location.search).get('cameraDebug') === '1',
+    [location.search],
+  )
 
   const handleDetectedBarcode = useCallback(
     (detectedValue: string) => {
@@ -24,6 +29,7 @@ export function ScanPage() {
   )
 
   const scanner = useBarcodeScanner({
+    debugEnabled: isCameraDebugVisible,
     enabled: isScannerActive,
     onDetected: handleDetectedBarcode,
   })
@@ -213,7 +219,7 @@ export function ScanPage() {
           </div>
         )}
 
-        {isScannerActive && scannerDiagnostics.length > 0 ? (
+        {isCameraDebugVisible && isScannerActive && scannerDiagnostics.length > 0 ? (
           <section className="scanner-diagnostics" aria-live="polite">
             <p className="eyebrow eyebrow--light">{t('Diagnostics.Title')}</p>
             <p className="supporting-text supporting-text--light">{t('Diagnostics.Description')}</p>
