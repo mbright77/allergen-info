@@ -266,11 +266,12 @@ Profile handling rules:
 - malformed stored profile state is ignored safely and replaced with an empty default state
 - the top-right shell control is the primary profile switcher and add-profile entry point
 - the bottom-nav `Profile` route edits the currently active profile
-- favorites, history, and recent searches are device-global and not profile-scoped
+- favorites are scoped to the active profile
+- history and recent searches remain device-global and not profile-scoped
 
 Favorites and history persistence notes:
 
-- saved favorites store core product identity, result status, timestamps, and optional `imageUrl`
+- saved favorites store core product identity, result status, timestamps, and optional `imageUrl`, keyed by profile
 - favorites are added or removed from the full product result screen
 - favorites without `imageUrl` still render safely with a non-image fallback
 - history entries are added automatically when a product analysis screen is opened successfully or when a scan fallback response returns product data

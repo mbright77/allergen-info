@@ -1,8 +1,10 @@
 import type { AnalysisOverallStatus } from '../domain/contracts'
 
-const FAVORITES_STORAGE_KEY = 'safescan.favorites.v1'
+const FAVORITES_STORAGE_KEY = 'safescan.favorites.v2'
 const HISTORY_STORAGE_KEY = 'safescan.history.v1'
 const MAX_HISTORY_ITEMS = 20
+
+type StoredFavoritesByProfile = Record<string, SavedProductItem[]>
 
 export type SavedProductItem = {
   gtin: string
@@ -15,12 +17,30 @@ export type SavedProductItem = {
   updatedAt: string
 }
 
-export function readFavorites(): SavedProductItem[] {
-  return readCollection(FAVORITES_STORAGE_KEY)
+export function readFavorites(profileId: string | null): SavedProductItem[] {
+  const favorites = readFavoritesByProfile()
+
+  if (!profileId) {
+    return []
+  }
+
+  return favorites[profileId] ?? []
 }
 
-export function writeFavorites(items: SavedProductItem[]) {
-  writeCollection(FAVORITES_STORAGE_KEY, items)
+export function writeFavorites(profileId: string | null, items: SavedProductItem[]) {
+  if (!profileId || typeof window === 'undefined') {
+    return
+  }
+
+  const currentFavorites = readFavoritesByProfile()
+
+  window.localStorage.setItem(
+    FAVORITES_STORAGE_KEY,
+    JSON.stringify({
+      ...currentFavorites,
+      [profileId]: items,
+    }),
+  )
 }
 
 export function readHistory(): SavedProductItem[] {
@@ -47,6 +67,43 @@ function readCollection(storageKey: string): SavedProductItem[] {
     return Array.isArray(parsed) ? parsed.filter(isSavedProductItem) : []
   } catch {
     return []
+  }
+}
+
+function readFavoritesByProfile(): StoredFavoritesByProfile {
+  if (typeof window === 'undefined') {
+    return {}
+  }
+
+  const rawValue = window.localStorage.getItem(FAVORITES_STORAGE_KEY)
+
+  if (!rawValue) {
+    return {}
+  }
+
+  try {
+    const parsed = JSON.parse(rawValue)
+
+    if (!parsed || typeof parsed !== 'object') {
+      return {}
+    }
+
+    return Object.entries(parsed).reduce<StoredFavoritesByProfile>((favorites, [profileId, items]) => {
+      if (typeof profileId !== 'string' || !Array.isArray(items)) {
+        return favorites
+      }
+
+      const normalizedItems = items.filter(isSavedProductItem)
+
+      if (normalizedItems.length === 0) {
+        return favorites
+      }
+
+      favorites[profileId] = normalizedItems
+      return favorites
+    }, {})
+  } catch {
+    return {}
   }
 }
 

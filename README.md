@@ -27,7 +27,7 @@ This repository contains the full SafeScan application as a monorepo:
 - supports barcode scanning and manual product search
 - analyzes products against the active profile
 - returns `Safe`, `MayContain`, `Contains`, or `Unknown`
-- stores local favorites, history, recent searches, and cached results
+- stores profile-scoped favorites plus local history, recent searches, and cached results
 - supports optional product imagery and offline fallbacks for cached data
 
 ## Repository Structure

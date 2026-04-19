@@ -57,14 +57,16 @@ describe('HomePage', () => {
     )
     window.localStorage.setItem(
       FAVORITES_STORAGE_KEY,
-      JSON.stringify([
-        {
-          gtin: '1',
-          name: 'Favorite Product',
-          overallStatus: 'Safe',
-          updatedAt: '2026-03-21T10:00:00Z',
-        },
-      ]),
+      JSON.stringify({
+        p1: [
+          {
+            gtin: '1',
+            name: 'Favorite Product',
+            overallStatus: 'Safe',
+            updatedAt: '2026-03-21T10:00:00Z',
+          },
+        ],
+      }),
     )
     window.localStorage.setItem(
       HISTORY_STORAGE_KEY,
