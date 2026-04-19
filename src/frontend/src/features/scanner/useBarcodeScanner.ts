@@ -3,7 +3,6 @@ import { useEffect, useRef, useState } from 'react'
 import {
   DEFAULT_CAMERA_SELECTION,
   pickPreferredRearCameraDeviceId,
-  type CameraSelection,
 } from './cameraSelection'
 
 type ScannerStatus = 'idle' | 'requesting' | 'active' | 'unsupported' | 'denied' | 'error'
@@ -102,9 +101,24 @@ type ScannerStartConfig = {
   videoConstraints: ExtendedMediaTrackConstraints
 }
 
+function createStartConfig(deviceId?: string): ScannerStartConfig {
+  return {
+    fps: 8,
+    qrbox: getBarcodeScanBox,
+    videoConstraints: {
+      ...(deviceId
+        ? { deviceId: { exact: deviceId } }
+        : { facingMode: { ideal: 'environment' } }),
+      width: { ideal: 1280, max: 1280 },
+      height: { ideal: 720, max: 720 },
+      frameRate: { ideal: 24, max: 30 },
+      resizeMode: 'crop-and-scale',
+    } as ExtendedMediaTrackConstraints,
+  }
+}
+
 async function maybeSwitchToPreferredRearCamera(
   instance: Html5QrcodeInstance,
-  startConfig: ScannerStartConfig,
   onDecode: (decodedText: string) => void,
   onDecodeError: (errorMessage: string) => void,
 ) {
@@ -122,9 +136,10 @@ async function maybeSwitchToPreferredRearCamera(
     }
 
     await instance.stop()
+    const preferredStartConfig = createStartConfig(preferredDeviceId)
     await instance.start(
       preferredDeviceId,
-      startConfig,
+      preferredStartConfig,
       onDecode,
       onDecodeError,
     )
@@ -254,24 +269,12 @@ export function useBarcodeScanner({ enabled, onDetected }: UseBarcodeScannerOpti
           onDetected(nextValue)
         }
 
-        const startConfig: ScannerStartConfig = {
-          fps: 8,
-          qrbox: getBarcodeScanBox,
-          videoConstraints: {
-            facingMode: { ideal: 'environment' },
-            width: { ideal: 1280, max: 1280 },
-            height: { ideal: 720, max: 720 },
-            frameRate: { ideal: 24, max: 30 },
-            resizeMode: 'crop-and-scale',
-          } as ExtendedMediaTrackConstraints,
-        }
+        const startConfig = createStartConfig()
 
         scannerInstanceRef.current = instance
 
-        const cameraSelection: CameraSelection = DEFAULT_CAMERA_SELECTION
-
         await instance.start(
-          cameraSelection,
+          DEFAULT_CAMERA_SELECTION,
           startConfig,
           handleDetectedText,
           () => {
@@ -286,7 +289,6 @@ export function useBarcodeScanner({ enabled, onDetected }: UseBarcodeScannerOpti
 
         const switchedCamera = await maybeSwitchToPreferredRearCamera(
           instance,
-          startConfig,
           handleDetectedText,
           () => {
             // not found callback is expected during normal scanning
